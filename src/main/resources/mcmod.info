@@ -1,0 +1,16 @@
+[
+{
+  "modid": "observerlib",
+  "name": "ObserverLib",
+  "description": "A library Mod which allows for very performant and generic area observation.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["HellFirePvP"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
