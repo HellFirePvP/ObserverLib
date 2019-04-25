@@ -8,15 +8,14 @@
 
 package hellfirepvp.observerlib;
 
+import hellfirepvp.observerlib.client.ClientProxy;
 import hellfirepvp.observerlib.common.CommonProxy;
-import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,56 +26,38 @@ import org.apache.logging.log4j.Logger;
  * Created by HellFirePvP
  * Date: 06.03.2019 / 21:18
  */
-@Mod(modid = ObserverLib.MODID, name = ObserverLib.NAME, version = ObserverLib.VERSION,
-        dependencies = "required-after:forge@[14.23.5.2781,)",
-        certificateFingerprint = "a0f0b759d895c15ceb3e3bcb5f3c2db7c582edf0",
-        acceptedMinecraftVersions = "[1.12, 1.13)"
-)
+@Mod(ObserverLib.MODID)
 public class ObserverLib {
 
     public static final String MODID = "observerlib";
     public static final String NAME = "ObserverLib";
-    public static final String VERSION = "0.0.1";
-    public static final String CLIENT_PROXY = "hellfirepvp.observerlib.client.ClientProxy";
-    public static final String COMMON_PROXY = "hellfirepvp.observerlib.common.CommonProxy";
 
-    private static boolean devEnvChache = false;
+    public static final Logger log = LogManager.getLogger(NAME);
+    private static ObserverLib instance;
 
-    @Mod.Instance(MODID)
-    public static ObserverLib instance;
+    private ModContainer modContainer;
+    private CommonProxy proxy;
 
-    public static Logger log = LogManager.getLogger(NAME);
+    public ObserverLib() {
+        instance = this;
+        this.modContainer = ModList.get().getModContainerById(MODID).get();
 
-    @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
-    public static CommonProxy proxy;
-
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        event.getModMetadata().version = VERSION;
-        devEnvChache = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
-
-        proxy.preInit();
+        this.proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> CommonProxy::new);
+        this.proxy.initialize();
+        this.proxy.attachLifecycle(FMLJavaModLoadingContext.get().getModEventBus());
+        this.proxy.attachEventHandlers(MinecraftForge.EVENT_BUS);
     }
 
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent event) {
-        MinecraftForge.EVENT_BUS.register(this);
-
-        proxy.init();
+    public static CommonProxy getProxy() {
+        return getInstance().proxy;
     }
 
-    @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent event) {
-        proxy.postInit();
+    public static ModContainer getModContainer() {
+        return getInstance().modContainer;
     }
 
-    @Mod.EventHandler
-    public void onServerStop(FMLServerStoppedEvent event) {
-        //WorldCacheManager.wipeCache();
-    }
-
-    public static boolean isRunningInDevEnvironment() {
-        return devEnvChache;
+    public static ObserverLib getInstance() {
+        return instance;
     }
 
 }

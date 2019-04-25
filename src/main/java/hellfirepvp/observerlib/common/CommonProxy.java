@@ -8,6 +8,14 @@
 
 package hellfirepvp.observerlib.common;
 
+import hellfirepvp.observerlib.common.change.StructureIntegrityObserver;
+import hellfirepvp.observerlib.common.registry.RegistryProviders;
+import hellfirepvp.observerlib.common.registry.RegistryStructures;
+import hellfirepvp.observerlib.common.world.WorldEventListener;
+import net.minecraft.world.World;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+
 /**
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
@@ -17,16 +25,25 @@ package hellfirepvp.observerlib.common;
  */
 public class CommonProxy {
 
-    public void preInit() {
+    public void initialize() {
+        RegistryProviders.initialize();
+        RegistryStructures.initialize();
+    }
+
+    public void attachLifecycle(IEventBus modEventBus) {
 
     }
 
-    public void init() {
+    public void attachEventHandlers(IEventBus eventBus) {
+        eventBus.addListener(this::attachWorldListener);
 
+        new StructureIntegrityObserver(eventBus);
     }
 
-    public void postInit() {
-
+    private void attachWorldListener(WorldEvent.Load event) {
+        if (event.getWorld() instanceof World) {
+            ((World) event.getWorld()).addEventListener(new WorldEventListener());
+        }
     }
 
 }
