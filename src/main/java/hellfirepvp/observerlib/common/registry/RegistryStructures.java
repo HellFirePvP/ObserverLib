@@ -1,8 +1,6 @@
 package hellfirepvp.observerlib.common.registry;
 
-import com.google.common.reflect.TypeToken;
 import hellfirepvp.observerlib.ObserverLib;
-import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryModifiable;

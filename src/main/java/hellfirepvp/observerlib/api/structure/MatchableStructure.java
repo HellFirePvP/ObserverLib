@@ -2,6 +2,7 @@ package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraftforge.registries.IForgeRegistryEntry;
@@ -78,6 +79,16 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
             MatchableState state = getContents().get(centerOffset);
             return state.matches(reader, center.add(centerOffset), comparing);
         }
+    }
+
+    @Override
+    default MatchableStructure setRegistryName(ResourceLocation name) {
+        return this;
+    }
+
+    @Override
+    default Class<MatchableStructure> getRegistryType() {
+        return MatchableStructure.class;
     }
 
 }
