@@ -12,6 +12,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
@@ -40,7 +41,7 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public void initialize(IBlockReader world, BlockPos center) {
+    public void initialize(IWorld world, BlockPos center) {
         for (BlockPos offset : this.structure.getContents().keySet()) {
             if (!this.structure.matchesSingleBlock(world, center, offset)) {
                 this.mismatches.add(offset);
@@ -55,7 +56,7 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public boolean notifyChange(IBlockReader world, BlockPos center, BlockChangeSet changeSet) {
+    public boolean notifyChange(IWorld world, BlockPos center, BlockChangeSet changeSet) {
         for (BlockStateChangeSet.StateChange change : changeSet.getChanges()) {
             if (this.structure.hasBlockAt(change.getRelativePosition()) &&
                     !this.structure.matchesSingleBlock(world, center, change.getRelativePosition(), change.getNewState())) {

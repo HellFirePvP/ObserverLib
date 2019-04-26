@@ -35,7 +35,6 @@ public class BlockStateChangeSet implements BlockChangeSet {
         }
     }
 
-    @Override
     public final void reset() {
         this.changes.clear();
     }

@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReaderBase;
 import net.minecraftforge.common.util.Constants;
 
@@ -36,7 +37,7 @@ public class StructureMatchingBuffer {
     private Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
 
     @Nonnull
-    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(IWorldReaderBase world, BlockPos center, ObserverProvider provider) {
+    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(IWorld world, BlockPos center, ObserverProvider provider) {
         MatchChangeSubscriber<T> existing;
         if ((existing = (MatchChangeSubscriber<T>) getSubscriber(center)) != null) {
             if (!existing.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {

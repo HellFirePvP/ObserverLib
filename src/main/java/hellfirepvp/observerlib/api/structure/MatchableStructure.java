@@ -63,12 +63,31 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
         return true;
     }
 
+    /**
+     * Test if a single position in this world matches the structure's expected blockstate at that position.
+     *
+     * @param reader the current world matching in
+     * @param center the current center of the change matching at
+     * @param centerOffset the offset from the center to check the matching at
+     *
+     * @return true, if the blockstate at the offset of the center does match the structure's expectations, false if not
+     */
     default public boolean matchesSingleBlock(@Nonnull IBlockReader reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset) {
         return matchesSingleBlock(reader, center, centerOffset, reader.getBlockState(center.add(centerOffset)));
     }
 
+    /**
+     * Test if the blockstate given matches the structure's matcher at the given center-offset.
+     *
+     * @param reader the current world matching in
+     * @param center the current center of the change matching at
+     * @param centerOffset the offset from the center to check the matching at
+     * @param comparing the blockstate to check for validity
+     *
+     * @return true, if the blockstate at the offset of the center does match the structure's expectations, false if not
+     */
     default public boolean matchesSingleBlock(@Nullable IBlockReader reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset,
@@ -81,11 +100,17 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
         }
     }
 
+    /**
+     * Default implementation to not allow overriding a potential matchable structure's registry name
+     */
     @Override
     default MatchableStructure setRegistryName(ResourceLocation name) {
         return this;
     }
 
+    /**
+     * Default implementation to declare all matchable structures that type for forge registries too.
+     */
     @Override
     default Class<MatchableStructure> getRegistryType() {
         return MatchableStructure.class;

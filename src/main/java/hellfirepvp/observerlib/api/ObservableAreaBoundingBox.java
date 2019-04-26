@@ -29,8 +29,8 @@ public class ObservableAreaBoundingBox implements ObservableArea {
     }
 
     @Override
-    public boolean observes(Vec3i pos) {
-        return boundingBox.contains(new Vec3d(pos.getX(), pos.getY(), pos.getZ()));
+    public boolean observes(Vec3i relativePos) {
+        return boundingBox.contains(new Vec3d(relativePos.getX(), relativePos.getY(), relativePos.getZ()));
     }
 
 }

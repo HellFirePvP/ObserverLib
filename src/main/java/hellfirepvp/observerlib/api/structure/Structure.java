@@ -7,6 +7,8 @@ import net.minecraft.util.math.Vec3i;
 import java.util.Map;
 
 /**
+ * This class represents a generic structure.
+ *
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
  * Class: Structure

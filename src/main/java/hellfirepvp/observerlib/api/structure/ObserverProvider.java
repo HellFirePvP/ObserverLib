@@ -22,6 +22,14 @@ public abstract class ObserverProvider implements IForgeRegistryEntry<ObserverPr
         this.registryName = registryName;
     }
 
+    /**
+     * Provides a new observer of the current provider.
+     *
+     * The observer MUST return the same registry name in {@link ChangeObserver#getProviderRegistryName()}
+     * as this provider's {@link ObserverProvider#getRegistryName()} for deserialization purposes.
+     *
+     * @return a new observer
+     */
     @Nonnull
     public abstract ChangeObserver provideObserver();
 

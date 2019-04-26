@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * Exemplary implementation of {@link MatchableState} containing a set of passable {@link IBlockState}s.
+ *
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
  * Class: MatchableBlockState

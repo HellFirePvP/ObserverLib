@@ -3,6 +3,7 @@ package hellfirepvp.observerlib.common.change;
 import com.google.common.collect.Lists;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ChangeSubscriber;
+import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.common.data.MatcherDataManager;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.block.state.IBlockState;
@@ -11,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 
 /**
@@ -39,6 +41,14 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         return center;
     }
 
+    @Override
+    @Nonnull
+    public BlockChangeSet getCurrentChangeSet() {
+        return this.changeSet;
+    }
+
+    @Override
+    @Nonnull
     public T getObserver() {
         return matcher;
     }
@@ -58,6 +68,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         this.changeSet.addChange(pos.subtract(getCenter()), pos, oldState, newState);
     }
 
+    @Override
     public boolean matches(IWorld world) {
         if (this.isMatching != null && this.changeSet.isEmpty()) {
             return isMatching;
