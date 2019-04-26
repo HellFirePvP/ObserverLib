@@ -1,12 +1,12 @@
 package hellfirepvp.observerlib.api;
 
+import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-import net.minecraftforge.registries.IForgeRegistryEntry;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -15,33 +15,25 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 23.04.2019 / 22:15
  */
-public abstract class ChangeObserver implements IForgeRegistryEntry<ChangeObserver> {
+public abstract class ChangeObserver {
 
-    private final ResourceLocation registryName;
+    private final ResourceLocation providerRegistryName;
 
-    public ChangeObserver(ResourceLocation registryName) {
-        this.registryName = registryName;
+    public ChangeObserver(ResourceLocation providerRegistryName) {
+        this.providerRegistryName = providerRegistryName;
     }
 
-    @Override
-    public Class<ChangeObserver> getRegistryType() {
-        return ChangeObserver.class;
+    @Nonnull
+    public final ResourceLocation getProviderRegistryName() {
+        return providerRegistryName;
     }
 
-    @Override
-    public final ChangeObserver setRegistryName(ResourceLocation name) {
-        return this;
-    }
+    public abstract void initialize(IBlockReader world, BlockPos center);
 
-    @Nullable
-    @Override
-    public final ResourceLocation getRegistryName() {
-        return registryName;
-    }
-
+    @Nonnull
     public abstract ObservableArea getObservableArea();
 
-    public abstract boolean notifyChange(IBlockReader world, BlockPos centre, BlockChangeSet changeSet);
+    public abstract boolean notifyChange(IBlockReader world, BlockPos center, BlockChangeSet changeSet);
 
     public abstract void readFromNBT(NBTTagCompound tag);
 

@@ -1,4 +1,4 @@
-package hellfirepvp.observerlib.api;
+package hellfirepvp.observerlib.api.block;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;

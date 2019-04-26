@@ -4,9 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.ChangeObserver;
-import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.structure.ObserverProvider;
-import hellfirepvp.observerlib.common.change.ChangeSubscriber;
+import hellfirepvp.observerlib.common.change.MatchChangeSubscriber;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,7 +13,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorldReaderBase;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
@@ -33,31 +32,30 @@ import java.util.Map;
 public class StructureMatchingBuffer {
 
     private boolean dirty = false;
-    private Map<ChunkPos, List<ChangeSubscriber<? extends ChangeObserver>>> subscribers = Maps.newHashMap();
-    private Map<BlockPos, ChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
-
-    //@Nonnull
-    //public ChangeSubscriber<StructureMatcherPatternArray> observeAndInitializePattern(IBlockReader world,
-    //                                                                                  BlockPos center,
-    //                                                                                  MatchableStructure structure) {
-    //    StructureMatcherPatternArray match = new StructureMatcherPatternArray(structure.getRegistryName());
-    //    match.initialize(world, center);
-    //    return observeArea(center, match);
-    //}
+    private Map<ChunkPos, List<MatchChangeSubscriber<? extends ChangeObserver>>> subscribers = Maps.newHashMap();
+    private Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
 
     @Nonnull
-    public <T extends ChangeObserver> ChangeSubscriber<T> observeArea(BlockPos requester, T matcher) {
-        ObserverProvider observer = RegistryProviders.getProvider(matcher.getRegistryName());
-        if (observer == null) {
-            ObserverLib.log.warn("Found unregistered change matcher: " + matcher.getRegistryName().toString());
-            ObserverLib.log.warn("It will NOT persist! Register your matchers!");
+    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(IWorldReaderBase world, BlockPos center, ObserverProvider provider) {
+        MatchChangeSubscriber<T> existing;
+        if ((existing = (MatchChangeSubscriber<T>) getSubscriber(center)) != null) {
+            if (!existing.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {
+                ObserverLib.log.warn("Trying to observe area at dim=" + world.getDimension().getType().getId() + " " + center.toString() +
+                        " while it is already being observed by " + existing.getObserver().getProviderRegistryName());
+                ObserverLib.log.warn("Removing existing observer!");
+                this.removeSubscriber(center);
+            } else {
+                return existing;
+            }
         }
-        ChangeSubscriber<T> subscriber = new ChangeSubscriber<>(requester, matcher);
-        this.requestSubscribers.put(requester, subscriber);
+
+        T observer = (T) provider.provideObserver();
+        MatchChangeSubscriber<T> subscriber = new MatchChangeSubscriber<>(center, observer);
+        this.requestSubscribers.put(center, subscriber);
         for (ChunkPos pos : subscriber.getObservableChunks()) {
             this.subscribers.computeIfAbsent(pos, (chPos) -> Lists.newArrayList()).add(subscriber);
         }
-
+        observer.initialize(world, center);
         markDirty();
         return subscriber;
     }
@@ -65,10 +63,10 @@ public class StructureMatchingBuffer {
     public boolean removeSubscriber(BlockPos pos) {
         if (requestSubscribers.remove(pos) != null) {
             ChunkPos chunk = new ChunkPos(pos);
-            List<ChangeSubscriber<?>> chunkSubscribers = subscribers
+            List<MatchChangeSubscriber<?>> chunkSubscribers = subscribers
                     .computeIfAbsent(chunk, ch -> Lists.newArrayList());
             chunkSubscribers.clear();
-            for (ChangeSubscriber<?> subscr : requestSubscribers.values()) {
+            for (MatchChangeSubscriber<?> subscr : requestSubscribers.values()) {
                 if (subscr.getObservableChunks().contains(chunk)) {
                     chunkSubscribers.add(subscr);
                 }
@@ -80,12 +78,12 @@ public class StructureMatchingBuffer {
     }
 
     @Nullable
-    public ChangeSubscriber<?> getSubscriber(BlockPos pos) {
+    public MatchChangeSubscriber<?> getSubscriber(BlockPos pos) {
         return this.requestSubscribers.get(pos);
     }
 
     @Nonnull
-    public List<ChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
+    public List<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
         return this.subscribers.getOrDefault(pos, Collections.emptyList());
     }
 
@@ -113,14 +111,14 @@ public class StructureMatchingBuffer {
             ResourceLocation matchIdentifier = new ResourceLocation(subscriberTag.getString("identifier"));
             ObserverProvider observer = RegistryProviders.getProvider(matchIdentifier);
             if (observer == null) {
-                ObserverLib.log.warn("Unknown StructureMatcher: " + matchIdentifier.toString() + "! Skipping...");
+                ObserverLib.log.warn("Unknown Observer Provider: " + matchIdentifier.toString() + "! Skipping...");
                 continue;
             }
 
-            ChangeSubscriber<?> subscriber = new ChangeSubscriber<>(requester, observer.provideMatcher());
+            MatchChangeSubscriber<?> subscriber = new MatchChangeSubscriber<>(requester, observer.provideObserver());
             subscriber.readFromNBT(subscriberTag.getCompound("matchData"));
 
-            this.requestSubscribers.put(subscriber.getRequester(), subscriber);
+            this.requestSubscribers.put(subscriber.getCenter(), subscriber);
             for (ChunkPos chPos : subscriber.getObservableChunks()) {
                 this.subscribers.computeIfAbsent(chPos, pos -> Lists.newArrayList())
                         .add(subscriber);
@@ -131,10 +129,10 @@ public class StructureMatchingBuffer {
     public void writeToNBT(NBTTagCompound compound) {
         NBTTagList subscriberList = new NBTTagList();
 
-        for (ChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
+        for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
             NBTTagCompound subscriber = new NBTTagCompound();
-            NBTHelper.writeBlockPosToNBT(sub.getRequester(), subscriber);
-            subscriber.setString("identifier", sub.getMatcher().getRegistryName().toString());
+            NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
+            subscriber.setString("identifier", sub.getObserver().getProviderRegistryName().toString());
 
             NBTHelper.setAsSubTag(subscriber, "matchData", sub::writeToNBT);
 

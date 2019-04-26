@@ -8,8 +8,10 @@
 
 package hellfirepvp.observerlib;
 
+import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.client.ClientProxy;
 import hellfirepvp.observerlib.common.CommonProxy;
+import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
@@ -46,6 +48,8 @@ public class ObserverLib {
         this.proxy.initialize();
         this.proxy.attachLifecycle(FMLJavaModLoadingContext.get().getModEventBus());
         this.proxy.attachEventHandlers(MinecraftForge.EVENT_BUS);
+
+        ObserverHelper.setHelper(new MatcherObserverHelper());
     }
 
     public static CommonProxy getProxy() {

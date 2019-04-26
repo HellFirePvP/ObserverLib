@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.common.change;
 
 import com.google.common.collect.Maps;
-import hellfirepvp.observerlib.api.BlockChangeSet;
+import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;

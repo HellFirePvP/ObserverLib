@@ -1,36 +1,28 @@
-/*******************************************************************************
- * HellFirePvP / Astral Sorcery 2019
- *
- * All rights reserved.
- * The source code is available on github: https://github.com/HellFirePvP/AstralSorcery
- * For further details, see the License file there.
- ******************************************************************************/
-
 package hellfirepvp.observerlib.common.change;
 
 import com.google.common.collect.Lists;
-import hellfirepvp.observerlib.api.BlockChangeSet;
 import hellfirepvp.observerlib.api.ChangeObserver;
+import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.common.data.MatcherDataManager;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
+import net.minecraft.world.IWorld;
 
 import java.util.Collection;
 
 /**
- * This class is part of the Astral Sorcery Mod
+ * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
- * Class: ChangeSubscriber
+ * Class: MatchChangeSubscriber
  * Created by HellFirePvP
  * Date: 02.12.2018 / 11:53
  */
-public class ChangeSubscriber<T extends ChangeObserver> {
+public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSubscriber<T> {
 
-    private BlockPos requester;
+    private BlockPos center;
     private T matcher;
 
     private BlockStateChangeSet changeSet = new BlockStateChangeSet();
@@ -38,40 +30,40 @@ public class ChangeSubscriber<T extends ChangeObserver> {
 
     private Collection<ChunkPos> affectedChunkCache = null;
 
-    public ChangeSubscriber(BlockPos requester, T matcher) {
-        this.requester = requester;
+    public MatchChangeSubscriber(BlockPos center, T matcher) {
+        this.center = center;
         this.matcher = matcher;
     }
 
-    public BlockPos getRequester() {
-        return requester;
+    public BlockPos getCenter() {
+        return center;
     }
 
-    public T getMatcher() {
+    public T getObserver() {
         return matcher;
     }
 
     public Collection<ChunkPos> getObservableChunks() {
         if (affectedChunkCache == null) {
-            affectedChunkCache = Lists.newArrayList(getMatcher().getObservableArea().getAffectedChunks(getRequester()));
+            affectedChunkCache = Lists.newArrayList(getObserver().getObservableArea().getAffectedChunks(getCenter()));
         }
         return affectedChunkCache;
     }
 
     public boolean observes(BlockPos pos) {
-        return this.getMatcher().getObservableArea().observes(pos.subtract(getRequester()));
+        return this.getObserver().getObservableArea().observes(pos.subtract(getCenter()));
     }
 
     public void addChange(BlockPos pos, IBlockState oldState, IBlockState newState) {
-        this.changeSet.addChange(pos.subtract(getRequester()), pos, oldState, newState);
+        this.changeSet.addChange(pos.subtract(getCenter()), pos, oldState, newState);
     }
 
-    public boolean matches(World world) {
+    public boolean matches(IWorld world) {
         if (this.isMatching != null && this.changeSet.isEmpty()) {
             return isMatching;
         }
 
-        this.isMatching = this.matcher.notifyChange(world, this.getRequester(), this.changeSet);
+        this.isMatching = this.matcher.notifyChange(world, this.getCenter(), this.changeSet);
         this.changeSet.reset();
         MatcherDataManager.getOrLoadData(world).markDirty();
 
@@ -83,7 +75,7 @@ public class ChangeSubscriber<T extends ChangeObserver> {
 
         this.matcher.readFromNBT(tag.getCompound("matchData"));
         this.changeSet.readFromNBT(tag.getCompound("changeData"));
-        this.requester = NBTHelper.readBlockPosFromNBT(tag);
+        this.center = NBTHelper.readBlockPosFromNBT(tag);
         if (tag.hasKey("isMatching")) {
             this.isMatching = tag.getBoolean("isMatching");
         } else {
@@ -95,7 +87,7 @@ public class ChangeSubscriber<T extends ChangeObserver> {
         NBTHelper.setAsSubTag(tag, "matchData", this.matcher::writeToNBT);
         NBTHelper.setAsSubTag(tag, "changeData", this.changeSet::writeToNBT);
 
-        NBTHelper.writeBlockPosToNBT(this.requester, tag);
+        NBTHelper.writeBlockPosToNBT(this.center, tag);
         if (this.isMatching != null) {
             tag.setBoolean("isMatching", this.isMatching);
         }

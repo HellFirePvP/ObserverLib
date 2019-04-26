@@ -2,8 +2,8 @@ package hellfirepvp.observerlib.api;
 
 import com.google.common.collect.Lists;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3i;
 
 import java.util.Collection;
@@ -20,12 +20,12 @@ public interface ObservableArea {
 
     public Collection<ChunkPos> getAffectedChunks(Vec3i offset);
 
-    public boolean observes(BlockPos pos);
+    public boolean observes(Vec3i pos);
 
     default Collection<ChunkPos> calculateAffectedChunks(AxisAlignedBB box, Vec3i offset) {
         return calculateAffectedChunks(
-                new BlockPos(box.minX, box.minY, box.minZ).add(offset),
-                new BlockPos(box.maxX, box.maxY, box.maxZ).add(offset));
+                new Vec3i(Math.round(box.minX + offset.getX()), Math.round(box.minY + offset.getY()), Math.round(box.minZ + offset.getZ())),
+                new Vec3i(Math.round(box.maxX + offset.getX()), Math.round(box.maxY + offset.getY()), Math.round(box.minZ + offset.getZ())));
     }
 
     default Collection<ChunkPos> calculateAffectedChunks(Vec3i min, Vec3i max) {

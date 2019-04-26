@@ -4,6 +4,7 @@ import hellfirepvp.observerlib.api.ChangeObserver;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -21,7 +22,8 @@ public abstract class ObserverProvider implements IForgeRegistryEntry<ObserverPr
         this.registryName = registryName;
     }
 
-    public abstract ChangeObserver provideMatcher();
+    @Nonnull
+    public abstract ChangeObserver provideObserver();
 
     @Override
     public final ObserverProvider setRegistryName(ResourceLocation name) {

@@ -38,8 +38,8 @@ public class StructureIntegrityObserver {
         IBlockState oldS = event.getOldState();
         IBlockState newS = event.getNewState();
 
-        List<ChangeSubscriber<?>> subscribers = buf.getSubscribers(ch);
-        for (ChangeSubscriber<?> subscriber : subscribers) {
+        List<MatchChangeSubscriber<?>> subscribers = buf.getSubscribers(ch);
+        for (MatchChangeSubscriber<?> subscriber : subscribers) {
             if (subscriber.observes(pos)) {
                 subscriber.addChange(pos, oldS, newS);
                 buf.markDirty();
