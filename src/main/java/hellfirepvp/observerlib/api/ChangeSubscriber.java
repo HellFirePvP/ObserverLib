@@ -52,6 +52,6 @@ public interface ChangeSubscriber<T extends ChangeObserver> {
      *
      * @return true, if the current state is valid, false if not.
      */
-    public boolean matches(IWorld world);
+    public boolean isValid(IWorld world);
 
 }

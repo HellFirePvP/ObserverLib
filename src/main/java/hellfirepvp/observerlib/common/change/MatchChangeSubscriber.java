@@ -69,7 +69,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
     }
 
     @Override
-    public boolean matches(IWorld world) {
+    public boolean isValid(IWorld world) {
         if (this.isMatching != null && this.changeSet.isEmpty()) {
             return isMatching;
         }
