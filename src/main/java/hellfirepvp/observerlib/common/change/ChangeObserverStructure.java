@@ -59,7 +59,8 @@ public class ChangeObserverStructure extends ChangeObserver {
     public boolean notifyChange(IWorld world, BlockPos center, BlockChangeSet changeSet) {
         for (BlockStateChangeSet.StateChange change : changeSet.getChanges()) {
             if (this.structure.hasBlockAt(change.getRelativePosition()) &&
-                    !this.structure.matchesSingleBlock(world, center, change.getRelativePosition(), change.getNewState())) {
+                    !this.structure.matchesSingleBlock(world, center, change.getRelativePosition(), change.getNewState(),
+                            world.getTileEntity(center.add(change.getRelativePosition())))) {
 
                 this.mismatches.add(change.getRelativePosition());
             } else {
