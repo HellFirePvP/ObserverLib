@@ -3,8 +3,10 @@ package hellfirepvp.observerlib.common.block;
 import hellfirepvp.observerlib.api.block.MatchableBlockState;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
+import hellfirepvp.observerlib.api.tile.MatchableTile;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 
@@ -22,12 +24,20 @@ import java.util.Map;
 public class BlockArray implements Structure {
 
     private Map<BlockPos, MatchableState> blocks = new HashMap<>();
+    private Map<BlockPos, MatchableTile<? extends TileEntity>> tiles = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0);
     private Vec3i max = new Vec3i(0, 0, 0);
 
     @Override
+    @Nonnull
     public Map<BlockPos, MatchableState> getContents() {
         return blocks;
+    }
+
+    @Nonnull
+    @Override
+    public Map<BlockPos, ? extends MatchableTile<? extends TileEntity>> getTileEntities() {
+        return tiles;
     }
 
     @Override

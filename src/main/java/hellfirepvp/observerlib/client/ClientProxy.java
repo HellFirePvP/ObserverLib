@@ -8,7 +8,9 @@
 
 package hellfirepvp.observerlib.client;
 
+import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.CommonProxy;
+import net.minecraftforge.eventbus.api.IEventBus;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -19,4 +21,10 @@ import hellfirepvp.observerlib.common.CommonProxy;
  */
 public class ClientProxy extends CommonProxy {
 
+    @Override
+    public void attachEventHandlers(IEventBus eventBus) {
+        super.attachEventHandlers(eventBus);
+
+        ClientTickHelper.INSTANCE.attachEventListener(eventBus);
+    }
 }

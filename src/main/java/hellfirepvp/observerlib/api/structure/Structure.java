@@ -1,9 +1,13 @@
 package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
+import hellfirepvp.observerlib.api.tile.MatchableTile;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.IBlockReader;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -18,11 +22,23 @@ import java.util.Map;
 public interface Structure {
 
     /**
-     * The contents of the change
+     * The contents of the structure
      *
      * @return a map consisting of offset -> blockstate matcher entries
      */
+    @Nonnull
     public Map<BlockPos, ? extends MatchableState> getContents();
+
+    /**
+     * The tiles of the structure
+     *
+     * Will only be queried/accessed for positions where a MatchableState
+     * {@link MatchableState#createTileEntity(IBlockReader, long)} creates a tileentity
+     *
+     * @return a map consisting of offset -> tileentity matching and data entries
+     */
+    @Nonnull
+    public Map<BlockPos, ? extends MatchableTile<? extends TileEntity>> getTileEntities();
 
     /**
      * @return the maximum offset any position can be in any x/y/z direction in {@link #getContents()}

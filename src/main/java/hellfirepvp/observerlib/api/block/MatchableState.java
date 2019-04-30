@@ -3,8 +3,11 @@ package hellfirepvp.observerlib.api.block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -46,6 +49,19 @@ public interface MatchableState {
      */
     @Nonnull
     public IBlockState getDescriptiveState(long tick);
+
+    /**
+     * Create a new tileentity for matching help or rendering
+     *
+     * @param blockReader a world-accessor to create the tileentity in
+     * @param tick an ongoing client tick to cycle through blocks
+     *
+     * @return the created tileentity for the currently cycle'd blockstate
+     */
+    @Nullable
+    default public TileEntity createTileEntity(IBlockReader blockReader, long tick) {
+        return getDescriptiveState(tick).createTileEntity(blockReader);
+    }
 
     /**
      * Test if this matcher considers the blockstate passed in valid.

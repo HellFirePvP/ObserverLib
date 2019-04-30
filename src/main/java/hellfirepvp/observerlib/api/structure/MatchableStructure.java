@@ -1,7 +1,9 @@
 package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
+import hellfirepvp.observerlib.api.tile.MatchableTile;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
@@ -75,7 +77,9 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
     default public boolean matchesSingleBlock(@Nonnull IBlockReader reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset) {
-        return matchesSingleBlock(reader, center, centerOffset, reader.getBlockState(center.add(centerOffset)));
+        return matchesSingleBlock(reader, center, centerOffset,
+                reader.getBlockState(center.add(centerOffset)),
+                reader.getTileEntity(center.add(centerOffset)));
     }
 
     /**
@@ -91,12 +95,15 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
     default public boolean matchesSingleBlock(@Nullable IBlockReader reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset,
-                                              @Nonnull IBlockState comparing) {
+                                              @Nonnull IBlockState comparing,
+                                              @Nullable TileEntity tileEntity) {
         if (!hasBlockAt(centerOffset)) {
             return false;
         } else {
             MatchableState state = getContents().get(centerOffset);
-            return state.matches(reader, center.add(centerOffset), comparing);
+            MatchableTile tileMatch = getTileEntities().get(centerOffset);
+            return state.matches(reader, center.add(centerOffset), comparing) &&
+                    (tileEntity == null || (tileMatch == null || tileMatch.matches(reader, center.add(centerOffset), tileEntity)));
         }
     }
 
