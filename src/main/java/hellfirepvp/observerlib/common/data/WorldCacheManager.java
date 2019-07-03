@@ -51,7 +51,6 @@ public class WorldCacheManager implements ITickHandler {
                 }
             }
         }
-        domains.clear();
     }
 
     @Nonnull
