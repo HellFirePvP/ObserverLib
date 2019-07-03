@@ -3,6 +3,7 @@ package hellfirepvp.observerlib.api.block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 
 /**
  * An interface for blocks to allow for easy removal of {@link hellfirepvp.observerlib.api.ChangeSubscriber}
@@ -10,7 +11,7 @@ import net.minecraft.world.IWorld;
  *
  * Warning! If this does not return true, it's up to "you" to determine when the ChangeSubscriber at this
  * position needs to be removed!
- * Calling {@link hellfirepvp.observerlib.api.ObserverHelper#removeObserver(IWorld, BlockPos)} has the same effect
+ * Calling {@link hellfirepvp.observerlib.api.ObserverHelper#removeObserver(World, BlockPos)} has the same effect
  * as returning true here, so calling this with the appropriate position will remove the subscriber.
  *
  * This class is part of the ObserverLib Mod

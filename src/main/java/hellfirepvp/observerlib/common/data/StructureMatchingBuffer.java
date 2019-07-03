@@ -4,8 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.ChangeObserver;
+import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.api.structure.ObserverProvider;
 import hellfirepvp.observerlib.common.change.MatchChangeSubscriber;
+import hellfirepvp.observerlib.common.data.base.SectionWorldData;
+import hellfirepvp.observerlib.common.data.base.WorldSection;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.nbt.NBTTagCompound;
@@ -15,10 +18,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReaderBase;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +35,19 @@ import java.util.Map;
  * Created by HellFirePvP
  * Date: 25.04.2019 / 20:48
  */
-public class StructureMatchingBuffer {
+public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingBuffer.MatcherSectionData> {
 
-    private boolean dirty = false;
-    private Map<ChunkPos, List<MatchChangeSubscriber<? extends ChangeObserver>>> subscribers = Maps.newHashMap();
-    private Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
+    public StructureMatchingBuffer(WorldCacheDomain.SaveKey key) {
+        super(key, PRECISION_CHUNK);
+    }
+
+    @Override
+    public MatcherSectionData createNewSection(int sectionX, int sectionZ) {
+        return new MatcherSectionData(sectionX, sectionZ);
+    }
+
+    @Override
+    public void updateTick(World world) {}
 
     @Nonnull
     public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(IWorld world, BlockPos center, ObserverProvider provider) {
@@ -52,95 +65,103 @@ public class StructureMatchingBuffer {
 
         T observer = (T) provider.provideObserver();
         MatchChangeSubscriber<T> subscriber = new MatchChangeSubscriber<>(center, observer);
-        this.requestSubscribers.put(center, subscriber);
-        for (ChunkPos pos : subscriber.getObservableChunks()) {
-            this.subscribers.computeIfAbsent(pos, (chPos) -> Lists.newArrayList()).add(subscriber);
-        }
+        MatcherSectionData data = getOrCreateSection(center);
+
+        data.addSubscriber(center, subscriber);
         observer.initialize(world, center);
-        markDirty();
+        markDirty(data);
         return subscriber;
     }
 
     public boolean removeSubscriber(BlockPos pos) {
-        if (requestSubscribers.remove(pos) != null) {
-            ChunkPos chunk = new ChunkPos(pos);
-            List<MatchChangeSubscriber<?>> chunkSubscribers = subscribers
-                    .computeIfAbsent(chunk, ch -> Lists.newArrayList());
-            chunkSubscribers.clear();
-            for (MatchChangeSubscriber<?> subscr : requestSubscribers.values()) {
-                if (subscr.getObservableChunks().contains(chunk)) {
-                    chunkSubscribers.add(subscr);
-                }
-            }
+        MatcherSectionData data = getOrCreateSection(pos);
 
-            return true;
+        ChangeSubscriber<? extends ChangeObserver> removed = data.removeSubscriber(pos);
+        if (removed != null) {
+            markDirty(data);
         }
-        return false;
+        return removed != null;
     }
 
     @Nullable
-    public MatchChangeSubscriber<?> getSubscriber(BlockPos pos) {
-        return this.requestSubscribers.get(pos);
+    public ChangeSubscriber<? extends ChangeObserver> getSubscriber(BlockPos pos) {
+        return getOrCreateSection(pos).getSubscriber(pos);
     }
 
     @Nonnull
-    public List<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
-        return this.subscribers.getOrDefault(pos, Collections.emptyList());
+    public Collection<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
+        MatcherSectionData data = getOrCreateSection(pos.asBlockPos());
+        return data.requestSubscribers.values();
     }
 
-    public final void markDirty() {
-        this.dirty = true;
-    }
+    @Override
+    public void writeToNBT(NBTTagCompound nbt) {}
 
-    public final boolean needsSaving() {
-        return this.dirty;
-    }
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {}
 
-    public final void clearDirtyFlag() {
-        this.dirty = false;
-    }
+    public class MatcherSectionData extends WorldSection {
 
-    public void readFromNBT(NBTTagCompound compound) {
-        this.subscribers.clear();
-        this.requestSubscribers.clear();
+        private Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
 
-        NBTTagList subscriberList = compound.getList("subscribers", Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < subscriberList.size(); i++) {
-            NBTTagCompound subscriberTag = subscriberList.getCompound(i);
-
-            BlockPos requester = NBTHelper.readBlockPosFromNBT(subscriberTag);
-            ResourceLocation matchIdentifier = new ResourceLocation(subscriberTag.getString("identifier"));
-            ObserverProvider observer = RegistryProviders.getProvider(matchIdentifier);
-            if (observer == null) {
-                ObserverLib.log.warn("Unknown Observer Provider: " + matchIdentifier.toString() + "! Skipping...");
-                continue;
-            }
-
-            MatchChangeSubscriber<?> subscriber = new MatchChangeSubscriber<>(requester, observer.provideObserver());
-            subscriber.readFromNBT(subscriberTag.getCompound("matchData"));
-
-            this.requestSubscribers.put(subscriber.getCenter(), subscriber);
-            for (ChunkPos chPos : subscriber.getObservableChunks()) {
-                this.subscribers.computeIfAbsent(chPos, pos -> Lists.newArrayList())
-                        .add(subscriber);
-            }
-        }
-    }
-
-    public void writeToNBT(NBTTagCompound compound) {
-        NBTTagList subscriberList = new NBTTagList();
-
-        for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
-            NBTTagCompound subscriber = new NBTTagCompound();
-            NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
-            subscriber.setString("identifier", sub.getObserver().getProviderRegistryName().toString());
-
-            NBTHelper.setAsSubTag(subscriber, "matchData", sub::writeToNBT);
-
-            subscriberList.add(subscriber);
+        private MatcherSectionData(int sX, int sZ) {
+            super(sX, sZ);
         }
 
-        compound.setTag("subscribers", subscriberList);
+        @Nullable
+        private MatchChangeSubscriber<? extends ChangeObserver> getSubscriber(BlockPos pos) {
+            return this.requestSubscribers.get(pos);
+        }
+
+        @Nullable
+        private ChangeSubscriber<? extends ChangeObserver> removeSubscriber(BlockPos pos) {
+            return this.requestSubscribers.remove(pos);
+        }
+
+        @Nullable
+        private ChangeSubscriber<? extends ChangeObserver> addSubscriber(BlockPos pos, MatchChangeSubscriber<? extends ChangeObserver> subscriber) {
+            return this.requestSubscribers.put(pos, subscriber);
+        }
+
+        @Override
+        public void writeToNBT(NBTTagCompound tag) {
+            this.requestSubscribers.clear();
+
+            NBTTagList subscriberList = tag.getList("subscribers", Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < subscriberList.size(); i++) {
+                NBTTagCompound subscriberTag = subscriberList.getCompound(i);
+
+                BlockPos requester = NBTHelper.readBlockPosFromNBT(subscriberTag);
+                ResourceLocation matchIdentifier = new ResourceLocation(subscriberTag.getString("identifier"));
+                ObserverProvider observer = RegistryProviders.getProvider(matchIdentifier);
+                if (observer == null) {
+                    ObserverLib.log.warn("Unknown Observer Provider: " + matchIdentifier.toString() + "! Skipping...");
+                    continue;
+                }
+
+                MatchChangeSubscriber<?> subscriber = new MatchChangeSubscriber<>(requester, observer.provideObserver());
+                subscriber.readFromNBT(subscriberTag.getCompound("matchData"));
+
+                this.requestSubscribers.put(subscriber.getCenter(), subscriber);
+            }
+        }
+
+        @Override
+        public void readFromNBT(NBTTagCompound tag) {
+            NBTTagList subscriberList = new NBTTagList();
+
+            for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
+                NBTTagCompound subscriber = new NBTTagCompound();
+                NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
+                subscriber.setString("identifier", sub.getObserver().getProviderRegistryName().toString());
+
+                NBTHelper.setAsSubTag(subscriber, "matchData", sub::writeToNBT);
+
+                subscriberList.add(subscriber);
+            }
+
+            tag.setTag("subscribers", subscriberList);
+        }
     }
 
 }

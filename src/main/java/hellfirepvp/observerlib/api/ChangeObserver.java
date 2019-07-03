@@ -7,6 +7,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
@@ -45,7 +46,7 @@ public abstract class ChangeObserver {
      * Called once after the observer is newly set on a position to observe it.
      * Useful to gather initial data about the state and the observer's surroundings.
      *
-     * Called from {@link ObserverHelper#observeArea(IWorld, BlockPos, ObserverProvider)}.
+     * Called from {@link ObserverHelper#observeArea(World, BlockPos, ObserverProvider)}.
      *
      * @param world the world the observer will be observing changes in
      * @param center the current offset/center of where the observer is located at

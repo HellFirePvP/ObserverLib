@@ -4,13 +4,14 @@ import com.google.common.collect.Lists;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
-import hellfirepvp.observerlib.common.data.MatcherDataManager;
+import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -76,7 +77,9 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
 
         this.isMatching = this.matcher.notifyChange(world, this.getCenter(), this.changeSet);
         this.changeSet.reset();
-        MatcherDataManager.getOrLoadData(world).markDirty();
+        if (world instanceof World) {
+            MatcherObserverHelper.getBuffer((World) world).markDirty(this.getCenter());
+        }
 
         return this.isMatching;
     }

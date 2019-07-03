@@ -2,7 +2,7 @@ package hellfirepvp.observerlib.api;
 
 import hellfirepvp.observerlib.api.structure.ObserverProvider;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -49,7 +49,7 @@ public abstract class ObserverHelper {
      *      offset already exists in that world at that position
      */
     @Nonnull
-    public abstract <T extends ChangeObserver> ChangeSubscriber<T> observeArea(IWorld world, BlockPos center, ObserverProvider provider);
+    public abstract <T extends ChangeObserver> ChangeSubscriber<T> observeArea(World world, BlockPos center, ObserverProvider provider);
 
     /**
      * Removes an observer at the given world + position combination.
@@ -59,7 +59,7 @@ public abstract class ObserverHelper {
      *
      * @return true, if there was a observer at the world + position combination and it could be removed, false otherwise
      */
-    public abstract boolean removeObserver(IWorld world, BlockPos pos);
+    public abstract boolean removeObserver(World world, BlockPos pos);
 
     /**
      * Returns the current observation subscriber at the given world + position if there is one.
@@ -70,6 +70,6 @@ public abstract class ObserverHelper {
      * @return the observation subscriber at that position or null if none is found there
      */
     @Nullable
-    public abstract ChangeSubscriber<? extends ChangeObserver> getSubscriber(IWorld world, BlockPos pos);
+    public abstract ChangeSubscriber<? extends ChangeObserver> getSubscriber(World world, BlockPos pos);
 
 }
