@@ -1,10 +1,10 @@
 package hellfirepvp.observerlib.common.util;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.state.IProperty;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -28,37 +28,37 @@ import java.util.function.Predicate;
 public class NBTHelper {
 
     @Nonnull
-    public static NBTTagCompound getBlockStateNBTTag(IBlockState state) {
-        if(state.getBlock().getRegistryName() == null) {
+    public static CompoundNBT getBlockStateNBTTag(BlockState state) {
+        if (state.getBlock().getRegistryName() == null) {
             state = Blocks.AIR.getDefaultState();
         }
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setString("registryName", state.getBlock().getRegistryName().toString());
-        NBTTagList properties = new NBTTagList();
+        CompoundNBT tag = new CompoundNBT();
+        tag.putString("registryName", state.getBlock().getRegistryName().toString());
+        ListNBT properties = new ListNBT();
         for (IProperty property : state.getProperties()) {
-            NBTTagCompound propTag = new NBTTagCompound();
+            CompoundNBT propTag = new CompoundNBT();
             try {
-                propTag.setString("value", property.getName(state.get(property)));
+                propTag.putString("value", property.getName(state.get(property)));
             } catch (Exception exc) {
                 continue;
             }
-            propTag.setString("property", property.getName());
+            propTag.putString("property", property.getName());
             properties.add(propTag);
         }
-        tag.setTag("properties", properties);
+        tag.put("properties", properties);
         return tag;
     }
 
     @Nullable
-    public static <T extends Comparable<T>> IBlockState getBlockStateFromTag(NBTTagCompound cmp, IBlockState _default) {
+    public static <T extends Comparable<T>> BlockState getBlockStateFromTag(CompoundNBT cmp, BlockState _default) {
         ResourceLocation key = new ResourceLocation(cmp.getString("registryName"));
         Block block = ForgeRegistries.BLOCKS.getValue(key);
         if(block == null || block == Blocks.AIR) return _default;
-        IBlockState state = block.getDefaultState();
+        BlockState state = block.getDefaultState();
         Collection<IProperty<?>> properties = state.getProperties();
-        NBTTagList list = cmp.getList("properties", Constants.NBT.TAG_COMPOUND);
+        ListNBT list = cmp.getList("properties", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
-            NBTTagCompound propertyTag = list.getCompound(i);
+            CompoundNBT propertyTag = list.getCompound(i);
             String valueStr = propertyTag.getString("value");
             String propertyStr = propertyTag.getString("property");
             IProperty<T> match = (IProperty<T>) iterativeSearch(properties, prop -> prop.getName().equalsIgnoreCase(propertyStr));
@@ -84,19 +84,19 @@ public class NBTHelper {
         return null;
     }
 
-    public static void setAsSubTag(NBTTagCompound compound, String tag, Consumer<NBTTagCompound> applyFct) {
-        NBTTagCompound newTag = new NBTTagCompound();
+    public static void setAsSubTag(CompoundNBT compound, String tag, Consumer<CompoundNBT> applyFct) {
+        CompoundNBT newTag = new CompoundNBT();
         applyFct.accept(newTag);
-        compound.setTag(tag, newTag);
+        compound.put(tag, newTag);
     }
 
-    public static void writeBlockPosToNBT(BlockPos pos, NBTTagCompound compound) {
-        compound.setInt("bposX", pos.getX());
-        compound.setInt("bposY", pos.getY());
-        compound.setInt("bposZ", pos.getZ());
+    public static void writeBlockPosToNBT(BlockPos pos, CompoundNBT compound) {
+        compound.putInt("bposX", pos.getX());
+        compound.putInt("bposY", pos.getY());
+        compound.putInt("bposZ", pos.getZ());
     }
 
-    public static BlockPos readBlockPosFromNBT(NBTTagCompound compound) {
+    public static BlockPos readBlockPosFromNBT(CompoundNBT compound) {
         int x = compound.getInt("bposX");
         int y = compound.getInt("bposY");
         int z = compound.getInt("bposZ");

@@ -8,7 +8,6 @@
 
 package hellfirepvp.observerlib.common;
 
-import hellfirepvp.observerlib.common.change.StructureIntegrityObserver;
 import hellfirepvp.observerlib.common.data.WorldCacheIOThread;
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
 import hellfirepvp.observerlib.common.event.handler.EventHandlerIO;
@@ -16,7 +15,6 @@ import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.registry.RegistryStructures;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import hellfirepvp.observerlib.common.util.tick.TickManager;
-import hellfirepvp.observerlib.common.world.WorldEventListener;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -55,8 +53,6 @@ public class CommonProxy {
 
         EventHandlerIO.init(eventBus);
         this.tickManager.attachListeners(eventBus);
-
-        new StructureIntegrityObserver(eventBus);
     }
 
     public void attachTickListeners(Consumer<ITickHandler> registrar) {
@@ -65,17 +61,18 @@ public class CommonProxy {
 
     private void attachWorldListener(WorldEvent.Load event) {
         if (event.getWorld() instanceof World) {
-            ((World) event.getWorld()).addEventListener(new WorldEventListener());
+            // TODO re-add equivalent listener/hook
+            //((World) event.getWorld()).addEventListener(new WorldEventListener());
         }
     }
 
     private void onServerStarted(FMLServerStartedEvent event) {
-        WorldCacheIOThread.getTask().onServerStart();
+        WorldCacheIOThread.onServerStart();
     }
 
     private void onServerStopping(FMLServerStoppingEvent event) {
         WorldCacheManager.cleanUp();
-        WorldCacheIOThread.getTask().onServerStop();
+        WorldCacheIOThread.onServerStop();
     }
 
 }

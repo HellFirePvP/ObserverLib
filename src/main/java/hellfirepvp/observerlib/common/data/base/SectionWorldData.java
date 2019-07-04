@@ -13,7 +13,7 @@ import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.Vec3i;
 
 import javax.annotation.Nonnull;
@@ -133,9 +133,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.dirtySections.clear();
     }
 
-    public abstract void writeToNBT(NBTTagCompound nbt);
+    public abstract void writeToNBT(CompoundNBT nbt);
 
-    public abstract void readFromNBT(NBTTagCompound nbt);
+    public abstract void readFromNBT(CompoundNBT nbt);
 
     private File getSaveFile(File directory, T section) {
         String name = String.format("%s_%s_%s.dat",
@@ -147,6 +147,12 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
     @Override
     public final void writeData(File baseDirectory, File backupDirectory) throws IOException {
+        if (!baseDirectory.exists()) {
+            baseDirectory.mkdirs();
+        }
+        if (!backupDirectory.exists()) {
+            backupDirectory.mkdirs();
+        }
         File generalSaveFile = new File(baseDirectory, "general.dat");
         if (generalSaveFile.exists()) {
             try {
@@ -158,7 +164,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         } else {
             generalSaveFile.createNewFile();
         }
-        NBTTagCompound generalData = new NBTTagCompound();
+        CompoundNBT generalData = new CompoundNBT();
         this.writeToNBT(generalData);
         CompressedStreamTools.write(generalData, generalSaveFile);
 
@@ -178,7 +184,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
                     saveFile.createNewFile();
                 }
 
-                NBTTagCompound data = new NBTTagCompound();
+                CompoundNBT data = new CompoundNBT();
                 section.writeToNBT(data);
                 CompressedStreamTools.write(data, saveFile);
             }
@@ -191,10 +197,10 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
         File generalSaveFile = new File(baseDirectory, "general.dat");
         if (generalSaveFile.exists()) {
-            NBTTagCompound tag = CompressedStreamTools.read(generalSaveFile);
+            CompoundNBT tag = CompressedStreamTools.read(generalSaveFile);
             this.readFromNBT(tag);
         } else {
-            this.readFromNBT(new NBTTagCompound());
+            this.readFromNBT(new CompoundNBT());
         }
 
         for (File subFile : baseDirectory.listFiles()) {

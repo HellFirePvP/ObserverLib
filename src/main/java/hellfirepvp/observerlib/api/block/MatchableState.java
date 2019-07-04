@@ -1,13 +1,11 @@
 package hellfirepvp.observerlib.api.block;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,28 +25,28 @@ public interface MatchableState {
     public static final MatchableState IS_AIR = new MatchableState() {
         @Nonnull
         @Override
-        public IBlockState getDescriptiveState(long tick) {
+        public BlockState getDescriptiveState(long tick) {
             return Blocks.AIR.getDefaultState();
         }
 
         @Override
-        public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull IBlockState state) {
+        public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
             return state.getMaterial() == Material.AIR;
         }
     };
 
     /**
      * Get a descriptive blockstate for the current matcher for rendering or related.
-     * Return {@link net.minecraft.init.Blocks#AIR}'s default state if nothing should be displayed.
+     * Return {@link net.minecraft.block.Blocks#AIR}'s default state if nothing should be displayed.
      *
-     * Generally a blockstate returned here should also be accepted by {@link #matches(IBlockReader, BlockPos, IBlockState)}.
+     * Generally a blockstate returned here should also be accepted by {@link #matches(IBlockReader, BlockPos, BlockState)}.
      *
      * @param tick an ongoing client tick to cycle through blocks
      *
      * @return a descriptive state representing matcher
      */
     @Nonnull
-    public IBlockState getDescriptiveState(long tick);
+    public BlockState getDescriptiveState(long tick);
 
     /**
      * Create a new tileentity for matching help or rendering
@@ -68,11 +66,11 @@ public interface MatchableState {
      *
      * @param reader the current world the blockstate is being matched in
      * @param absolutePosition the absolute position in the world the state is at.
-     *                         May be {@link BlockPos#ORIGIN} if no position is known
+     *                         May be {@link BlockPos#ZERO} if no position is known
      * @param state the blockstate to test if it's valid for this matcher
      *
      * @return if the blockstate is valid
      */
-    public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull IBlockState state);
+    public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state);
 
 }

@@ -6,8 +6,8 @@ import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
@@ -65,7 +65,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         return this.getObserver().getObservableArea().observes(pos.subtract(getCenter()));
     }
 
-    public void addChange(BlockPos pos, IBlockState oldState, IBlockState newState) {
+    public void addChange(BlockPos pos, BlockState oldState, BlockState newState) {
         this.changeSet.addChange(pos.subtract(getCenter()), pos, oldState, newState);
     }
 
@@ -84,26 +84,26 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         return this.isMatching;
     }
 
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(CompoundNBT tag) {
         this.affectedChunkCache = null;
 
         this.matcher.readFromNBT(tag.getCompound("matchData"));
         this.changeSet.readFromNBT(tag.getCompound("changeData"));
         this.center = NBTHelper.readBlockPosFromNBT(tag);
-        if (tag.hasKey("isMatching")) {
+        if (tag.contains("isMatching")) {
             this.isMatching = tag.getBoolean("isMatching");
         } else {
             this.isMatching = null;
         }
     }
 
-    public void writeToNBT(NBTTagCompound tag) {
+    public void writeToNBT(CompoundNBT tag) {
         NBTHelper.setAsSubTag(tag, "matchData", this.matcher::writeToNBT);
         NBTHelper.setAsSubTag(tag, "changeData", this.changeSet::writeToNBT);
 
         NBTHelper.writeBlockPosToNBT(this.center, tag);
         if (this.isMatching != null) {
-            tag.setBoolean("isMatching", this.isMatching);
+            tag.putBoolean("isMatching", this.isMatching);
         }
     }
 }

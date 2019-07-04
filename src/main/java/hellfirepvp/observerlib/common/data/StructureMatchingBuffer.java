@@ -1,6 +1,5 @@
 package hellfirepvp.observerlib.common.data;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.ChangeObserver;
@@ -11,21 +10,18 @@ import hellfirepvp.observerlib.common.data.base.SectionWorldData;
 import hellfirepvp.observerlib.common.data.base.WorldSection;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReaderBase;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -95,10 +91,10 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound nbt) {}
+    public void writeToNBT(CompoundNBT nbt) {}
 
     @Override
-    public void readFromNBT(NBTTagCompound nbt) {}
+    public void readFromNBT(CompoundNBT nbt) {}
 
     public class MatcherSectionData extends WorldSection {
 
@@ -124,12 +120,12 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         }
 
         @Override
-        public void writeToNBT(NBTTagCompound tag) {
+        public void writeToNBT(CompoundNBT tag) {
             this.requestSubscribers.clear();
 
-            NBTTagList subscriberList = tag.getList("subscribers", Constants.NBT.TAG_COMPOUND);
+            ListNBT subscriberList = tag.getList("subscribers", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < subscriberList.size(); i++) {
-                NBTTagCompound subscriberTag = subscriberList.getCompound(i);
+                CompoundNBT subscriberTag = subscriberList.getCompound(i);
 
                 BlockPos requester = NBTHelper.readBlockPosFromNBT(subscriberTag);
                 ResourceLocation matchIdentifier = new ResourceLocation(subscriberTag.getString("identifier"));
@@ -147,20 +143,20 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         }
 
         @Override
-        public void readFromNBT(NBTTagCompound tag) {
-            NBTTagList subscriberList = new NBTTagList();
+        public void readFromNBT(CompoundNBT tag) {
+            ListNBT subscriberList = new ListNBT();
 
             for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
-                NBTTagCompound subscriber = new NBTTagCompound();
+                CompoundNBT subscriber = new CompoundNBT();
                 NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
-                subscriber.setString("identifier", sub.getObserver().getProviderRegistryName().toString());
+                subscriber.putString("identifier", sub.getObserver().getProviderRegistryName().toString());
 
                 NBTHelper.setAsSubTag(subscriber, "matchData", sub::writeToNBT);
 
                 subscriberList.add(subscriber);
             }
 
-            tag.setTag("subscribers", subscriberList);
+            tag.put("subscribers", subscriberList);
         }
     }
 

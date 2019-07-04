@@ -4,8 +4,8 @@ import hellfirepvp.observerlib.api.block.MatchableBlockState;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -50,7 +50,7 @@ public class BlockArray implements Structure {
         return min;
     }
 
-    public void addBlock(BlockPos pos, IBlockState state) {
+    public void addBlock(BlockPos pos, BlockState state) {
         MatchableState match = new MatchableBlockState(state);
         if (state == Blocks.AIR.getDefaultState()) {
             match = MatchableState.IS_AIR;
@@ -59,11 +59,11 @@ public class BlockArray implements Structure {
         updateSize(pos);
     }
 
-    public void addBlock(int x, int y, int z, IBlockState state) {
+    public void addBlock(int x, int y, int z, BlockState state) {
         this.addBlock(new BlockPos(x, y, z), state);
     }
 
-    public void addBlockCube(IBlockState state, int ox, int oy, int oz, int tx, int ty, int tz) {
+    public void addBlockCube(BlockState state, int ox, int oy, int oz, int tx, int ty, int tz) {
         int lx, ly, lz;
         int hx, hy, hz;
         if(ox < tx) {

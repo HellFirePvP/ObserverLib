@@ -6,8 +6,8 @@ import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ObservableArea;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -73,27 +73,27 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(CompoundNBT tag) {
         this.mismatches.clear();
-        NBTTagList tagMismatches = tag.getList("mismatchList", Constants.NBT.TAG_COMPOUND);
+        ListNBT tagMismatches = tag.getList("mismatchList", Constants.NBT.TAG_COMPOUND);
 
         for (int i = 0; i < tagMismatches.size(); i++) {
-            NBTTagCompound tagPos = tagMismatches.getCompound(i);
+            CompoundNBT tagPos = tagMismatches.getCompound(i);
             this.mismatches.add(NBTHelper.readBlockPosFromNBT(tagPos));
         }
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        NBTTagList tagMismatches = new NBTTagList();
+    public void writeToNBT(CompoundNBT tag) {
+        ListNBT tagMismatches = new ListNBT();
 
         for (BlockPos pos : this.mismatches) {
-            NBTTagCompound tagPos = new NBTTagCompound();
+            CompoundNBT tagPos = new CompoundNBT();
             NBTHelper.writeBlockPosToNBT(pos, tagPos);
             tagMismatches.add(tagPos);
         }
 
-        tag.setTag("mismatchList", tagMismatches);
+        tag.put("mismatchList", tagMismatches);
     }
 
 }

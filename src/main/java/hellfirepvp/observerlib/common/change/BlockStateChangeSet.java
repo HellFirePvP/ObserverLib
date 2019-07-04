@@ -3,10 +3,10 @@ package hellfirepvp.observerlib.common.change;
 import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants;
 
@@ -26,7 +26,7 @@ public class BlockStateChangeSet implements BlockChangeSet {
 
     private Map<BlockPos, BlockStateChange> changes = Maps.newHashMap();
 
-    public void addChange(BlockPos pos, BlockPos absolute, IBlockState oldState, IBlockState newState) {
+    public void addChange(BlockPos pos, BlockPos absolute, BlockState oldState, BlockState newState) {
         BlockStateChange oldChangeSet = this.changes.get(pos);
         if (oldChangeSet != null) { // Chain changes so absolute old one is still consistent!
             this.changes.put(pos, new BlockStateChange(pos, absolute, oldChangeSet.oldState, newState));
@@ -55,44 +55,44 @@ public class BlockStateChangeSet implements BlockChangeSet {
         return Collections.unmodifiableCollection(this.changes.values());
     }
 
-    public void readFromNBT(NBTTagCompound cmp) {
+    public void readFromNBT(CompoundNBT cmp) {
         this.changes.clear();
 
-        NBTTagList changeList = cmp.getList("changeList", Constants.NBT.TAG_COMPOUND);
+        ListNBT changeList = cmp.getList("changeList", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < changeList.size(); i++) {
-            NBTTagCompound changeTag = changeList.getCompound(i);
+            CompoundNBT changeTag = changeList.getCompound(i);
 
             BlockPos pos = NBTHelper.readBlockPosFromNBT(changeTag.getCompound("relPos"));
             BlockPos abs = NBTHelper.readBlockPosFromNBT(changeTag.getCompound("absPos"));
-            IBlockState oldState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("oldState"),
+            BlockState oldState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("oldState"),
                     Blocks.AIR.getDefaultState());
-            IBlockState newState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("newState"),
+            BlockState newState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("newState"),
                     Blocks.AIR.getDefaultState());
             this.changes.put(pos, new BlockStateChange(pos, abs, oldState, newState));
         }
     }
 
-    public void writeToNBT(NBTTagCompound cmp) {
-        NBTTagList changes = new NBTTagList();
+    public void writeToNBT(CompoundNBT cmp) {
+        ListNBT changes = new ListNBT();
         for (BlockStateChange change : this.changes.values()) {
-            NBTTagCompound tag = new NBTTagCompound();
+            CompoundNBT tag = new CompoundNBT();
             NBTHelper.setAsSubTag(tag, "relPos", (posTag) -> NBTHelper.writeBlockPosToNBT(change.getRelativePosition(), posTag));
             NBTHelper.setAsSubTag(tag, "absPos", (posTag) -> NBTHelper.writeBlockPosToNBT(change.getAbsolutePosition(), posTag));
             NBTHelper.writeBlockPosToNBT(change.pos, tag);
-            tag.setTag("oldState", NBTHelper.getBlockStateNBTTag(change.oldState));
-            tag.setTag("newState", NBTHelper.getBlockStateNBTTag(change.newState));
+            tag.put("oldState", NBTHelper.getBlockStateNBTTag(change.oldState));
+            tag.put("newState", NBTHelper.getBlockStateNBTTag(change.newState));
             changes.add(tag);
         }
 
-        cmp.setTag("changeList", changes);
+        cmp.put("changeList", changes);
     }
 
     public static final class BlockStateChange implements StateChange {
 
         private final BlockPos pos, abs;
-        private final IBlockState oldState, newState;
+        private final BlockState oldState, newState;
 
-        private BlockStateChange(BlockPos pos, BlockPos abs, IBlockState oldState, IBlockState newState) {
+        private BlockStateChange(BlockPos pos, BlockPos abs, BlockState oldState, BlockState newState) {
             this.pos = pos;
             this.abs = abs;
             this.oldState = oldState;
@@ -113,13 +113,13 @@ public class BlockStateChangeSet implements BlockChangeSet {
 
         @Nonnull
         @Override
-        public IBlockState getOldState() {
+        public BlockState getOldState() {
             return this.oldState;
         }
 
         @Nonnull
         @Override
-        public IBlockState getNewState() {
+        public BlockState getNewState() {
             return this.newState;
         }
     }

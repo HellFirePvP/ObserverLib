@@ -3,21 +3,21 @@ package hellfirepvp.observerlib.client.util;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.fluid.IFluidState;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.EnumLightType;
 import net.minecraft.world.IWorldReader;
+import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.Heightmap;
@@ -50,7 +50,7 @@ public class RenderWorld implements IWorldReader {
     public RenderWorld(Structure structure, Biome globalBiome) {
         this.structure = structure;
         this.globalBiome = globalBiome;
-        this.thisDim = DimensionType.OVERWORLD.create();
+        this.thisDim = Minecraft.getInstance().world.getDimension();
         this.maxBorder = this.thisDim.createWorldBorder();
     }
 
@@ -74,7 +74,7 @@ public class RenderWorld implements IWorldReader {
         if (tileMatch == null) {
             return tile;
         }
-        NBTTagCompound tag = new NBTTagCompound();
+        CompoundNBT tag = new CompoundNBT();
         tile.write(tag);
         tileMatch.writeDisplayData(tile, ClientTickHelper.getClientTick(), tag);
         tile.read(tag);
@@ -82,7 +82,7 @@ public class RenderWorld implements IWorldReader {
     }
 
     @Override
-    public IBlockState getBlockState(BlockPos pos) {
+    public BlockState getBlockState(BlockPos pos) {
         if (!this.structure.hasBlockAt(pos)) {
             return null;
         }
@@ -96,28 +96,13 @@ public class RenderWorld implements IWorldReader {
     }
 
     @Override
-    public boolean isAirBlock(BlockPos pos) {
-        return getBlockState(pos).isAir(this, pos);
-    }
-
-    @Override
-    public boolean isChunkLoaded(int x, int z, boolean allowEmpty) {
-        return true; //Maybe needs more attention
-    }
-
-    @Override
     public Biome getBiome(BlockPos pos) {
         return globalBiome;
     }
 
     @Override
-    public int getCombinedLight(BlockPos pos, int lightValue) {
-        return MAX_LIGHT;
-    }
-
-    @Override
-    public int getLightFor(EnumLightType type, BlockPos pos) {
-        return MAX_LIGHT;
+    public int getLightFor(LightType lightType, BlockPos blockPos) {
+        return 0;
     }
 
     @Override
@@ -125,20 +110,25 @@ public class RenderWorld implements IWorldReader {
         return MAX_LIGHT;
     }
 
+    @Nullable
     @Override
-    public boolean canSeeSky(BlockPos pos) {
+    public IChunk getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
+        return null;
+    }
+
+    @Override
+    public boolean chunkExists(int chunkX, int chunkZ) {
         return false;
+    }
+
+    @Override
+    public BlockPos getHeight(Heightmap.Type heightmapType, BlockPos pos) {
+        return null;
     }
 
     @Override
     public int getHeight(Heightmap.Type heightmapType, int x, int z) {
         return 0;
-    }
-
-    @Nullable
-    @Override
-    public EntityPlayer getClosestPlayer(double x, double y, double z, double distance, Predicate<Entity> predicate) {
-        return null;
     }
 
     @Override
@@ -154,11 +144,6 @@ public class RenderWorld implements IWorldReader {
     @Override
     public boolean checkNoEntityCollision(@Nullable Entity entityIn, VoxelShape shape) {
         return true;
-    }
-
-    @Override
-    public int getStrongPower(BlockPos pos, EnumFacing direction) {
-        return 0;
     }
 
     @Override

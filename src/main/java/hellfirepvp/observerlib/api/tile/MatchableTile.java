@@ -1,6 +1,6 @@
 package hellfirepvp.observerlib.api.tile;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
@@ -21,14 +21,14 @@ public interface MatchableTile<T extends TileEntity> {
 
     /**
      * Write tileentity data to set onto the tileentity for rendering
-     * via {@link TileEntity#read(NBTTagCompound)}
+     * via {@link TileEntity#read(CompoundNBT)}
      *
      * @param tile the created client tileentity
      * @param tick an ongoing client tick to cycle through things or related
      * @param tag the tag read onto the tileentity before rendering
      */
     @OnlyIn(Dist.CLIENT)
-    public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull NBTTagCompound tag);
+    public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull CompoundNBT tag);
 
     /**
      * Tests if this matcher considers the passed tileentity valid for the world & blockpos combination

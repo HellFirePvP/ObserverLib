@@ -2,7 +2,7 @@ package hellfirepvp.observerlib.api;
 
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.api.structure.ObserverProvider;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -84,7 +84,7 @@ public abstract class ChangeObserver {
      *
      * @param tag the tag holding persistent information about this observer
      */
-    public abstract void readFromNBT(NBTTagCompound tag);
+    public abstract void readFromNBT(CompoundNBT tag);
 
     /**
      * Write information of this observer for persistence.
@@ -92,6 +92,6 @@ public abstract class ChangeObserver {
      *
      * @param tag an empty TagCompound to write information into
      */
-    public abstract void writeToNBT(NBTTagCompound tag);
+    public abstract void writeToNBT(CompoundNBT tag);
 
 }

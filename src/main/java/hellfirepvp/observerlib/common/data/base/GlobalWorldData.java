@@ -13,7 +13,7 @@ import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +57,7 @@ public abstract class GlobalWorldData extends CachedWorldData {
             saveFile.createNewFile();
         }
 
-        NBTTagCompound data = new NBTTagCompound();
+        CompoundNBT data = new CompoundNBT();
         this.writeToNBT(data);
         CompressedStreamTools.write(data, saveFile);
     }
@@ -67,9 +67,9 @@ public abstract class GlobalWorldData extends CachedWorldData {
         this.readFromNBT(CompressedStreamTools.read(this.getSaveFile(baseDirectory)));
     }
 
-    public abstract void writeToNBT(NBTTagCompound tag);
+    public abstract void writeToNBT(CompoundNBT tag);
 
-    public abstract void readFromNBT(NBTTagCompound tag);
+    public abstract void readFromNBT(CompoundNBT tag);
 
     public final boolean needsSaving() {
         return this.dirty;

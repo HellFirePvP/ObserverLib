@@ -1,6 +1,6 @@
 package hellfirepvp.observerlib.api.block;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
@@ -80,7 +80,7 @@ public interface BlockChangeSet {
          * @return the old blockstate
          */
         @Nonnull
-        public IBlockState getOldState();
+        public BlockState getOldState();
 
         /**
          * Returns the new blockstate that is currently present in the world at the absolute position.
@@ -88,7 +88,7 @@ public interface BlockChangeSet {
          * @return the new blockstate
          */
         @Nonnull
-        public IBlockState getNewState();
+        public BlockState getNewState();
 
     }
 

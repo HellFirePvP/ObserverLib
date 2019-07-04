@@ -31,7 +31,7 @@ import java.util.TimerTask;
  */
 public class WorldCacheIOThread extends TimerTask {
 
-    private static final WorldCacheIOThread saveTask = new WorldCacheIOThread();
+    private static WorldCacheIOThread saveTask;
     private static Timer ioThread;
 
     private Map<WorldCacheDomain, Map<Integer, IWorldRelatedData>> worldSaveQueue = Maps.newHashMap();
@@ -41,21 +41,20 @@ public class WorldCacheIOThread extends TimerTask {
 
     private WorldCacheIOThread() {}
 
-    public static WorldCacheIOThread getTask() {
-        return saveTask;
-    }
-
-    public void onServerStart() {
+    public static void onServerStart() {
         if (ioThread != null) {
             return;
         }
+        saveTask = new WorldCacheIOThread();
         ioThread = new Timer("WorldCacheIOThread", true);
         ioThread.scheduleAtFixedRate(saveTask, 30_000, 30_000);
     }
 
-    public void onServerStop() {
-        this.flushAndSaveAll();
+    public static void onServerStop() {
+        saveTask.flushAndSaveAll();
 
+        saveTask.cancel();
+        saveTask = null;
         ioThread.cancel();
         ioThread = null;
     }

@@ -2,7 +2,7 @@ package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -95,7 +95,7 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
     default public boolean matchesSingleBlock(@Nullable IBlockReader reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset,
-                                              @Nonnull IBlockState comparing,
+                                              @Nonnull BlockState comparing,
                                               @Nullable TileEntity tileEntity) {
         if (!hasBlockAt(centerOffset)) {
             return false;
