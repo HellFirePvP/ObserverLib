@@ -1,11 +1,3 @@
-/*******************************************************************************
- * HellFirePvP / ObserverLib 2019
- *
- * All rights reserved.
- * The source code is available on github: https://github.com/HellFirePvP/AstralSorcery
- * For further details, see the License file there.
- ******************************************************************************/
-
 package hellfirepvp.observerlib.common.util.tick;
 
 import net.minecraftforge.fml.common.gameevent.TickEvent;

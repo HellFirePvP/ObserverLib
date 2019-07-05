@@ -1,0 +1,3 @@
+{
+  "onBlockChange": "javascript/on-block-change.js"
+}

@@ -1,11 +1,3 @@
-/*******************************************************************************
- * HellFirePvP / ObserverLib 2019
- *
- * This project is licensed under GNU GENERAL PUBLIC LICENSE Version 3.
- * The source code is available on github: https://github.com/HellFirePvP/ObserverLib
- * For further details, see the License file there.
- ******************************************************************************/
-
 package hellfirepvp.observerlib.common;
 
 import hellfirepvp.observerlib.common.data.WorldCacheIOThread;

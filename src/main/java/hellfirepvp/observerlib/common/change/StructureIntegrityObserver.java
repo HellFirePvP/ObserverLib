@@ -8,9 +8,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -22,9 +24,10 @@ import java.util.Collection;
  */
 public class StructureIntegrityObserver {
 
-    public static void onBlockChange(IWorld world, IChunk chunk, BlockPos pos, BlockState oldS, BlockState newS) {
+    public static void onBlockChange(IWorld world, @Nullable Chunk chunk, BlockPos pos, BlockState oldS, BlockState newS) {
         if (world.isRemote() ||
                 !(world instanceof World) ||
+                chunk == null ||
                 !chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
             return;
         }
