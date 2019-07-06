@@ -23,37 +23,37 @@ import java.util.function.Supplier;
 public class WorldCacheDomain {
 
     private final ResourceLocation key;
-    private Set<SaveKey> knownSaveKeys = new HashSet<>();
-    private Map<Integer, Map<SaveKey, CachedWorldData>> domainData = new HashMap<>();
+    private Set<SaveKey<? extends CachedWorldData>> knownSaveKeys = new HashSet<>();
+    private Map<Integer, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
 
     WorldCacheDomain(ResourceLocation key) {
         this.key = key;
     }
 
-    public SaveKey createSaveKey(String name, Function<SaveKey, CachedWorldData> dataProvider) {
-        for (SaveKey key : knownSaveKeys) {
+    public <T extends CachedWorldData> SaveKey<T> createSaveKey(String name, Function<SaveKey<T>, T> dataProvider) {
+        for (SaveKey<?> key : knownSaveKeys) {
             if (key.identifier.equalsIgnoreCase(name)) {
-                return key;
+                return (SaveKey<T>) key;
             }
         }
 
-        SaveKey key = new SaveKey(name, dataProvider);
+        SaveKey<T> key = new SaveKey<>(name, dataProvider);
         this.knownSaveKeys.add(key);
         return key;
     }
 
     @Nullable
-    public SaveKey getKey(String identifier) {
-        for (SaveKey key : knownSaveKeys) {
+    public <T extends CachedWorldData> SaveKey<T> getKey(String identifier) {
+        for (SaveKey<?> key : knownSaveKeys) {
             if (key.identifier.equalsIgnoreCase(identifier)) {
-                return key;
+                return (SaveKey<T>) key;
             }
         }
         return null;
     }
 
     @Nonnull
-    public Set<SaveKey> getKnownSaveKeys() {
+    public Set<SaveKey<? extends CachedWorldData>> getKnownSaveKeys() {
         return Collections.unmodifiableSet(knownSaveKeys);
     }
 
@@ -67,8 +67,8 @@ public class WorldCacheDomain {
             return;
         }
 
-        Map<SaveKey, CachedWorldData> dataMap = this.domainData.get(dimId);
-        for (WorldCacheDomain.SaveKey key : this.getKnownSaveKeys()) {
+        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimId);
+        for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
             if(dataMap.containsKey(key)) {
                 dataMap.get(key).updateTick(world);
             }
@@ -76,7 +76,7 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    <T extends CachedWorldData> T getCachedData(int dimId, SaveKey key) {
+    <T extends CachedWorldData> T getCachedData(int dimId, SaveKey<T> key) {
         if (!domainData.containsKey(dimId)) {
             return null;
         }
@@ -88,8 +88,8 @@ public class WorldCacheDomain {
     }
 
     @Nonnull
-    public <T extends CachedWorldData> T getData(World world, SaveKey key) {
-        CachedWorldData data = getFromCache(world, key);
+    public <T extends CachedWorldData> T getData(World world, SaveKey<T> key) {
+        T data = getFromCache(world, key);
         if(data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
 
@@ -101,13 +101,13 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    private CachedWorldData getFromCache(World world, SaveKey key) {
+    private <T extends CachedWorldData> T getFromCache(World world, SaveKey<T> key) {
         int dimId = world.getDimension().getType().getId();
         if (!domainData.containsKey(dimId)) {
             return null;
         }
-        Map<SaveKey, CachedWorldData> dataMap = domainData.get(dimId);
-        return dataMap.get(key);
+        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = domainData.get(dimId);
+        return (T) dataMap.get(key);
     }
 
     public File getSaveDirectory() {
@@ -122,17 +122,17 @@ public class WorldCacheDomain {
         return dataDir;
     }
 
-    public static class SaveKey {
+    public static class SaveKey<T extends CachedWorldData> {
 
         private final String identifier;
-        private final Function<SaveKey, CachedWorldData> instanceProvider;
+        private final Function<SaveKey<T>, T> instanceProvider;
 
-        private SaveKey(String identifier, Function<SaveKey, CachedWorldData> provider) {
+        private SaveKey(String identifier, Function<SaveKey<T>, T> provider) {
             this.identifier = identifier;
             this.instanceProvider = provider;
         }
 
-        public CachedWorldData getNewInstance(SaveKey key) {
+        public T getNewInstance(SaveKey<T> key) {
             return instanceProvider.apply(key);
         }
 

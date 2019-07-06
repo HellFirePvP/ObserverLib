@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingBuffer.MatcherSectionData> {
 
-    public StructureMatchingBuffer(WorldCacheDomain.SaveKey key) {
+    public StructureMatchingBuffer(WorldCacheDomain.SaveKey<? extends StructureMatchingBuffer> key) {
         super(key, PRECISION_CHUNK);
     }
 

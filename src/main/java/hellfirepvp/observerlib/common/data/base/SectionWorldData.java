@@ -35,7 +35,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     private Set<SectionKey> dirtySections = new HashSet<>();
     private Set<SectionKey> removedSections = new HashSet<>();
 
-    protected SectionWorldData(WorldCacheDomain.SaveKey key, int sectionPrecision) {
+    protected SectionWorldData(WorldCacheDomain.SaveKey<?> key, int sectionPrecision) {
         super(key);
         this.precision = sectionPrecision;
     }

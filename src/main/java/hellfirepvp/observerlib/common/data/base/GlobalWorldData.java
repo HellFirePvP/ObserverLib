@@ -22,7 +22,7 @@ public abstract class GlobalWorldData extends CachedWorldData {
     private boolean dirty = false;
     private final String saveFileName;
 
-    protected GlobalWorldData(WorldCacheDomain.SaveKey key) {
+    protected GlobalWorldData(WorldCacheDomain.SaveKey<?> key) {
         super(key);
         this.saveFileName = key.getIdentifier() + ".dat";
     }

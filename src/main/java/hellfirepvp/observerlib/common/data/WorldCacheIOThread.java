@@ -88,8 +88,8 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     @Nonnull
-    static CachedWorldData loadNow(WorldCacheDomain domain, World world, WorldCacheDomain.SaveKey key) {
-        CachedWorldData loaded = loadDataFromFile(domain, world.getDimension().getType().getId(), key);
+    static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, World world, WorldCacheDomain.SaveKey<T> key) {
+        T loaded = loadDataFromFile(domain, world.getDimension().getType().getId(), key);
         loaded.onLoad(world);
         return loaded;
     }
@@ -126,14 +126,14 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     @Nonnull
-    private static CachedWorldData loadDataFromFile(WorldCacheDomain domain, int dimensionId, WorldCacheDomain.SaveKey key) {
+    private static <T extends CachedWorldData> T loadDataFromFile(WorldCacheDomain domain, int dimensionId, WorldCacheDomain.SaveKey<T> key) {
         DirectorySet f = getDirectorySet(domain.getSaveDirectory(), dimensionId, key);
         if (!f.getActualDirectory().exists() && !f.getBackupDirectory().exists()) {
             return key.getNewInstance(key);
         }
         ObserverLib.log.info("Load CachedWorldData '" + key.getIdentifier() + "' for world " + dimensionId);
         boolean errored = false;
-        CachedWorldData data = null;
+        T data = null;
         try {
             if (f.getActualDirectory().exists()) {
                 data = attemptLoad(key, f.getActualDirectory());
@@ -175,13 +175,13 @@ public class WorldCacheIOThread extends TimerTask {
         return data;
     }
 
-    private static CachedWorldData attemptLoad(WorldCacheDomain.SaveKey key, File baseDirectory) throws IOException {
-        CachedWorldData data = key.getNewInstance(key);
+    private static <T extends CachedWorldData> T attemptLoad(WorldCacheDomain.SaveKey<T> key, File baseDirectory) throws IOException {
+        T data = key.getNewInstance(key);
         data.readData(baseDirectory);
         return data;
     }
 
-    private synchronized static DirectorySet getDirectorySet(File baseDirectory, int dimId, WorldCacheDomain.SaveKey key) {
+    private synchronized static DirectorySet getDirectorySet(File baseDirectory, int dimId, WorldCacheDomain.SaveKey<?> key) {
         if (saveDir == null) {
             saveDir = getServerWorldDirectory(baseDirectory);
         }

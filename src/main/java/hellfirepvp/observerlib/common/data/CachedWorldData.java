@@ -14,9 +14,9 @@ import java.util.Random;
 public abstract class CachedWorldData implements IWorldRelatedData {
 
     protected final Random rand = new Random();
-    private final WorldCacheDomain.SaveKey key;
+    private final WorldCacheDomain.SaveKey<?> key;
 
-    protected CachedWorldData(WorldCacheDomain.SaveKey key) {
+    protected CachedWorldData(WorldCacheDomain.SaveKey<?> key) {
         this.key = key;
     }
 
@@ -24,7 +24,7 @@ public abstract class CachedWorldData implements IWorldRelatedData {
 
     public abstract void updateTick(World world);
 
-    public final WorldCacheDomain.SaveKey getSaveKey() {
+    public final WorldCacheDomain.SaveKey<?> getSaveKey() {
         return key;
     }
 

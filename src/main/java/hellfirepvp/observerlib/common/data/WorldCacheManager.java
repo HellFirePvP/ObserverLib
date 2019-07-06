@@ -35,7 +35,7 @@ public class WorldCacheManager implements ITickHandler {
     public static void cleanUp() {
         for (WorldCacheDomain domain : domains.values()) {
             for (int dimId : domain.getUsedWorlds()) {
-                for (WorldCacheDomain.SaveKey key : domain.getKnownSaveKeys()) {
+                for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
                     CachedWorldData data = domain.getCachedData(dimId, key);
                     if (data != null && data.needsSaving()) {
                         WorldCacheIOThread.scheduleSave(domain, dimId, data);
