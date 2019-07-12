@@ -23,9 +23,10 @@ import java.util.Collection;
 public class StructureIntegrityObserver {
 
     public static void onBlockChange(World world, @Nullable Chunk chunk, BlockPos pos, BlockState oldS, BlockState newS) {
-        if (world.isRemote() ||
-                chunk == null ||
-                !chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
+        if (chunk == null) {
+            chunk = world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
+        }
+        if (world.isRemote() || !chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
             return;
         }
 
