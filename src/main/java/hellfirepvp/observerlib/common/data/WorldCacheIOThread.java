@@ -78,6 +78,9 @@ public class WorldCacheIOThread extends TimerTask {
 
     static void scheduleSave(WorldCacheDomain domain, int dimensionId, IWorldRelatedData worldRelatedData) {
         WorldCacheIOThread tr = saveTask;
+        if (saveTask == null) { //Server startup didn't finish
+            return;
+        }
         if (tr.inSave) {
             tr.awaitingSaveQueue.computeIfAbsent(domain, d -> new HashMap<>())
                     .put(dimensionId, worldRelatedData);
