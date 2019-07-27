@@ -101,9 +101,6 @@ public class WorldCacheIOThread extends TimerTask {
         for (WorldCacheDomain domain : this.worldSaveQueue.keySet()) {
             for (Map.Entry<Integer, IWorldRelatedData> entry : this.worldSaveQueue.get(domain).entrySet()) {
                 saveNow(domain, entry.getKey(), entry.getValue());
-                if (skipTick) {
-                    return;
-                }
             }
         }
     }
