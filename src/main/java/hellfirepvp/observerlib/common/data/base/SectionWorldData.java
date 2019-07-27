@@ -200,7 +200,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             if (!fileName.endsWith(".dat")) {
                 continue;
             }
-            fileName = fileName.substring(fileName.length() - 4);
+            fileName = fileName.substring(0, fileName.length() - 4);
             String[] ptrn = fileName.split("_");
             if (ptrn.length != 3 || ptrn[0].equalsIgnoreCase(identifier)) {
                 continue;
