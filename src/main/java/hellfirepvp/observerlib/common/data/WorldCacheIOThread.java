@@ -9,10 +9,7 @@ import org.apache.commons.io.FileUtils;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -26,8 +23,8 @@ public class WorldCacheIOThread extends TimerTask {
     private static WorldCacheIOThread saveTask;
     private static Timer ioThread;
 
-    private Map<WorldCacheDomain, Map<Integer, IWorldRelatedData>> worldSaveQueue = Maps.newHashMap();
-    private Map<WorldCacheDomain, Map<Integer, IWorldRelatedData>> awaitingSaveQueue = Maps.newHashMap();
+    private Map<WorldCacheDomain, Map<Integer, List<IWorldRelatedData>>> worldSaveQueue = Maps.newHashMap();
+    private Map<WorldCacheDomain, Map<Integer, List<IWorldRelatedData>>> awaitingSaveQueue = Maps.newHashMap();
     private boolean inSave = false, skipTick = false;
     private static File saveDir;
 
@@ -60,18 +57,28 @@ public class WorldCacheIOThread extends TimerTask {
         inSave = true;
         saveAllNow();
         worldSaveQueue.clear();
-        inSave = false;
 
-        worldSaveQueue.putAll(awaitingSaveQueue);
+        for (WorldCacheDomain domain : this.awaitingSaveQueue.keySet()) {
+            for (Map.Entry<Integer, List<IWorldRelatedData>> entry : this.awaitingSaveQueue.get(domain).entrySet()) {
+                this.worldSaveQueue.computeIfAbsent(domain, d -> new HashMap<>()).put(entry.getKey(), entry.getValue());
+            }
+        }
         awaitingSaveQueue.clear();
+        inSave = false;
     }
 
     private void flushAndSaveAll() {
         skipTick = true;
-        worldSaveQueue.putAll(awaitingSaveQueue);
+        for (WorldCacheDomain domain : this.awaitingSaveQueue.keySet()) {
+            for (Map.Entry<Integer, List<IWorldRelatedData>> entry : this.awaitingSaveQueue.get(domain).entrySet()) {
+                this.worldSaveQueue.computeIfAbsent(domain, d -> new HashMap<>()).put(entry.getKey(), entry.getValue());
+            }
+        }
         saveAllNow();
+
         worldSaveQueue.clear();
         awaitingSaveQueue.clear();
+
         skipTick = false;
         inSave = false;
     }
@@ -83,10 +90,12 @@ public class WorldCacheIOThread extends TimerTask {
         }
         if (tr.inSave) {
             tr.awaitingSaveQueue.computeIfAbsent(domain, d -> new HashMap<>())
-                    .put(dimensionId, worldRelatedData);
+                    .computeIfAbsent(dimensionId, id -> new ArrayList<>())
+                    .add(worldRelatedData);
         } else {
             tr.worldSaveQueue.computeIfAbsent(domain, d -> new HashMap<>())
-                    .put(dimensionId, worldRelatedData);
+                    .computeIfAbsent(dimensionId, id -> new ArrayList<>())
+                    .add(worldRelatedData);
         }
     }
 
@@ -99,8 +108,8 @@ public class WorldCacheIOThread extends TimerTask {
 
     private void saveAllNow() {
         for (WorldCacheDomain domain : this.worldSaveQueue.keySet()) {
-            for (Map.Entry<Integer, IWorldRelatedData> entry : this.worldSaveQueue.get(domain).entrySet()) {
-                saveNow(domain, entry.getKey(), entry.getValue());
+            for (Map.Entry<Integer, List<IWorldRelatedData>> entry : this.worldSaveQueue.get(domain).entrySet()) {
+                entry.getValue().forEach(data -> saveNow(domain, entry.getKey(), data));
             }
         }
     }
