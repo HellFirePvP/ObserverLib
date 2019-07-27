@@ -122,6 +122,10 @@ public class WorldCacheDomain {
         return dataDir;
     }
 
+    void clear() {
+        this.domainData.clear();
+    }
+
     public static class SaveKey<T extends CachedWorldData> {
 
         private final String identifier;

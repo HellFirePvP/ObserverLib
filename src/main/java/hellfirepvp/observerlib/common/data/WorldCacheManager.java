@@ -32,7 +32,7 @@ public class WorldCacheManager implements ITickHandler {
         return instance;
     }
 
-    public static void cleanUp() {
+    public static void scheduleSaveAll() {
         for (WorldCacheDomain domain : domains.values()) {
             for (int dimId : domain.getUsedWorlds()) {
                 for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
@@ -42,6 +42,12 @@ public class WorldCacheManager implements ITickHandler {
                     }
                 }
             }
+        }
+    }
+
+    public static void cleanUp() {
+        for (WorldCacheDomain domain : domains.values()) {
+            domain.clear();
         }
     }
 

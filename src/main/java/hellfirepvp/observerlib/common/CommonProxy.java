@@ -7,8 +7,6 @@ import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.registry.RegistryStructures;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import hellfirepvp.observerlib.common.util.tick.TickManager;
-import net.minecraft.world.World;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
@@ -39,7 +37,6 @@ public class CommonProxy {
     }
 
     public void attachEventHandlers(IEventBus eventBus) {
-        eventBus.addListener(this::attachWorldListener);
         eventBus.addListener(this::onServerStarted);
         eventBus.addListener(this::onServerStopping);
 
@@ -51,20 +48,14 @@ public class CommonProxy {
         registrar.accept(WorldCacheManager.getInstance());
     }
 
-    private void attachWorldListener(WorldEvent.Load event) {
-        if (event.getWorld() instanceof World) {
-            // TODO re-add equivalent listener/hook
-            //((World) event.getWorld()).addEventListener(new WorldEventListener());
-        }
-    }
-
     private void onServerStarted(FMLServerStartedEvent event) {
         WorldCacheIOThread.onServerStart();
     }
 
     private void onServerStopping(FMLServerStoppingEvent event) {
-        WorldCacheManager.cleanUp();
+        WorldCacheManager.scheduleSaveAll();
         WorldCacheIOThread.onServerStop();
+        WorldCacheManager.cleanUp();
     }
 
 }
