@@ -1,3 +1,3 @@
 {
-  "onBlockChange": "javascript/on-block-change.js"
+  "on_block_change": "javascript/on_block_change.js"
 }

@@ -8,7 +8,7 @@ function initializeCoreMod() {
                 'methodDesc': '(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;I)V'
             },
             'transformer': function(method) {
-                print('[ObserverLib]: Adding onBlockChange ASM Patch...');
+                print('[ObserverLib]: Adding \'on_block_change\' ASM patch...');
 
                 var endPoint = "hellfirepvp/observerlib/common/util/ASMHookEndpoint";
                 var endPointMethod = "onBlockChange";
@@ -42,7 +42,7 @@ function initializeCoreMod() {
                 instr.insertBefore(onBlockChangeCall, new VarInsnNode(Opcodes.ALOAD, 3));
                 instr.insertBefore(onBlockChangeCall, new VarInsnNode(Opcodes.ALOAD, 4));
 
-                print('[ObserverLib]: Added onBlockChange ASM Patch!');
+                print('[ObserverLib]: Added \'on_block_change\' ASM patch!');
                 return method;
             }
         }

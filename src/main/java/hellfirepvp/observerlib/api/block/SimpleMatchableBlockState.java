@@ -14,20 +14,20 @@ import java.util.List;
  *
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
- * Class: MatchableBlockState
+ * Class: SimpleMatchableBlockState
  * Created by HellFirePvP
  * Date: 25.04.2019 / 20:09
  */
-public class MatchableBlockState implements MatchableState {
+public class SimpleMatchableBlockState implements MatchableState {
 
     private static final int CYCLE_STATES = 20;
     private final List<BlockState> matchingStates;
 
-    public MatchableBlockState(BlockState... matchingStates) {
+    public SimpleMatchableBlockState(BlockState... matchingStates) {
         this(Arrays.asList(matchingStates));
     }
 
-    public MatchableBlockState(List<BlockState> matchingStates) {
+    public SimpleMatchableBlockState(List<BlockState> matchingStates) {
         this.matchingStates = matchingStates;
     }
 

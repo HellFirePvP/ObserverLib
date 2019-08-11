@@ -60,17 +60,14 @@ public class RenderWorld implements IWorldReader {
         if (!this.structure.hasBlockAt(pos)) {
             return null;
         }
-        MatchableState state = this.structure.getContents().get(pos);
-        if (state == null) {
-            return null;
-        }
+        MatchableState state = this.structure.getBlockStateAt(pos);
         TileEntity tile = state.createTileEntity(this, ClientTickHelper.getClientTick());
         if (tile == null) {
             return null;
         }
         tile.setPos(pos);
 
-        MatchableTile tileMatch = this.structure.getTileEntities().get(pos);
+        MatchableTile tileMatch = this.structure.getTileEntityAt(pos);
         if (tileMatch == null) {
             return tile;
         }
@@ -84,7 +81,7 @@ public class RenderWorld implements IWorldReader {
     @Override
     public BlockState getBlockState(BlockPos pos) {
         if (!this.structure.hasBlockAt(pos)) {
-            return null;
+            return Blocks.AIR.getDefaultState();
         }
         MatchableState state = this.structure.getContents().get(pos);
         return state == null ? Blocks.AIR.getDefaultState() : state.getDescriptiveState(ClientTickHelper.getClientTick());
@@ -102,7 +99,7 @@ public class RenderWorld implements IWorldReader {
 
     @Override
     public int getLightFor(LightType lightType, BlockPos blockPos) {
-        return 0;
+        return MAX_LIGHT;
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ChangeSubscriber;
-import hellfirepvp.observerlib.api.structure.ObserverProvider;
+import hellfirepvp.observerlib.api.ObserverProvider;
 import hellfirepvp.observerlib.common.change.MatchChangeSubscriber;
 import hellfirepvp.observerlib.common.data.base.SectionWorldData;
 import hellfirepvp.observerlib.common.data.base.WorldSection;

@@ -1,7 +1,6 @@
 package hellfirepvp.observerlib.api;
 
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
-import hellfirepvp.observerlib.api.structure.ObserverProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +31,7 @@ public abstract class ChangeObserver {
     }
 
     /**
-     * Returns the registry name of the owning {@link hellfirepvp.observerlib.api.structure.ObserverProvider}.
+     * Returns the registry name of the owning {@link ObserverProvider}.
      * Used for serialization/deserialization so the observer can be saved persistently.
      *
      * @return the changeprovider's registry name

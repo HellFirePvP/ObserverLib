@@ -1,6 +1,5 @@
-package hellfirepvp.observerlib.api.structure;
+package hellfirepvp.observerlib.api;
 
-import hellfirepvp.observerlib.api.ChangeObserver;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 

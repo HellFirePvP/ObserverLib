@@ -4,7 +4,7 @@ import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.api.ObserverHelper;
-import hellfirepvp.observerlib.api.structure.ObserverProvider;
+import hellfirepvp.observerlib.api.ObserverProvider;
 import hellfirepvp.observerlib.common.data.StructureMatchingBuffer;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import hellfirepvp.observerlib.common.data.WorldCacheManager;

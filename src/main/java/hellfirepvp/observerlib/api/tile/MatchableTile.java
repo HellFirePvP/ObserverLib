@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
+import net.minecraft.world.IWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -29,6 +30,15 @@ public interface MatchableTile<T extends TileEntity> {
      */
     @OnlyIn(Dist.CLIENT)
     public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull CompoundNBT tag);
+
+    /**
+     * Write data onto the tileentity after it was placed into the world.
+     *
+     * @param tile the placed tile entity
+     * @param world the world it was placed in
+     * @param pos the position it was placed at
+     */
+    public void postPlacement(@Nonnull T tile, @Nonnull IBlockReader world, BlockPos pos);
 
     /**
      * Tests if this matcher considers the passed tileentity valid for the world & blockpos combination

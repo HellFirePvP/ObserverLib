@@ -100,8 +100,8 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
         if (!hasBlockAt(centerOffset)) {
             return false;
         } else {
-            MatchableState state = getContents().get(centerOffset);
-            MatchableTile tileMatch = getTileEntities().get(centerOffset);
+            MatchableState state = getBlockStateAt(centerOffset);
+            MatchableTile tileMatch = getTileEntityAt(centerOffset);
             return state.matches(reader, center.add(centerOffset), comparing) &&
                     (tileEntity == null || (tileMatch == null || tileMatch.matches(reader, center.add(centerOffset), tileEntity)));
         }

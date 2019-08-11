@@ -2,12 +2,15 @@ package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
+import net.minecraft.block.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.IBlockReader;
+import org.apache.commons.lang3.ObjectUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
@@ -51,14 +54,56 @@ public interface Structure {
     public Vec3i getMinimumOffset();
 
     /**
-     * Checks if there's a blockstate at the current offset of the change.
+     * Checks if there's a blockstate at the current offset.
      *
      * @param offset the offset to check for a blockstate
      *
-     * @return if the change has a state at that offset
+     * @return if the structure has a state at that offset
      */
     default public boolean hasBlockAt(BlockPos offset) {
         return getContents().containsKey(offset);
+    }
+
+    /**
+     * Returns the blockstate at the given offset.
+     * Returns {@link MatchableState#IS_AIR} if not present.
+     *
+     * @param offset the offset to get the blockstate at
+     *
+     * @return the blockstate at that position or AIR
+     */
+    @Nonnull
+    default public MatchableState getBlockStateAt(BlockPos offset) {
+        if (!hasBlockAt(offset)) {
+            return MatchableState.IS_AIR;
+        }
+        return ObjectUtils.firstNonNull(getContents().get(offset), MatchableState.IS_AIR);
+    }
+
+    /**
+     * Checks if there's a tileentity supposed to be set at the current offset.
+     *
+     * @param offset the offset to check for a tileentity
+     *
+     * @return if the structure has a tileentity at that offset
+     */
+    default public boolean hasTileAt(BlockPos offset) {
+        return getTileEntities().containsKey(offset);
+    }
+
+    /**
+     * Returns the expected tileentity at the given offset.
+     *
+     * @param offset the offset to get the tileentity at
+     *
+     * @return the matchable tileentity or null if not present
+     */
+    @Nullable
+    default public MatchableTile<? extends TileEntity> getTileEntityAt(BlockPos offset) {
+        if (!hasTileAt(offset)) {
+            return null;
+        }
+        return getTileEntities().get(offset);
     }
 
 }

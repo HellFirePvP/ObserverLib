@@ -1,6 +1,6 @@
-package hellfirepvp.observerlib.common.block;
+package hellfirepvp.observerlib.api.util;
 
-import hellfirepvp.observerlib.api.block.MatchableBlockState;
+import hellfirepvp.observerlib.api.block.SimpleMatchableBlockState;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
@@ -9,17 +9,21 @@ import net.minecraft.block.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import org.apache.logging.log4j.util.TriConsumer;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
+ * This class is an exemplary simple implementation of the structure interface.
+ *
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
  * Class: BlockArray
  * Created by HellFirePvP
- * Date: 25.04.2019 / 21:50
+ * Date: 11.08.2019 / 09:10
  */
 public class BlockArray implements Structure {
 
@@ -50,8 +54,15 @@ public class BlockArray implements Structure {
         return min;
     }
 
-    public void addBlock(BlockPos pos, BlockState state) {
-        MatchableState match = new MatchableBlockState(state);
+    public void addTileEntity(MatchableTile<?> tile, int x, int y, int z) {
+        BlockPos pos = new BlockPos(x, y, z);
+        tiles.put(pos, tile);
+        updateSize(pos);
+    }
+
+    public void addBlock(BlockState state, int x, int y, int z) {
+        BlockPos pos = new BlockPos(x, y, z);
+        MatchableState match = new SimpleMatchableBlockState(state);
         if (state == Blocks.AIR.getDefaultState()) {
             match = MatchableState.IS_AIR;
         }
@@ -59,11 +70,11 @@ public class BlockArray implements Structure {
         updateSize(pos);
     }
 
-    public void addBlock(int x, int y, int z, BlockState state) {
-        this.addBlock(new BlockPos(x, y, z), state);
+    public void addBlockCube(BlockState state, int ox, int oy, int oz, int tx, int ty, int tz) {
+        this.forAllInCube(ox, oy, oz, tx, ty, tz, (x, y, z) -> this.addBlock(state, x, y, z));
     }
 
-    public void addBlockCube(BlockState state, int ox, int oy, int oz, int tx, int ty, int tz) {
+    private void forAllInCube(int ox, int oy, int oz, int tx, int ty, int tz, TriConsumer<Integer, Integer, Integer> fct) {
         int lx, ly, lz;
         int hx, hy, hz;
         if(ox < tx) {
@@ -91,7 +102,7 @@ public class BlockArray implements Structure {
         for (int xx = lx; xx <= hx; xx++) {
             for (int zz = lz; zz <= hz; zz++) {
                 for (int yy = ly; yy <= hy; yy++) {
-                    this.addBlock(new BlockPos(xx, yy, zz), state);
+                    fct.accept(xx, yy, zz);
                 }
             }
         }
@@ -117,5 +128,4 @@ public class BlockArray implements Structure {
             max = new Vec3i(max.getX(), max.getY(), addedPos.getZ());
         }
     }
-
 }

@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.common.registry;
 
 import hellfirepvp.observerlib.ObserverLib;
-import hellfirepvp.observerlib.api.structure.ObserverProvider;
+import hellfirepvp.observerlib.api.ObserverProvider;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryModifiable;
 import net.minecraftforge.registries.RegistryBuilder;
