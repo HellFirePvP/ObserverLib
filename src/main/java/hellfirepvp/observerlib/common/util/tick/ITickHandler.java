@@ -1,6 +1,6 @@
 package hellfirepvp.observerlib.common.util.tick;
 
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.event.TickEvent;
 
 import java.util.EnumSet;
 

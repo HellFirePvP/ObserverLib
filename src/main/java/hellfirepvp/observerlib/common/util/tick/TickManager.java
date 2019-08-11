@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.common.util.tick;
 
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.HashMap;
 import java.util.LinkedList;

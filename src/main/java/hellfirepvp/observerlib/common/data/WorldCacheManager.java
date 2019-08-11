@@ -4,7 +4,7 @@ import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.event.TickEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

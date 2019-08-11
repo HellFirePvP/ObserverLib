@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.client.util;
 
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 /**
  * This class is part of the ObserverLib Mod
