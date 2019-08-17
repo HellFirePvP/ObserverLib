@@ -2,6 +2,7 @@ package hellfirepvp.observerlib.common.data;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.LogicalSidedProvider;
@@ -11,7 +12,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -69,7 +69,7 @@ public class WorldCacheDomain {
 
         Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimId);
         for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
-            if(dataMap.containsKey(key)) {
+            if (dataMap.containsKey(key)) {
                 dataMap.get(key).updateTick(world);
             }
         }
@@ -88,9 +88,9 @@ public class WorldCacheDomain {
     }
 
     @Nonnull
-    public <T extends CachedWorldData> T getData(World world, SaveKey<T> key) {
+    public <T extends CachedWorldData> T getData(IWorld world, SaveKey<T> key) {
         T data = getFromCache(world, key);
-        if(data == null) {
+        if (data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
 
             int dimId = world.getDimension().getType().getId();
@@ -101,7 +101,7 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    private <T extends CachedWorldData> T getFromCache(World world, SaveKey<T> key) {
+    private <T extends CachedWorldData> T getFromCache(IWorld world, SaveKey<T> key) {
         int dimId = world.getDimension().getType().getId();
         if (!domainData.containsKey(dimId)) {
             return null;

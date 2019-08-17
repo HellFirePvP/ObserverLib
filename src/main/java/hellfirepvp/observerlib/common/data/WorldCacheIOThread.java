@@ -3,6 +3,7 @@ package hellfirepvp.observerlib.common.data;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import hellfirepvp.observerlib.ObserverLib;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import org.apache.commons.io.FileUtils;
 
@@ -100,7 +101,7 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     @Nonnull
-    static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, World world, WorldCacheDomain.SaveKey<T> key) {
+    static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, IWorld world, WorldCacheDomain.SaveKey<T> key) {
         T loaded = loadDataFromFile(domain, world.getDimension().getType().getId(), key);
         loaded.onLoad(world);
         return loaded;

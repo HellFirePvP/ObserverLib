@@ -9,6 +9,7 @@ import hellfirepvp.observerlib.common.data.StructureMatchingBuffer;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -27,7 +28,7 @@ public class MatcherObserverHelper extends ObserverHelper {
     private static WorldCacheDomain.SaveKey<StructureMatchingBuffer> STRUCTURE_BUFFER_KEY =
             WORLD_DOMAIN.createSaveKey("structure_buffer", StructureMatchingBuffer::new);
 
-    public static StructureMatchingBuffer getBuffer(World world) {
+    public static StructureMatchingBuffer getBuffer(IWorld world) {
         return WORLD_DOMAIN.getData(world, STRUCTURE_BUFFER_KEY);
     }
 
