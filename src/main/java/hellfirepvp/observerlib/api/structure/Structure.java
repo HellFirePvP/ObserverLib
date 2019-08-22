@@ -2,7 +2,7 @@ package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.Blocks;
+import hellfirepvp.observerlib.api.util.ContentSerializable;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -22,7 +22,7 @@ import java.util.Map;
  * Created by HellFirePvP
  * Date: 25.04.2019 / 19:45
  */
-public interface Structure {
+public interface Structure extends ContentSerializable {
 
     /**
      * The contents of the structure
