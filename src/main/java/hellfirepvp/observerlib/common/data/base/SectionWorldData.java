@@ -122,7 +122,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Override
-    public void markSaved() {}
+    public void markSaved() {
+        this.dirtySections.clear();
+    }
 
     public abstract void writeToNBT(CompoundNBT nbt);
 

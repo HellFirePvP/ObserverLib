@@ -45,8 +45,25 @@ public class AlternatingSet<T> {
         }
     }
 
+    public void clear() {
+        synchronized (flipLock) {
+            this.actualSet.clear();
+            this.flippedSet.clear();
+        }
+    }
+
+    public int size() {
+        return this.actualSet.size() + this.flippedSet.size();
+    }
+
     public boolean isEmpty() {
         return this.actualSet.isEmpty() && this.flippedSet.isEmpty();
+    }
+
+    public boolean contains(T o) {
+        synchronized (flipLock) {
+            return this.actualSet.contains(o) || this.flippedSet.contains(o);
+        }
     }
 
 }
