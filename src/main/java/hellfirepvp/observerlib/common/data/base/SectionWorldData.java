@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
+import hellfirepvp.observerlib.common.util.AlternatingSet;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.Vec3i;
@@ -32,7 +33,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     private Map<SectionKey, T> sections = new HashMap<>();
     private final int precision;
 
-    private Set<SectionKey> dirtySections = new HashSet<>();
+    private AlternatingSet<SectionKey> dirtySections = new AlternatingSet<>();
     private Set<SectionKey> removedSections = new HashSet<>();
 
     protected SectionWorldData(WorldCacheDomain.SaveKey<?> key, int sectionPrecision) {
@@ -121,9 +122,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Override
-    public void markSaved() {
-        this.dirtySections.clear();
-    }
+    public void markSaved() {}
 
     public abstract void writeToNBT(CompoundNBT nbt);
 
@@ -160,7 +159,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.writeToNBT(generalData);
         CompressedStreamTools.write(generalData, generalSaveFile);
 
-        for (SectionKey key : this.dirtySections) {
+        this.dirtySections.forEach(key -> {
             T section = getSection(key);
             if (section != null) {
 
@@ -180,7 +179,8 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
                 section.writeToNBT(data);
                 CompressedStreamTools.write(data, saveFile);
             }
-        }
+            return false;
+        });
     }
 
     @Override
