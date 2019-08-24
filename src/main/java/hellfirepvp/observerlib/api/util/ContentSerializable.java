@@ -4,6 +4,7 @@ import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -35,9 +36,10 @@ public interface ContentSerializable {
      * Returns this structure's potentially required items.
      *
      * @param world the world the structure is to be tested in
+     * @param player the player to view the structure as blocks
      * @return a list of non-null itemstacks potentially required for this structure.
      */
-    default List<ItemStack> getAsStacks(IBlockReader world) {
+    default List<ItemStack> getAsStacks(IBlockReader world, PlayerEntity player) {
         List<ItemStack> out = new LinkedList<>();
         if (!(this instanceof BlockArray)) {
             return out;
@@ -63,7 +65,7 @@ public interface ContentSerializable {
             if (stack.isEmpty()) {
                 try {
                     stack = sample.getBlock().getPickBlock(sample,
-                            new BlockRayTraceResult(Vec3d.ZERO, Direction.UP, pos, false), world, pos, Minecraft.getInstance().player);
+                            new BlockRayTraceResult(Vec3d.ZERO, Direction.UP, pos, false), world, pos, player);
                 } catch (Exception ignored) {}
             }
 
