@@ -1,8 +1,9 @@
-package hellfirepvp.observerlib.client.util;
+package hellfirepvp.observerlib.api.client;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
+import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
@@ -19,12 +20,13 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Stack;
 import java.util.function.Predicate;
 
 /**
@@ -37,7 +39,7 @@ import java.util.function.Predicate;
  * Date: 30.04.2019 / 22:22
  */
 @OnlyIn(Dist.CLIENT)
-public class RenderWorld implements IWorldReader {
+public class StructureRenderWorld implements IWorldReader {
 
     private static final int MAX_LIGHT = 15;
 
@@ -46,18 +48,36 @@ public class RenderWorld implements IWorldReader {
     private final WorldBorder maxBorder;
 
     private final Structure structure;
+    private Stack<Predicate<BlockPos>> blockFilter = new Stack<>();
 
-    public RenderWorld(Structure structure, Biome globalBiome) {
+    public StructureRenderWorld(Structure structure, Biome globalBiome) {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.thisDim = Minecraft.getInstance().world.getDimension();
         this.maxBorder = this.thisDim.createWorldBorder();
     }
 
+    public void pushContentFilter(@Nonnull Predicate<BlockPos> blockFilter) {
+        this.blockFilter.push(blockFilter);
+    }
+
+    public void popContentFilter() {
+        this.blockFilter.pop();
+    }
+
+    private boolean allowAccess(BlockPos pos) {
+        for (Predicate<BlockPos> filter : this.blockFilter) {
+            if (!filter.test(pos)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Nullable
     @Override
     public TileEntity getTileEntity(BlockPos pos) {
-        if (!this.structure.hasBlockAt(pos)) {
+        if (!this.structure.hasBlockAt(pos) || !allowAccess(pos)) {
             return null;
         }
         MatchableState state = this.structure.getBlockStateAt(pos);
@@ -65,6 +85,7 @@ public class RenderWorld implements IWorldReader {
         if (tile == null) {
             return null;
         }
+        tile.setWorld(Minecraft.getInstance().world);
         tile.setPos(pos);
 
         MatchableTile tileMatch = this.structure.getTileEntityAt(pos);
@@ -75,12 +96,14 @@ public class RenderWorld implements IWorldReader {
         tile.write(tag);
         tileMatch.writeDisplayData(tile, ClientTickHelper.getClientTick(), tag);
         tile.read(tag);
+
+        tileMatch.postPlacement(tile, this, pos);
         return tile;
     }
 
     @Override
     public BlockState getBlockState(BlockPos pos) {
-        if (!this.structure.hasBlockAt(pos)) {
+        if (!this.structure.hasBlockAt(pos) || !allowAccess(pos)) {
             return Blocks.AIR.getDefaultState();
         }
         MatchableState state = this.structure.getContents().get(pos);

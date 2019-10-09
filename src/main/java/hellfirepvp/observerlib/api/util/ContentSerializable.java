@@ -16,6 +16,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockReader;
+import net.minecraftforge.fluids.FluidAttributes;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -51,15 +54,10 @@ public interface ContentSerializable {
             BlockPos pos = structureEntry.getKey();
             BlockState sample = structureEntry.getValue().getDescriptiveState(tick);
 
-            //TODO fluids when forge adds generic ones
             ItemStack stack = ItemStack.EMPTY;
             if (!sample.getFluidState().isEmpty() && sample.getFluidState().isSource()) {
                 Fluid f = sample.getFluidState().getFluid();
-                if (f.isIn(FluidTags.WATER)) {
-                    stack = new ItemStack(Items.WATER_BUCKET);
-                } else if (f.isIn(FluidTags.LAVA)) {
-                    stack = new ItemStack(Items.LAVA_BUCKET);
-                }
+                stack = FluidUtil.getFilledBucket(new FluidStack(f, FluidAttributes.BUCKET_VOLUME));
             }
 
             if (stack.isEmpty()) {
