@@ -121,6 +121,23 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
         @Override
         public void writeToNBT(CompoundNBT tag) {
+            ListNBT subscriberList = new ListNBT();
+
+            for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
+                CompoundNBT subscriber = new CompoundNBT();
+                NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
+                subscriber.putString("identifier", sub.getObserver().getProviderRegistryName().toString());
+
+                NBTHelper.setAsSubTag(subscriber, "matchData", sub::writeToNBT);
+
+                subscriberList.add(subscriber);
+            }
+
+            tag.put("subscribers", subscriberList);
+        }
+
+        @Override
+        public void readFromNBT(CompoundNBT tag) {
             this.requestSubscribers.clear();
 
             ListNBT subscriberList = tag.getList("subscribers", Constants.NBT.TAG_COMPOUND);
@@ -140,23 +157,6 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
                 this.requestSubscribers.put(subscriber.getCenter(), subscriber);
             }
-        }
-
-        @Override
-        public void readFromNBT(CompoundNBT tag) {
-            ListNBT subscriberList = new ListNBT();
-
-            for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
-                CompoundNBT subscriber = new CompoundNBT();
-                NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
-                subscriber.putString("identifier", sub.getObserver().getProviderRegistryName().toString());
-
-                NBTHelper.setAsSubTag(subscriber, "matchData", sub::writeToNBT);
-
-                subscriberList.add(subscriber);
-            }
-
-            tag.put("subscribers", subscriberList);
         }
     }
 
