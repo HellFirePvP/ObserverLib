@@ -13,24 +13,28 @@ import java.util.Collection;
  */
 public class ObservableAreaBoundingBox implements ObservableArea {
 
-    private final AxisAlignedBB boundingBox;
+    private final AxisAlignedBB box;
 
     public ObservableAreaBoundingBox(Vec3i min, Vec3i max) {
         this(new AxisAlignedBB(min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ()));
     }
 
     public ObservableAreaBoundingBox(AxisAlignedBB boundingBox) {
-        this.boundingBox = boundingBox;
+        this.box = boundingBox;
     }
 
     @Override
     public Collection<ChunkPos> getAffectedChunks(Vec3i offset) {
-        return calculateAffectedChunks(this.boundingBox, offset);
+        return calculateAffectedChunks(this.box, offset);
     }
 
     @Override
     public boolean observes(Vec3i relativePos) {
-        return boundingBox.contains(new Vec3d(relativePos.getX(), relativePos.getY(), relativePos.getZ()));
+        int x = relativePos.getX();
+        int y = relativePos.getY();
+        int z = relativePos.getZ();
+
+        return x >= box.minX && x <= box.maxX && y >= box.minY && y <= box.maxY && z >= box.minZ && z <= box.maxZ;
     }
 
 }
