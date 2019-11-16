@@ -45,7 +45,7 @@ public interface ObservableArea {
     default Collection<ChunkPos> calculateAffectedChunks(AxisAlignedBB box, Vec3i offset) {
         return calculateAffectedChunks(
                 new Vec3i(Math.round(box.minX + offset.getX()), Math.round(box.minY + offset.getY()), Math.round(box.minZ + offset.getZ())),
-                new Vec3i(Math.round(box.maxX + offset.getX()), Math.round(box.maxY + offset.getY()), Math.round(box.minZ + offset.getZ())));
+                new Vec3i(Math.round(box.maxX + offset.getX()), Math.round(box.maxY + offset.getY()), Math.round(box.maxZ + offset.getZ())));
     }
 
     /**
