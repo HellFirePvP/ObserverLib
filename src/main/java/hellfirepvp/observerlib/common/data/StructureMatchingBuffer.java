@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ChangeSubscriber;
+import hellfirepvp.observerlib.api.ObservableArea;
 import hellfirepvp.observerlib.api.ObserverProvider;
 import hellfirepvp.observerlib.common.change.MatchChangeSubscriber;
 import hellfirepvp.observerlib.common.data.base.SectionWorldData;
@@ -61,11 +62,13 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
         T observer = (T) provider.provideObserver();
         MatchChangeSubscriber<T> subscriber = new MatchChangeSubscriber<>(center, observer);
-        MatcherSectionData data = getOrCreateSection(center);
 
-        data.addSubscriber(center, subscriber);
+        for (ChunkPos chPos : subscriber.getObservableChunks()) {
+            MatcherSectionData data = getOrCreateSection(chPos.asBlockPos());
+            data.addSubscriber(center, subscriber);
+            markDirty(data);
+        }
         observer.initialize(world, center);
-        markDirty(data);
         return subscriber;
     }
 
@@ -74,7 +77,12 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
         ChangeSubscriber<? extends ChangeObserver> removed = data.removeSubscriber(pos);
         if (removed != null) {
-            markDirty(data);
+            ObservableArea area = removed.getObserver().getObservableArea();
+            for (ChunkPos chPos : area.getAffectedChunks(pos)) {
+                MatcherSectionData matchData = getOrCreateSection(chPos.asBlockPos());
+                matchData.removeSubscriber(pos);
+                markDirty(matchData);
+            }
         }
         return removed != null;
     }
