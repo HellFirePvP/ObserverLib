@@ -27,7 +27,6 @@ public class WorldCacheIOThread extends TimerTask {
     private Map<WorldCacheDomain, Map<Integer, List<IWorldRelatedData>>> worldSaveQueue = Maps.newHashMap();
     private Map<WorldCacheDomain, Map<Integer, List<IWorldRelatedData>>> awaitingSaveQueue = Maps.newHashMap();
     private boolean inSave = false, skipTick = false;
-    private static File saveDir;
 
     private WorldCacheIOThread() {}
 
@@ -192,11 +191,7 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     private synchronized static DirectorySet getDirectorySet(File baseDirectory, int dimId, WorldCacheDomain.SaveKey<?> key) {
-        if (saveDir == null) {
-            saveDir = getServerWorldDirectory(baseDirectory);
-        }
-
-        File worldDir = new File(saveDir, "DIM_" + dimId);
+        File worldDir = new File(baseDirectory, "DIM_" + dimId);
         if (!worldDir.exists()) {
             worldDir.mkdirs();
         } else {
