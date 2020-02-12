@@ -2,7 +2,6 @@ package hellfirepvp.observerlib.client;
 
 import hellfirepvp.observerlib.client.preview.StructurePreviewHandler;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
-import hellfirepvp.observerlib.client.util.bar.BossBarHandler;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -31,6 +30,5 @@ public class ClientProxy extends CommonProxy {
         super.attachTickListeners(registrar);
 
         StructurePreviewHandler.getInstance().attachTickHandlers(registrar);
-        registrar.accept(BossBarHandler.getInstance());
     }
 }
