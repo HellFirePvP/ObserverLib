@@ -48,7 +48,7 @@ public class StructurePreview {
 
     private double minimumDisplayDistanceSq = 64;
     private double displayDistanceMultiplier = 1.75;
-    private BiPredicate<World, BlockPos> persistenceTest = (world, pos) -> !this.dimType.equals(world.getDimension().getType());
+    private BiPredicate<World, BlockPos> persistenceTest = (world, pos) -> true;
 
     private ITextComponent barText = null;
     private SimpleBossInfo bossInfo = null;
@@ -67,7 +67,7 @@ public class StructurePreview {
         return new Builder(sourceWorld, source, structure, tick);
     }
 
-    private boolean isOutOfRenderDistance(BlockPos position) {
+    private boolean isInRenderDistance(BlockPos position) {
         double distanceSq = Math.max(this.minimumDisplayDistanceSq, this.snapshot.getStructure().getMaximumOffset().distanceSq(this.snapshot.getStructure().getMinimumOffset()));
         distanceSq *= Math.max(1, displayDistanceMultiplier);
         return this.origin.distanceSq(position) <= distanceSq;
@@ -77,7 +77,7 @@ public class StructurePreview {
         if (!this.dimType.equals(renderWorld.getDimension().getType())) {
             return false;
         }
-        return this.isOutOfRenderDistance(renderPosition);
+        return this.isInRenderDistance(renderPosition);
     }
 
     boolean canPersist(World renderWorld, BlockPos position) {
@@ -86,8 +86,7 @@ public class StructurePreview {
 
     public void tick(World renderWorld, BlockPos position) {
         if (this.barText != null) {
-            boolean inRender = this.dimType.equals(renderWorld.getDimension().getType()) && this.isOutOfRenderDistance(position);
-            if (inRender) {
+            if (this.dimType.equals(renderWorld.getDimension().getType()) && this.isInRenderDistance(position)) {
                 if (this.bossInfo == null) {
                     this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.BLUE, BossInfo.Overlay.PROGRESS).build();
                     this.bossInfo.displayInfo();
@@ -192,12 +191,12 @@ public class StructurePreview {
         }
 
         public Builder removeIfOutOfRenderDistance() {
-            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.isOutOfRenderDistance(pos));
+            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.isInRenderDistance(pos));
             return this;
         }
 
         public Builder removeIfOutInDifferentWorld() {
-            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> !this.preview.dimType.equals(world.getDimension().getType()));
+            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimType.equals(world.getDimension().getType()));
             return this;
         }
 
