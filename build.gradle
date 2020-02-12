@@ -31,7 +31,7 @@ minecraft {
 
     mappings channel: 'snapshot', version: '20190711-1.14.3'
 
-    //accessTransformer = file('src/main/resources/META-INF/observerlib.cfg')
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.

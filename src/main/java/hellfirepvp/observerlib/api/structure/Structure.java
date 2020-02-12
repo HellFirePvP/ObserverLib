@@ -4,6 +4,7 @@ import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
 import hellfirepvp.observerlib.api.util.ContentSerializable;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.IBlockReader;
@@ -12,6 +13,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class represents a generic structure.
@@ -106,4 +109,17 @@ public interface Structure extends ContentSerializable {
         return getTileEntities().get(offset);
     }
 
+    /**
+     * Returns a slice of the structure of the given y-level.
+     *
+     * @param yOffset the y-level of the structure slice
+     *
+     * @return offsets and their associated expected states of that slice
+     */
+    default public Set<Tuple<BlockPos, ? extends MatchableState>> getStructureSlice(int yOffset) {
+        return getContents().entrySet().stream()
+                .filter(e -> e.getKey().getY() == yOffset)
+                .map(e -> new Tuple<>(e.getKey(), e.getValue()))
+                .collect(Collectors.toSet());
+    }
 }

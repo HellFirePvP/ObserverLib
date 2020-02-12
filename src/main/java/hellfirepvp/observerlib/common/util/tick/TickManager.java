@@ -3,10 +3,7 @@ package hellfirepvp.observerlib.common.util.tick;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -21,7 +18,7 @@ public class TickManager {
 
     public TickManager() {
         for (TickEvent.Type type : TickEvent.Type.values()) {
-            registeredTickHandlers.put(type, new LinkedList<>());
+            registeredTickHandlers.put(type, new ArrayList<>());
         }
     }
 
@@ -33,10 +30,31 @@ public class TickManager {
         eventBus.addListener(this::clientTick);
     }
 
+    /**
+     * Registers a TickHandler.
+     *
+     * @param handler the handler to register
+     */
     public void register(ITickHandler handler) {
         for (TickEvent.Type type : handler.getHandledTypes()) {
             registeredTickHandlers.get(type).add(handler);
         }
+    }
+
+    /**
+     * Unregisters a TickHandler.
+     *
+     * @param handler the handler to remove
+     * @return true if it has been successfully found in all lists it should've been registered to originally
+     */
+    public boolean unregister(ITickHandler handler) {
+        boolean removed = true;
+        for (TickEvent.Type type : handler.getHandledTypes()) {
+            if (!registeredTickHandlers.get(type).remove(handler)) {
+                removed = false;
+            }
+        }
+        return removed;
     }
 
     private void worldTick(TickEvent.WorldTickEvent event) {
