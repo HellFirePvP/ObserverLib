@@ -88,11 +88,11 @@ public class StructurePreview {
         if (this.barText != null) {
             if (this.dimType.equals(renderWorld.getDimension().getType()) && this.isInRenderDistance(position)) {
                 if (this.bossInfo == null) {
-                    this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.BLUE, BossInfo.Overlay.PROGRESS).build();
+                    this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.WHITE, BossInfo.Overlay.PROGRESS).build();
                     this.bossInfo.displayInfo();
                 }
                 float percFinished = StructureUtil.getMismatches(this.snapshot.getStructure(), renderWorld, this.origin).size() / ((float) this.snapshot.getStructure().getContents().size());
-                this.bossInfo.setPercent(percFinished);
+                this.bossInfo.setPercent(1F - percFinished);
             } else if (this.bossInfo != null) {
                 this.bossInfo.removeInfo();
                 this.bossInfo = null;
@@ -127,8 +127,7 @@ public class StructurePreview {
         GlStateManager.disableAlphaTest();
         GlStateManager.disableDepthTest();
         GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_ONE, GL14.GL_ONE_MINUS_CONSTANT_ALPHA);
-        GlStateManager.color4f(0.5F, 0.5F, 0.5F, 0.5F);
+        GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_SRC_ALPHA);
 
         GlStateManager.pushMatrix();
         Vec3d vec = new Vec3d(0, 0, 0);
@@ -139,12 +138,18 @@ public class StructurePreview {
 
         List<Tuple<BlockPos, ? extends MatchableState>> structureSlice = this.snapshot.getStructure().getStructureSlice(displaySlice.get());
         structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distanceSq(playerPos.x, playerPos.y, playerPos.z, false)));
+        Collections.reverse(structureSlice);
         for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : structureSlice) {
             drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
 
             BlockPos at = expectedBlock.getA().add(this.origin);
             BlockState renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             TileEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, this.snapshot.getSnapshotTick());
+
+            if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), renderState, renderTile)) {
+                continue;
+            }
+
             IModelData data = EmptyModelData.INSTANCE;
             if (renderTile != null) {
                 data = renderTile.getModelData();
