@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.client.preview;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.GlStateManager;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.client.StructureRenderWorld;
@@ -27,8 +28,7 @@ import net.minecraftforge.client.model.data.IModelData;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.function.BiPredicate;
 
 /**
@@ -106,7 +106,7 @@ public class StructurePreview {
         }
     }
 
-    void render(World renderWorld) {
+    void render(World renderWorld, Vec3d playerPos) {
         Optional<Integer> displaySlice = StructureUtil.getLowestMismatchingSlice(this.snapshot.getStructure(), renderWorld, this.origin);
         if (!displaySlice.isPresent()) {
             return; //Nothing to render
@@ -128,15 +128,18 @@ public class StructurePreview {
         GlStateManager.disableDepthTest();
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_ONE, GL14.GL_ONE_MINUS_CONSTANT_ALPHA);
+        GlStateManager.color4f(0.5F, 0.5F, 0.5F, 0.5F);
 
         GlStateManager.pushMatrix();
-        Vec3d v = new Vec3d(0, 0, 0);
+        Vec3d vec = new Vec3d(0, 0, 0);
         if (Minecraft.getInstance().gameRenderer != null) {
-            v = Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
+            vec = Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
         }
-        GlStateManager.translated(-v.getX(), -v.getY(), -v.getZ());
+        GlStateManager.translated(-vec.getX(), -vec.getY(), -vec.getZ());
 
-        for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : this.snapshot.getStructure().getStructureSlice(displaySlice.get())) {
+        List<Tuple<BlockPos, ? extends MatchableState>> structureSlice = this.snapshot.getStructure().getStructureSlice(displaySlice.get());
+        structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distanceSq(playerPos.x, playerPos.y, playerPos.z, false)));
+        for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : structureSlice) {
             drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
 
             BlockPos at = expectedBlock.getA().add(this.origin);
@@ -148,11 +151,11 @@ public class StructurePreview {
             }
 
             GlStateManager.pushMatrix();
-            GlStateManager.translatef(at.getX(), at.getY(), at.getZ());
-            GlStateManager.scalef(0.75F, 0.75F, 0.75F);
+            GlStateManager.translatef(at.getX() + 0.2F, at.getY() + 0.2F, at.getZ() + 0.2F);
+            GlStateManager.scalef(0.6F, 0.6F, 0.6F);
 
             decorated.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-            if (!drawWorld.isAirBlock(expectedBlock.getA())) {
+            if (!renderWorld.isAirBlock(at)) {
                 colorDecorator.isMismatch = true;
             }
             brd.renderBlock(renderState, BlockPos.ZERO, drawWorld, decorated, rand, data);
@@ -166,6 +169,7 @@ public class StructurePreview {
         GlStateManager.popMatrix();
         drawWorld.popContentFilter();
 
+        GlStateManager.color4f(1F, 1F, 1F, 1F);
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.disableBlend();
         GlStateManager.enableDepthTest();

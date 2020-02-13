@@ -54,7 +54,7 @@ public class StructurePreviewHandler implements ITickHandler {
         }
 
         if (this.currentPreview.canRender(renderWorld, player.getPosition())) {
-            this.currentPreview.render(renderWorld);
+            this.currentPreview.render(renderWorld, player.getPositionVector());
         }
     }
 

@@ -12,8 +12,8 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -116,10 +116,10 @@ public interface Structure extends ContentSerializable {
      *
      * @return offsets and their associated expected states of that slice
      */
-    default public Set<Tuple<BlockPos, ? extends MatchableState>> getStructureSlice(int yOffset) {
+    default public List<Tuple<BlockPos, ? extends MatchableState>> getStructureSlice(int yOffset) {
         return getContents().entrySet().stream()
                 .filter(e -> e.getKey().getY() == yOffset)
                 .map(e -> new Tuple<>(e.getKey(), e.getValue()))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 }
