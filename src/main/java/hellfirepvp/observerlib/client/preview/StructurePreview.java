@@ -145,8 +145,9 @@ public class StructurePreview {
             BlockPos at = expectedBlock.getA().add(this.origin);
             BlockState renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             TileEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, this.snapshot.getSnapshotTick());
+            BlockState actual = renderWorld.getBlockState(at);
 
-            if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), renderState, renderTile)) {
+            if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), actual, renderWorld.getTileEntity(at))) {
                 continue;
             }
 
@@ -160,7 +161,7 @@ public class StructurePreview {
             GlStateManager.scalef(0.6F, 0.6F, 0.6F);
 
             decorated.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
-            if (!renderWorld.isAirBlock(at)) {
+            if (!actual.isAir(renderWorld, at)) {
                 colorDecorator.isMismatch = true;
             }
             brd.renderBlock(renderState, BlockPos.ZERO, drawWorld, decorated, rand, data);
