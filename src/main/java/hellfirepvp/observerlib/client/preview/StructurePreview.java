@@ -228,12 +228,14 @@ public class StructurePreview {
 
     private static class BlockMismatchColorDecorator implements BufferBuilderDecorator.ColorDecorator {
 
+        private static final int[] errorColor = new int[] { 255, 0, 0, 128 };
+
         private boolean isMismatch = false;
 
         @Override
         public int[] decorate(int r, int g, int b, int a) {
             if (this.isMismatch) {
-                return new int[] { 255, 0, 0, 128 };
+                return errorColor;
             } else {
                 return new int[] { r, g, b, 128 };
             }

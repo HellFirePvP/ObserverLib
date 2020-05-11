@@ -1,9 +1,11 @@
 package hellfirepvp.observerlib.api.util;
 
+import hellfirepvp.observerlib.api.block.SimpleMatchableBlock;
 import hellfirepvp.observerlib.api.block.SimpleMatchableBlockState;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -12,6 +14,7 @@ import net.minecraft.util.math.Vec3i;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -35,13 +38,13 @@ public class BlockArray implements Structure {
     @Override
     @Nonnull
     public Map<BlockPos, MatchableState> getContents() {
-        return blocks;
+        return Collections.unmodifiableMap(this.blocks);
     }
 
     @Nonnull
     @Override
     public Map<BlockPos, ? extends MatchableTile<? extends TileEntity>> getTileEntities() {
-        return tiles;
+        return Collections.unmodifiableMap(this.tiles);
     }
 
     @Override
@@ -55,19 +58,50 @@ public class BlockArray implements Structure {
     }
 
     public void addTileEntity(MatchableTile<?> tile, int x, int y, int z) {
-        BlockPos pos = new BlockPos(x, y, z);
-        tiles.put(pos, tile);
+        this.addTileEntity(tile, new BlockPos(x, y, z));
+    }
+
+    public void addTileEntity(MatchableTile<?> tile, BlockPos pos) {
+        this.tiles.put(pos, tile);
         updateSize(pos);
     }
 
     public void addBlock(BlockState state, int x, int y, int z) {
-        BlockPos pos = new BlockPos(x, y, z);
+        this.addBlock(state, new BlockPos(x, y, z));
+    }
+
+    public void addBlock(Block block, int x, int y, int z) {
+        this.addBlock(block, new BlockPos(x, y, z));
+    }
+
+    public void addBlock(MatchableState state, int x, int y, int z) {
+        this.addBlock(state, new BlockPos(x, y, z));
+    }
+
+    public void addBlock(BlockState state, BlockPos pos) {
         MatchableState match = new SimpleMatchableBlockState(state);
         if (state == Blocks.AIR.getDefaultState()) {
             match = MatchableState.IS_AIR;
         }
-        blocks.put(pos, match);
+        this.addBlock(match, pos);
+    }
+
+    public void addBlock(Block block, BlockPos pos) {
+        MatchableState match = new SimpleMatchableBlock(block);
+        if (block == Blocks.AIR) {
+            match = MatchableState.IS_AIR;
+        }
+        this.addBlock(match, pos);
+    }
+
+    public void addBlock(MatchableState state, BlockPos pos) {
+        this.blocks.put(pos, state);
         updateSize(pos);
+    }
+
+    public void addAll(BlockArray other) {
+        other.getContents().forEach((pos, matchState) -> this.addBlock(matchState, pos));
+        other.getTileEntities().forEach((pos, tile) -> this.addTileEntity(tile, pos));
     }
 
     public void addBlockCube(BlockState state, int ox, int oy, int oz, int tx, int ty, int tz) {

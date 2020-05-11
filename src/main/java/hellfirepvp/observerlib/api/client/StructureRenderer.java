@@ -2,7 +2,6 @@ package hellfirepvp.observerlib.api.client;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import hellfirepvp.observerlib.api.structure.Structure;
-import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -29,7 +28,7 @@ import java.util.Optional;
 import java.util.Random;
 
 /**
- * This class is part of the Astral Sorcery Mod
+ * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
  * Class: StructureRenderer
  * Created by HellFirePvP

@@ -34,14 +34,14 @@ public class SimpleMatchableBlockState implements MatchableState {
     @Nonnull
     @Override
     public BlockState getDescriptiveState(long tick) {
-        int cycleState = Math.max(2, CYCLE_STATES / matchingStates.size());
-        int part = (int) (tick % (cycleState * matchingStates.size()));
+        int cycleState = Math.max(2, CYCLE_STATES / this.matchingStates.size());
+        int part = (int) (tick % (cycleState * this.matchingStates.size()));
         return this.matchingStates.get(part / cycleState);
     }
 
     @Override
     public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
-        return matchingStates.contains(state);
+        return this.matchingStates.contains(state);
     }
 
 }
