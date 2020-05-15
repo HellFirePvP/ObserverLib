@@ -1,7 +1,9 @@
 package hellfirepvp.observerlib.common;
 
+import hellfirepvp.observerlib.common.change.StructureIntegrityObserver;
 import hellfirepvp.observerlib.common.data.WorldCacheIOThread;
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
+import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import hellfirepvp.observerlib.common.event.handler.EventHandlerIO;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.registry.RegistryStructures;
@@ -27,6 +29,8 @@ public class CommonProxy {
     public void initialize() {
         this.tickManager = new TickManager();
         this.attachTickListeners(this.tickManager::register);
+
+        BlockChangeNotifier.addListener(new StructureIntegrityObserver());
 
         RegistryProviders.initialize();
         RegistryStructures.initialize();

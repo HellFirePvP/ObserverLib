@@ -1,6 +1,6 @@
 package hellfirepvp.observerlib.common.util;
 
-import hellfirepvp.observerlib.common.change.StructureIntegrityObserver;
+import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 public class ASMHookEndpoint {
 
     public static void onBlockChange(World world, BlockPos pos, @Nullable Chunk chunk, BlockState prevState, BlockState postState) {
-        StructureIntegrityObserver.onBlockChange(world, chunk, pos, prevState, postState);
+        BlockChangeNotifier.onBlockChange(world, chunk, pos, postState, postState);
     }
 
 }
