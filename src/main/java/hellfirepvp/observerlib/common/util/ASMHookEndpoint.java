@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 public class ASMHookEndpoint {
 
     public static void onBlockChange(World world, BlockPos pos, @Nullable Chunk chunk, BlockState prevState, BlockState postState) {
-        BlockChangeNotifier.onBlockChange(world, chunk, pos, postState, postState);
+        BlockChangeNotifier.onBlockChange(world, chunk, pos, prevState, postState);
     }
 
 }
