@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.fluid.IFluidState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
@@ -148,15 +149,18 @@ public class StructureRenderer {
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
         this.structure.getContents().keySet()
                 .forEach(pos -> {
-                    if (this.isolateIndividualBlockRender) {
-                        this.world.pushContentFilter(wPos -> wPos.equals(pos));
-                    }
                     BlockState view = this.world.getBlockState(pos);
                     if (!view.getBlock().equals(Blocks.AIR)) {
-                        this.renderBlockSafely(pos, view, buf);
-                    }
-                    if (this.isolateIndividualBlockRender) {
-                        this.world.popContentFilter();
+                        if (!view.getFluidState().isEmpty()) {
+                            this.renderFluid(pos, view.getFluidState(), buf);
+                        }
+                        if (this.isolateIndividualBlockRender) {
+                            this.world.pushContentFilter(wPos -> wPos.equals(pos));
+                            this.renderBlock(pos, view, buf);
+                            this.world.popContentFilter();
+                        } else {
+                            this.renderBlock(pos, view, buf);
+                        }
                     }
                 });
         tes.draw();
@@ -182,16 +186,21 @@ public class StructureRenderer {
         GlStateManager.popMatrix();
     }
 
-    private void renderBlockSafely(BlockPos offset, BlockState state, BufferBuilder vb) {
+    private void renderFluid(BlockPos pos, IFluidState fluidState, BufferBuilder buf) {
+        BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
+        brd.renderFluid(pos, this.world, buf, fluidState);
+    }
+
+    private void renderBlock(BlockPos offset, BlockState state, BufferBuilder buf) {
         BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
         try {
-            brd.renderBlock(state, offset, this.world, vb, rand, EmptyModelData.INSTANCE);
+            brd.renderBlock(state, offset, this.world, buf, rand, EmptyModelData.INSTANCE);
         } catch (Exception exc) {
             BlockRenderType type = state.getRenderType();
             if (type == BlockRenderType.MODEL) {
                 IBakedModel model = brd.getModelForState(state);
                 long posRandom = state.getPositionRandom(offset);
-                brd.getBlockModelRenderer().renderModel(this.world, model, state, offset, vb, true, rand, posRandom, EmptyModelData.INSTANCE);
+                brd.getBlockModelRenderer().renderModel(this.world, model, state, offset, buf, true, rand, posRandom, EmptyModelData.INSTANCE);
             }
         }
     }
