@@ -140,8 +140,6 @@ public class StructurePreview {
         structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distanceSq(playerPos.x, playerPos.y, playerPos.z, false)));
         Collections.reverse(structureSlice);
         for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : structureSlice) {
-            drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
-
             BlockPos at = expectedBlock.getA().add(this.origin);
             BlockState renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             TileEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, this.snapshot.getSnapshotTick());
@@ -164,12 +162,16 @@ public class StructurePreview {
             if (!actual.isAir(renderWorld, at)) {
                 colorDecorator.isMismatch = true;
             }
+            drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
+            if (!renderState.getFluidState().isEmpty()) {
+                brd.renderFluid(BlockPos.ZERO, drawWorld, decorated, renderState.getFluidState());
+            }
             brd.renderBlock(renderState, BlockPos.ZERO, drawWorld, decorated, rand, data);
+            drawWorld.popContentFilter();
             colorDecorator.isMismatch = false;
             tes.draw();
 
             GlStateManager.popMatrix();
-            drawWorld.popContentFilter();
         }
 
         GlStateManager.popMatrix();
