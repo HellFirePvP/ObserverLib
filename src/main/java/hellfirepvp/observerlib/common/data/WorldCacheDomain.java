@@ -89,12 +89,12 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    <T extends CachedWorldData> T getCachedData(IWorld world, SaveKey<T> key) {
+    public <T extends CachedWorldData> T getCachedData(IWorld world, SaveKey<T> key) {
         return this.getCachedData(world.getDimension().getType().getRegistryName(), key);
     }
 
     @Nullable
-    <T extends CachedWorldData> T getCachedData(ResourceLocation dimKey, SaveKey<T> key) {
+    public <T extends CachedWorldData> T getCachedData(ResourceLocation dimKey, SaveKey<T> key) {
         synchronized (this.worldDataLck) {
             if (!this.loadedWorldData.containsKey(dimKey)) {
                 return null;

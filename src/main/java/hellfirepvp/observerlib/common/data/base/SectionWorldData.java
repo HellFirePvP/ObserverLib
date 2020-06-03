@@ -17,8 +17,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -46,14 +44,14 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.precision = sectionPrecision;
     }
 
-    public SectionWorldData<T> loadSectionsInstantly() {
+    protected SectionWorldData<T> loadSectionsInstantly() {
         this.loadSectionsInstantly = true;
         return this;
     }
 
     public void markDirty(Vec3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
-        T section = getSection(key);
+        T section = getLoadedSection(key);
         if (section != null) {
             this.dirtySections.add(key);
         }
@@ -108,12 +106,12 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Nullable
-    public T getSection(Vec3i absolute) {
-        return this.getSection(SectionKey.resolve(absolute, this.precision));
+    public T getLoadedSection(Vec3i absolute) {
+        return this.getLoadedSection(SectionKey.resolve(absolute, this.precision));
     }
 
     @Nullable
-    private T getSection(SectionKey key) {
+    private T getLoadedSection(SectionKey key) {
         return this.sections.get(key);
     }
 
@@ -180,7 +178,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         CompressedStreamTools.write(generalData, generalSaveFile);
 
         this.dirtySections.forEach(key -> {
-            T section = getSection(key);
+            T section = getLoadedSection(key);
             if (section != null) {
 
                 File saveFile = this.getSaveFile(this.getDirectory().getActualDirectory(true), section);
