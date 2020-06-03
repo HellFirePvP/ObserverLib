@@ -1,5 +1,7 @@
 package hellfirepvp.observerlib.common.data;
 
+import hellfirepvp.observerlib.common.data.io.DirectorySet;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -14,10 +16,12 @@ public interface IWorldRelatedData {
 
     public WorldCacheDomain.SaveKey getSaveKey();
 
-    public abstract void markSaved();
+    public DirectorySet getDirectory();
 
-    public void writeData(File baseDirectory, File backupDirectory) throws IOException;
+    public void markSaved();
 
-    public void readData(File baseDirectory) throws IOException;
+    public void writeData() throws IOException;
+
+    public void readData() throws IOException;
 
 }

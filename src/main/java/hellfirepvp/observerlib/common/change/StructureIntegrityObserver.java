@@ -28,20 +28,21 @@ public class StructureIntegrityObserver implements BlockChangeNotifier.Listener 
             return;
         }
 
-        StructureMatchingBuffer buf = MatcherObserverHelper.getBuffer(world);
-        ChunkPos ch = chunk.getPos();
-        Collection<MatchChangeSubscriber<?>> subscribers = buf.getSubscribers(ch);
-        for (MatchChangeSubscriber<?> subscriber : subscribers) {
-            if (subscriber.observes(pos)) {
-                subscriber.addChange(pos, oldState, newState);
-                buf.markDirty(pos);
-            }
-        }
+        MatcherObserverHelper.getBuffer(world, buf -> {
+            buf.getSubscribers(chunk.getPos(), subscribers -> {
+                for (MatchChangeSubscriber<?> subscriber : subscribers) {
+                    if (subscriber.observes(pos)) {
+                        subscriber.addChange(pos, oldState, newState);
+                        buf.markDirty(pos);
+                    }
+                }
 
-        if (oldState.getBlock() instanceof BlockStructureObserver) {
-            if (((BlockStructureObserver) oldState.getBlock()).removeWithNewState(world, pos, oldState, newState)) {
-                buf.removeSubscriber(pos);
-            }
-        }
+                if (oldState.getBlock() instanceof BlockStructureObserver) {
+                    if (((BlockStructureObserver) oldState.getBlock()).removeWithNewState(world, pos, oldState, newState)) {
+                        buf.removeSubscriber(pos, result -> {});
+                    }
+                }
+            });
+        });
     }
 }

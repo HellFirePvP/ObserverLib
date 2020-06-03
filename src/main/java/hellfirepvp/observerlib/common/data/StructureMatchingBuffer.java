@@ -6,9 +6,11 @@ import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.api.ObservableArea;
 import hellfirepvp.observerlib.api.ObserverProvider;
+import hellfirepvp.observerlib.api.util.FutureCallback;
 import hellfirepvp.observerlib.common.change.MatchChangeSubscriber;
 import hellfirepvp.observerlib.common.data.base.SectionWorldData;
 import hellfirepvp.observerlib.common.data.base.WorldSection;
+import hellfirepvp.observerlib.common.data.io.DirectorySet;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.nbt.CompoundNBT;
@@ -22,6 +24,7 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 
@@ -34,8 +37,8 @@ import java.util.Map;
  */
 public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingBuffer.MatcherSectionData> {
 
-    public StructureMatchingBuffer(WorldCacheDomain.SaveKey<? extends StructureMatchingBuffer> key) {
-        super(key, PRECISION_CHUNK);
+    public StructureMatchingBuffer(WorldCacheDomain.SaveKey<? extends StructureMatchingBuffer> key, DirectorySet directory) {
+        super(key, directory, PRECISION_CHUNK);
     }
 
     @Override
@@ -46,56 +49,56 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     @Override
     public void updateTick(World world) {}
 
-    @Nonnull
-    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(IWorld world, BlockPos center, ObserverProvider provider) {
-        MatchChangeSubscriber<T> existing;
-        if ((existing = (MatchChangeSubscriber<T>) getSubscriber(center)) != null) {
-            if (!existing.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {
-                ObserverLib.log.warn("Trying to observe area at dim=" + world.getDimension().getType().getId() + " " + center.toString() +
-                        " while it is already being observed by " + existing.getObserver().getProviderRegistryName());
-                ObserverLib.log.warn("Removing existing observer!");
-                this.removeSubscriber(center);
-            } else {
-                return existing;
+    public <T extends ChangeObserver, S extends ChangeSubscriber<T>> void observeArea(IWorld world, BlockPos center, ObserverProvider provider, FutureCallback<S> callback) {
+        this.getSubscriber(center, subscriber -> {
+            if (subscriber != null) {
+                if (!subscriber.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {
+                    ObserverLib.log.warn("Trying to observe area at dim=" + world.getDimension().getType().getId() + " " + center.toString() +
+                            " while it is already being observed by " + subscriber.getObserver().getProviderRegistryName());
+                    ObserverLib.log.warn("Removing existing observer!");
+                    this.removeSubscriber(center, result -> {});
+                } else {
+                    callback.onSuccess((S) subscriber);
+                    return;
+                }
             }
-        }
 
-        T observer = (T) provider.provideObserver();
-        MatchChangeSubscriber<T> subscriber = new MatchChangeSubscriber<>(center, observer);
+            T observer = (T) provider.provideObserver();
+            MatchChangeSubscriber<T> newSubscriber = new MatchChangeSubscriber<>(center, observer);
 
-        for (ChunkPos chPos : subscriber.getObservableChunks()) {
-            MatcherSectionData data = getOrCreateSection(chPos.asBlockPos());
-            data.addSubscriber(center, subscriber);
-            markDirty(data);
-        }
-        observer.initialize(world, center);
-        return subscriber;
-    }
-
-    public boolean removeSubscriber(BlockPos pos) {
-        MatcherSectionData data = getOrCreateSection(pos);
-
-        ChangeSubscriber<? extends ChangeObserver> removed = data.removeSubscriber(pos);
-        if (removed != null) {
-            ObservableArea area = removed.getObserver().getObservableArea();
-            for (ChunkPos chPos : area.getAffectedChunks(pos)) {
-                MatcherSectionData matchData = getOrCreateSection(chPos.asBlockPos());
-                matchData.removeSubscriber(pos);
-                markDirty(matchData);
+            for (ChunkPos chPos : newSubscriber.getObservableChunks()) {
+                getOrCreateSection(chPos.asBlockPos(), sectionData -> {
+                    sectionData.addSubscriber(center, newSubscriber);
+                    markDirty(sectionData);
+                });
             }
-        }
-        return removed != null;
+            observer.initialize(world, center);
+            callback.onSuccess((S) newSubscriber);
+        });
     }
 
-    @Nullable
-    public ChangeSubscriber<? extends ChangeObserver> getSubscriber(BlockPos pos) {
-        return getOrCreateSection(pos).getSubscriber(pos);
+    public void removeSubscriber(BlockPos pos, FutureCallback<Boolean> callback) {
+        getOrCreateSection(pos, section -> {
+            ChangeSubscriber<? extends ChangeObserver> removed = section.removeSubscriber(pos);
+            if (removed != null) {
+                ObservableArea area = removed.getObserver().getObservableArea();
+                for (ChunkPos chPos : area.getAffectedChunks(pos)) {
+                    getOrCreateSection(chPos.asBlockPos(), matchData -> {
+                        matchData.removeSubscriber(pos);
+                        markDirty(matchData);
+                    });
+                }
+            }
+            callback.onSuccess(removed != null);
+        });
     }
 
-    @Nonnull
-    public Collection<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
-        MatcherSectionData data = getOrCreateSection(pos.asBlockPos());
-        return data.requestSubscribers.values();
+    public void getSubscriber(BlockPos pos, FutureCallback<ChangeSubscriber<? extends ChangeObserver>> callback) {
+        getOrCreateSection(pos, section -> callback.onSuccess(section.getSubscriber(pos)));
+    }
+
+    public void getSubscribers(ChunkPos pos, FutureCallback<Collection<MatchChangeSubscriber<?>>> callback) {
+        getOrCreateSection(pos.asBlockPos(), section -> callback.onSuccess(section.requestSubscribers.values()));
     }
 
     @Override
@@ -125,6 +128,11 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         @Nullable
         private ChangeSubscriber<? extends ChangeObserver> addSubscriber(BlockPos pos, MatchChangeSubscriber<? extends ChangeObserver> subscriber) {
             return this.requestSubscribers.put(pos, subscriber);
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return this.requestSubscribers.isEmpty();
         }
 
         @Override

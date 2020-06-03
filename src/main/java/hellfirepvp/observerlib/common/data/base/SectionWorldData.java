@@ -2,8 +2,11 @@ package hellfirepvp.observerlib.common.data.base;
 
 import com.google.common.io.Files;
 import hellfirepvp.observerlib.ObserverLib;
+import hellfirepvp.observerlib.api.util.FutureCallback;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
+import hellfirepvp.observerlib.common.data.io.DirectorySet;
+import hellfirepvp.observerlib.common.data.io.WorldCacheIOManager;
 import hellfirepvp.observerlib.common.util.AlternatingSet;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.CompoundNBT;
@@ -14,6 +17,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -32,13 +36,19 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
     private Map<SectionKey, T> sections = new HashMap<>();
     private final int precision;
+    private boolean loadSectionsInstantly = false;
 
     private AlternatingSet<SectionKey> dirtySections = new AlternatingSet<>();
     private Set<SectionKey> removedSections = new HashSet<>();
 
-    protected SectionWorldData(WorldCacheDomain.SaveKey<?> key, int sectionPrecision) {
-        super(key);
+    protected SectionWorldData(WorldCacheDomain.SaveKey<?> key, DirectorySet directory, int sectionPrecision) {
+        super(key, directory);
         this.precision = sectionPrecision;
+    }
+
+    public SectionWorldData<T> loadSectionsInstantly() {
+        this.loadSectionsInstantly = true;
+        return this;
     }
 
     public void markDirty(Vec3i absolute) {
@@ -55,40 +65,46 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
     protected abstract T createNewSection(int sectionX, int sectionZ);
 
-    @Nonnull
-    public Collection<T> getSections(Vec3i absoluteMin, Vec3i absoluteMax) {
-        return resolveSections(absoluteMin, absoluteMax, this::getSection);
-    }
-
-    @Nonnull
-    public Collection<T> getOrCreateSections(Vec3i absoluteMin, Vec3i absoluteMax) {
-        return resolveSections(absoluteMin, absoluteMax, this::getOrCreateSection);
-    }
-
-    @Nonnull
-    private Collection<T> resolveSections(Vec3i absoluteMin, Vec3i absoluteMax, Function<SectionKey, T> sectionFct) {
+    public void getOrCreateSections(Vec3i absoluteMin, Vec3i absoluteMax, FutureCallback<Collection<T>> callback) {
         SectionKey lower = SectionKey.resolve(absoluteMin, this.precision);
         SectionKey higher = SectionKey.resolve(absoluteMax, this.precision);
-        Collection<T> out = new HashSet<>();
+        Collection<SectionKey> waitingSectionKeys = new HashSet<>();
         for (int xx = lower.x; xx <= higher.x; xx++) {
             for (int zz = lower.z; zz <= higher.z; zz++) {
-                T section = sectionFct.apply(new SectionKey(xx, zz));
-                if (section != null) {
-                    out.add(section);
-                }
+                waitingSectionKeys.add(new SectionKey(xx, zz));
             }
         }
-        return out;
+        Collection<T> foundSections = new HashSet<>();
+        for (SectionKey key : waitingSectionKeys) {
+            this.getOrCreateSection(key, (loaded) -> {
+                synchronized (foundSections) {
+                    foundSections.add(loaded);
+                    if (foundSections.size() == waitingSectionKeys.size()) {
+                        callback.onSuccess(foundSections);
+                    }
+                }
+            });
+        }
     }
 
-    @Nonnull
-    public T getOrCreateSection(Vec3i absolute) {
-        return getOrCreateSection(SectionKey.resolve(absolute, this.precision));
+    public void getOrCreateSection(Vec3i absolute, FutureCallback<T> callback) {
+        getOrCreateSection(SectionKey.resolve(absolute, this.precision), callback);
     }
 
-    @Nonnull
-    private T getOrCreateSection(SectionKey key) {
-        return this.sections.computeIfAbsent(key, sectionKey -> createNewSection(sectionKey.x, sectionKey.z));
+    private void getOrCreateSection(SectionKey key, FutureCallback<T> callback) {
+        if (this.sections.containsKey(key)) {
+            callback.onSuccess(this.sections.get(key));
+        } else if (this.loadSectionsInstantly) {
+            WorldCacheIOManager.loadSectionNow(this, key.x, key.z, (section) -> {
+                this.sections.put(key, section);
+                callback.onSuccess(section);
+            });
+        } else {
+            WorldCacheIOManager.scheduleSectionLoad(this, key.x, key.z, (section) -> {
+                this.sections.put(key, section);
+                callback.onSuccess(section);
+            });
+        }
     }
 
     @Nullable
@@ -101,18 +117,22 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         return this.sections.get(key);
     }
 
-    public boolean removeSection(T section) {
+    public void removeSection(T section) {
         SectionKey key = SectionKey.from(section);
-        return this.sections.remove(key) == section && this.removedSections.add(key);
+        this.dirtySections.remove(key);
+        this.sections.remove(key);
+        this.removedSections.add(key);
     }
 
-    public boolean removeSection(Vec3i absolute) {
+    public void removeSection(Vec3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
-        return this.sections.remove(key) != null && this.removedSections.add(key);
+        this.dirtySections.remove(key);
+        this.sections.remove(key);
+        this.removedSections.add(key);
     }
 
     @Nonnull
-    public Collection<T> getSections() {
+    public Collection<T> getLoadedSections() {
         return this.sections.values();
     }
 
@@ -131,25 +151,23 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     public abstract void readFromNBT(CompoundNBT nbt);
 
     private File getSaveFile(File directory, T section) {
-        String name = String.format("%s_%s_%s.dat",
-                this.getSaveKey().getIdentifier(),
-                section.getSectionX(),
-                section.getSectionZ());
-        return directory.toPath().resolve(name).toFile();
+        return this.getSaveFile(directory, section.getSectionX(), section.getSectionZ());
+    }
+
+    private File getSaveFile(File directory, int sectionX, int sectionZ) {
+        return new File(directory, this.getSectionFileName(sectionX, sectionZ));
+    }
+
+    private String getSectionFileName(int sectionX, int sectionZ) {
+        return String.format("%s_%s_%s.dat", this.getSaveKey().getIdentifier(), sectionX, sectionZ);
     }
 
     @Override
-    public final void writeData(File baseDirectory, File backupDirectory) throws IOException {
-        if (!baseDirectory.exists()) {
-            baseDirectory.mkdirs();
-        }
-        if (!backupDirectory.exists()) {
-            backupDirectory.mkdirs();
-        }
-        File generalSaveFile = new File(baseDirectory, "general.dat");
+    public final void writeData() throws IOException {
+        File generalSaveFile = new File(this.getDirectory().getActualDirectory(), "general.dat");
         if (generalSaveFile.exists()) {
             try {
-                Files.copy(generalSaveFile, new File(backupDirectory, "general.dat"));
+                Files.copy(generalSaveFile, new File(this.getDirectory().getBackupDirectory(true), "general.dat"));
             } catch (Exception exc) {
                 ObserverLib.log.info("Copying '" + getSaveKey().getIdentifier() + "' general actual file to its backup file failed!");
                 exc.printStackTrace();
@@ -165,10 +183,10 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             T section = getSection(key);
             if (section != null) {
 
-                File saveFile = this.getSaveFile(baseDirectory, section);
+                File saveFile = this.getSaveFile(this.getDirectory().getActualDirectory(true), section);
                 if (saveFile.exists()) {
                     try {
-                        Files.copy(saveFile, this.getSaveFile(backupDirectory, section));
+                        Files.copy(saveFile, this.getSaveFile(this.getDirectory().getBackupDirectory(true), section));
                     } catch (Exception exc) {
                         ObserverLib.log.info("Copying '" + getSaveKey().getIdentifier() + "' actual file to its backup file failed!");
                         exc.printStackTrace();
@@ -183,13 +201,17 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             }
             return false;
         });
+        this.removedSections.forEach(key -> {
+            File saveFile = this.getSaveFile(this.getDirectory().getActualDirectory(true), key.x, key.z);
+            if (saveFile.exists()) {
+                saveFile.delete();
+            }
+        });
     }
 
     @Override
-    public final void readData(File baseDirectory) throws IOException {
-        String identifier = getSaveKey().getIdentifier();
-
-        File generalSaveFile = new File(baseDirectory, "general.dat");
+    public final void readData() throws IOException {
+        File generalSaveFile = new File(this.getDirectory().getActualDirectory(), "general.dat");
         if (generalSaveFile.exists()) {
             CompoundNBT tag = CompressedStreamTools.read(generalSaveFile);
             this.readFromNBT(tag);
@@ -197,28 +219,46 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             this.readFromNBT(new CompoundNBT());
         }
 
-        for (File subFile : baseDirectory.listFiles()) {
-            String fileName = subFile.getName();
-            if (!fileName.endsWith(".dat")) {
-                continue;
+        if (this.loadSectionsInstantly) {
+            for (File subFile : this.getDirectory().getActualDirectory().listFiles()) {
+                String fileName = subFile.getName();
+                if (!fileName.endsWith(".dat")) {
+                    continue;
+                }
+                fileName = fileName.substring(0, fileName.length() - 4);
+                String[] ptrn = fileName.split("_");
+                if (ptrn.length != 3 || !ptrn[0].equalsIgnoreCase(this.getSaveKey().getIdentifier())) {
+                    continue;
+                }
+                int sX, sZ;
+                try {
+                    sX = Integer.parseInt(ptrn[1]);
+                    sZ = Integer.parseInt(ptrn[2]);
+                } catch (NumberFormatException exc) {
+                    continue;
+                }
+                
+                WorldCacheIOManager.loadSectionNow(this, sX, sZ,
+                        (section) -> this.sections.put(new SectionKey(sX, sZ), section));
             }
-            fileName = fileName.substring(0, fileName.length() - 4);
-            String[] ptrn = fileName.split("_");
-            if (ptrn.length != 3 || !ptrn[0].equalsIgnoreCase(identifier)) {
-                continue;
-            }
-            int sX, sZ;
-            try {
-                sX = Integer.parseInt(ptrn[1]);
-                sZ = Integer.parseInt(ptrn[2]);
-            } catch (NumberFormatException exc) {
-                continue;
-            }
-
-            T section = createNewSection(sX, sZ);
-            section.readFromNBT(CompressedStreamTools.read(subFile));
-            this.sections.put(new SectionKey(sX, sZ), section);
         }
+    }
+
+    @Nonnull
+    public final T loadWorldSection(int sectionX, int sectionZ) {
+        File sectionFile = this.getSaveFile(this.getDirectory().getActualDirectory(true), sectionX, sectionZ);
+        T newSection = this.createNewSection(sectionX, sectionZ);
+        if (!sectionFile.exists()) {
+            return newSection;
+        }
+        try {
+            newSection.readFromNBT(CompressedStreamTools.read(sectionFile));
+        } catch (IOException e) {
+            ObserverLib.log.info("Loading section " + sectionX + ", " + sectionZ + " for " + this.getSaveKey().getIdentifier() + " has failed! Generating empty section!");
+            e.printStackTrace();
+            newSection = this.createNewSection(sectionX, sectionZ);
+        }
+        return newSection;
     }
 
     private static class SectionKey {

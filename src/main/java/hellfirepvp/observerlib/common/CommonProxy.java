@@ -1,7 +1,8 @@
 package hellfirepvp.observerlib.common;
 
 import hellfirepvp.observerlib.common.change.StructureIntegrityObserver;
-import hellfirepvp.observerlib.common.data.WorldCacheIOThread;
+import hellfirepvp.observerlib.common.data.io.WorldCacheIOManager;
+import hellfirepvp.observerlib.common.data.io.WorldCacheSaveThread;
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
 import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import hellfirepvp.observerlib.common.event.handler.EventHandlerIO;
@@ -24,9 +25,12 @@ import java.util.function.Consumer;
  */
 public class CommonProxy {
 
+    private CommonScheduler commonScheduler;
     private TickManager tickManager;
 
     public void initialize() {
+        this.commonScheduler = new CommonScheduler();
+
         this.tickManager = new TickManager();
         this.attachTickListeners(this.tickManager::register);
 
@@ -49,17 +53,24 @@ public class CommonProxy {
     }
 
     public void attachTickListeners(Consumer<ITickHandler> registrar) {
+        registrar.accept(this.commonScheduler);
         registrar.accept(WorldCacheManager.getInstance());
     }
 
     private void onServerStarted(FMLServerStartedEvent event) {
-        WorldCacheIOThread.onServerStart();
+        WorldCacheIOManager.onServerStart();
     }
 
     private void onServerStopping(FMLServerStoppingEvent event) {
-        WorldCacheManager.scheduleSaveAll();
-        WorldCacheIOThread.onServerStop();
+        WorldCacheIOManager.onServerStop();
         WorldCacheManager.cleanUp();
     }
 
+    public void scheduleDelayed(Runnable r, int tickDelay) {
+        this.commonScheduler.addRunnable(r, tickDelay);
+    }
+
+    public void scheduleDelayed(Runnable r) {
+        this.scheduleDelayed(r, 0);
+    }
 }

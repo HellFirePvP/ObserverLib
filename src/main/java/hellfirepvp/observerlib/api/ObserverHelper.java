@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.api;
 
+import hellfirepvp.observerlib.api.util.FutureCallback;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -43,32 +44,27 @@ public abstract class ObserverHelper {
      * @param center the offset the observer should watch at
      * @param provider the provider providing a new observer instance for the observation
      * @param <T> the type of observer the provider is expected to return for generic usage
-     *
-     * @return a new subscriber watching the specified area OR the existing subscriber if one at the specified
+     * @param callback a callback with the new subscriber watching the specified area OR the existing subscriber if one at the specified
      *      offset already exists in that world at that position
      */
-    @Nonnull
-    public abstract <T extends ChangeObserver> ChangeSubscriber<T> observeArea(World world, BlockPos center, ObserverProvider provider);
+    public abstract <T extends ChangeObserver> void observeArea(World world, BlockPos center, ObserverProvider provider, FutureCallback<ChangeSubscriber<T>> callback);
 
     /**
      * Removes an observer at the given world + position combination.
      *
      * @param world the world to remove the observer from
      * @param pos the position the observer is expected to be at
-     *
-     * @return true, if there was a observer at the world + position combination and it could be removed, false otherwise
+     * @param callback a callback containing true, if there was a observer at the world + position combination and it could be removed, false otherwise
      */
-    public abstract boolean removeObserver(World world, BlockPos pos);
+    public abstract void removeObserver(World world, BlockPos pos, FutureCallback<Boolean> callback);
 
     /**
      * Returns the current observation subscriber at the given world + position if there is one.
      *
      * @param world the world to retrieve the observation subscriber from
      * @param pos the position to check at
-     *
-     * @return the observation subscriber at that position or null if none is found there
+     * @param callback a callback containing the observation subscriber at that position or null if none is found there
      */
-    @Nullable
-    public abstract ChangeSubscriber<? extends ChangeObserver> getSubscriber(World world, BlockPos pos);
+    public abstract void getSubscriber(World world, BlockPos pos, FutureCallback<ChangeSubscriber<? extends ChangeObserver>> callback);
 
 }

@@ -17,21 +17,18 @@ public class AlternatingSet<T> {
 
     private Set<T> actualSet = new HashSet<>();
     private Set<T> flippedSet = new HashSet<>();
-    private boolean accessible = true;
 
     public void add(T entry) {
         synchronized (flipLock) {
-            if (this.accessible) {
-                this.actualSet.add(entry);
-            } else {
-                this.flippedSet.add(entry);
-            }
+            this.flippedSet.add(entry);
         }
     }
 
     public void forEach(IOPredicate<T> entryConsumer) throws IOException {
         synchronized (flipLock) {
-            this.accessible = false;
+            this.actualSet.addAll(this.flippedSet);
+            this.flippedSet.clear();
+
             Set<T> set = new HashSet<>();
             for (T t : this.actualSet) {
                 if (entryConsumer.testUnsafe(t)) {
@@ -39,9 +36,6 @@ public class AlternatingSet<T> {
                 }
             }
             this.actualSet = set;
-            this.accessible = true;
-            this.actualSet.addAll(this.flippedSet);
-            this.flippedSet.clear();
         }
     }
 
@@ -66,4 +60,9 @@ public class AlternatingSet<T> {
         }
     }
 
+    public boolean remove(T o) {
+        synchronized (flipLock) {
+            return this.actualSet.remove(o) || this.flippedSet.remove(o);
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package hellfirepvp.observerlib.api;
 
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
+import hellfirepvp.observerlib.api.util.FutureCallback;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -45,7 +46,7 @@ public abstract class ChangeObserver {
      * Called once after the observer is newly set on a position to observe it.
      * Useful to gather initial data about the state and the observer's surroundings.
      *
-     * Called from {@link ObserverHelper#observeArea(World, BlockPos, ObserverProvider)}.
+     * Called from {@link ObserverHelper#observeArea(World, BlockPos, ObserverProvider, FutureCallback)}.
      *
      * @param world the world the observer will be observing changes in
      * @param center the current offset/center of where the observer is located at

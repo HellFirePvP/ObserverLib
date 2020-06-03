@@ -1,5 +1,7 @@
 package hellfirepvp.observerlib.common.data;
 
+import hellfirepvp.observerlib.common.data.io.DirectorySet;
+import hellfirepvp.observerlib.common.data.io.WorldCacheIOManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IWorld;
@@ -11,7 +13,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -24,13 +27,15 @@ public class WorldCacheDomain {
 
     private final ResourceLocation key;
     private Set<SaveKey<? extends CachedWorldData>> knownSaveKeys = new HashSet<>();
-    private Map<Integer, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
+
+    private final Object worldDataLck = new Object();
+    private Map<ResourceLocation, Map<SaveKey<?>, CachedWorldData>> loadedWorldData = new HashMap<>();
 
     WorldCacheDomain(ResourceLocation key) {
         this.key = key;
     }
 
-    public <T extends CachedWorldData> SaveKey<T> createSaveKey(String name, Function<SaveKey<T>, T> dataProvider) {
+    public <T extends CachedWorldData> SaveKey<T> createSaveKey(String name, BiFunction<SaveKey<T>, DirectorySet, T> dataProvider) {
         for (SaveKey<?> key : knownSaveKeys) {
             if (key.identifier.equalsIgnoreCase(name)) {
                 return (SaveKey<T>) key;
@@ -57,57 +62,61 @@ public class WorldCacheDomain {
         return Collections.unmodifiableSet(knownSaveKeys);
     }
 
+    Collection<ResourceLocation> getUsedWorlds() {
+        synchronized (this.worldDataLck) {
+            return this.loadedWorldData.keySet();
+        }
+    }
+
     public ResourceLocation getName() {
         return key;
     }
 
     void tick(World world) {
-        int dimId = world.getDimension().getType().getId();
-        if (!this.domainData.containsKey(dimId)) {
-            return;
-        }
+        synchronized (this.worldDataLck) {
+            ResourceLocation dimKey = world.getDimension().getType().getRegistryName();
+            if (!this.loadedWorldData.containsKey(dimKey)) {
+                return;
+            }
 
-        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimId);
-        for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
-            if (dataMap.containsKey(key)) {
-                dataMap.get(key).updateTick(world);
+            Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.loadedWorldData.get(dimKey);
+            for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
+                if (dataMap.containsKey(key)) {
+                    dataMap.get(key).updateTick(world);
+                }
             }
         }
     }
 
     @Nullable
-    <T extends CachedWorldData> T getCachedData(int dimId, SaveKey<T> key) {
-        if (!domainData.containsKey(dimId)) {
-            return null;
-        }
-        return (T) domainData.get(dimId).get(key);
-    }
-
-    Collection<Integer> getUsedWorlds() {
-        return this.domainData.keySet();
-    }
-
-    @Nonnull
-    public <T extends CachedWorldData> T getData(IWorld world, SaveKey<T> key) {
-        T data = getFromCache(world, key);
-        if (data == null) {
-            data = WorldCacheIOThread.loadNow(this, world, key);
-
-            int dimId = world.getDimension().getType().getId();
-            this.domainData.computeIfAbsent(dimId, i -> new HashMap<>())
-                    .put(key, data);
-        }
-        return (T) data;
+    <T extends CachedWorldData> T getCachedData(IWorld world, SaveKey<T> key) {
+        return this.getCachedData(world.getDimension().getType().getRegistryName(), key);
     }
 
     @Nullable
-    private <T extends CachedWorldData> T getFromCache(IWorld world, SaveKey<T> key) {
-        int dimId = world.getDimension().getType().getId();
-        if (!domainData.containsKey(dimId)) {
-            return null;
+    <T extends CachedWorldData> T getCachedData(ResourceLocation dimKey, SaveKey<T> key) {
+        synchronized (this.worldDataLck) {
+            if (!this.loadedWorldData.containsKey(dimKey)) {
+                return null;
+            }
+            return (T) this.loadedWorldData.get(dimKey).get(key);
         }
-        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = domainData.get(dimId);
-        return (T) dataMap.get(key);
+    }
+
+    public <T extends CachedWorldData> void getData(IWorld world, SaveKey<T> key, Consumer<T> onLoad) {
+        T data = getCachedData(world, key);
+        if (data != null) {
+            onLoad.accept(data);
+            return;
+        }
+
+        ResourceLocation dimKey = world.getDimension().getType().getRegistryName();
+        Consumer<T> cacheFn = (loaded) -> {
+            synchronized (this.worldDataLck) {
+                this.loadedWorldData.computeIfAbsent(dimKey, i -> new HashMap<>()).putIfAbsent(key, loaded);
+            }
+        };
+        WorldCacheIOManager.scheduleCacheLoad(this, dimKey, key, cacheFn.andThen(loaded -> loaded.onLoad(world)).andThen(onLoad));
     }
 
     public File getSaveDirectory() {
@@ -123,21 +132,23 @@ public class WorldCacheDomain {
     }
 
     void clear() {
-        this.domainData.clear();
+        synchronized (this.worldDataLck) {
+            this.loadedWorldData.clear();
+        }
     }
 
     public static class SaveKey<T extends CachedWorldData> {
 
         private final String identifier;
-        private final Function<SaveKey<T>, T> instanceProvider;
+        private final BiFunction<SaveKey<T>, DirectorySet, T> instanceProvider;
 
-        private SaveKey(String identifier, Function<SaveKey<T>, T> provider) {
+        private SaveKey(String identifier, BiFunction<SaveKey<T>, DirectorySet, T> provider) {
             this.identifier = identifier;
             this.instanceProvider = provider;
         }
 
-        public T getNewInstance(SaveKey<T> key) {
-            return instanceProvider.apply(key);
+        public T getNewInstance(SaveKey<T> key, DirectorySet directory) {
+            return instanceProvider.apply(key, directory);
         }
 
         public String getIdentifier() {

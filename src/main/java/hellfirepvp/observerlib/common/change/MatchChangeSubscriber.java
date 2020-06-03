@@ -78,7 +78,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         this.isMatching = this.matcher.notifyChange(world, this.getCenter(), this.changeSet);
         this.changeSet.reset();
         if (world instanceof World) {
-            MatcherObserverHelper.getBuffer(world).markDirty(this.getCenter());
+            MatcherObserverHelper.getBuffer(world, buf -> buf.markDirty(this.getCenter()));
         }
 
         return this.isMatching;

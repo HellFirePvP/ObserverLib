@@ -1,5 +1,7 @@
 package hellfirepvp.observerlib.common.data;
 
+import hellfirepvp.observerlib.common.data.io.WorldCacheIOManager;
+import hellfirepvp.observerlib.common.data.io.WorldCacheSaveThread;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IWorld;
@@ -34,12 +36,24 @@ public class WorldCacheManager implements ITickHandler {
 
     public static void scheduleSaveAll() {
         for (WorldCacheDomain domain : domains.values()) {
-            for (int dimId : domain.getUsedWorlds()) {
+            for (ResourceLocation dimKey : domain.getUsedWorlds()) {
                 for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
-                    CachedWorldData data = domain.getCachedData(dimId, key);
+                    CachedWorldData data = domain.getCachedData(dimKey, key);
                     if (data != null && data.needsSaving()) {
-                        WorldCacheIOThread.scheduleSave(domain, dimId, data);
+                        WorldCacheIOManager.scheduleSave(domain, dimKey, data);
                     }
+                }
+            }
+        }
+    }
+
+    public static void scheduleSave(IWorld world) {
+        ResourceLocation dimKey = world.getDimension().getType().getRegistryName();
+        for (WorldCacheDomain domain : domains.values()) {
+            for (WorldCacheDomain.SaveKey key : domain.getKnownSaveKeys()) {
+                CachedWorldData data = domain.getCachedData(dimKey, key);
+                if (data != null && data.needsSaving()) {
+                    WorldCacheIOManager.scheduleSave(domain, dimKey, data);
                 }
             }
         }
@@ -73,21 +87,11 @@ public class WorldCacheManager implements ITickHandler {
     @Override
     public void tick(TickEvent.Type type, Object... context) {
         World world = (World) context[0];
-        if (world.isRemote) return;
+        if (world.isRemote()) {
+            return;
+        }
         for (WorldCacheDomain domain : domains.values()) {
             domain.tick(world);
-        }
-    }
-
-    public void doSave(IWorld world) {
-        int dimId = world.getDimension().getType().getId();
-        for (WorldCacheDomain domain : domains.values()) {
-            for (WorldCacheDomain.SaveKey key : domain.getKnownSaveKeys()) {
-                CachedWorldData data = domain.getCachedData(dimId, key);
-                if (data != null && data.needsSaving()) {
-                    WorldCacheIOThread.scheduleSave(domain, dimId, data);
-                }
-            }
         }
     }
 

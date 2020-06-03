@@ -21,7 +21,7 @@ public class EventHandlerIO {
         if (event.getWorld().isRemote()) {
             return;
         }
-        WorldCacheManager.getInstance().doSave(event.getWorld());
+        WorldCacheManager.scheduleSave(event.getWorld());
     }
 
 }

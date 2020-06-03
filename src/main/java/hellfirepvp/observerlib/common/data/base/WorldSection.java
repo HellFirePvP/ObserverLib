@@ -32,6 +32,8 @@ public abstract class WorldSection {
 
     public abstract void readFromNBT(CompoundNBT tag);
 
+    public abstract boolean isEmpty();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
