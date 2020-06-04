@@ -14,7 +14,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.14.4-1.1.0'
+version = '1.15.2-1.1.0'
 group = 'hellfirepvp.observerlib'
 archivesBaseName = 'observerlib'
 String build_version = ""
@@ -29,7 +29,7 @@ sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = co
 
 minecraft {
 
-    mappings channel: 'snapshot', version: '20190711-1.14.3'
+    mappings channel: 'snapshot', version: '20200514-1.15.1'
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
@@ -90,7 +90,7 @@ minecraft {
 
 dependencies {
 
-    minecraft "net.minecraftforge:forge:1.14.4-28.1.40"
+    minecraft 'net.minecraftforge:forge:1.15.2-31.2.8'
 
 }
 
