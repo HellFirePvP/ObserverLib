@@ -1,6 +1,8 @@
 package hellfirepvp.observerlib.api.client;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import hellfirepvp.observerlib.api.structure.Structure;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -8,11 +10,10 @@ import net.minecraft.block.Blocks;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -99,18 +100,18 @@ public class StructureRenderer {
             return;
         }
 
-        MainWindow window = Minecraft.getInstance().mainWindow;
+        MainWindow window = Minecraft.getInstance().getMainWindow();
         double scale = window.getGuiScaleFactor();
 
-        double mul = 10.5;
-        double size = 2;
-        double minSize = 0.5;
+        float mul = 10.5F;
+        float size = 2;
+        float minSize = 0.5F;
 
         Vec3i max = this.structure.getMaximumOffset();//Ja.. ne IDE is nur so gut wie der entwickler/in davor :P
         Vec3i min = this.structure.getMinimumOffset();
 
-        double maxLength = 0;
-        double pointDst = max.getX() - min.getX();
+        float maxLength = 0;
+        float pointDst = max.getX() - min.getX();
         if (pointDst > maxLength) {
             maxLength = pointDst;
         }
@@ -125,26 +126,26 @@ public class StructureRenderer {
         maxLength -= 5;
 
         if(maxLength > 0) {
-            size = (size - minSize) * (1D - (maxLength / 20D));
+            size = (size - minSize) * (1F - (maxLength / 20F));
         }
 
-        double dr = -5.75 * size;
+        float dr = -5.75F * size;
 
         Tessellator tes = Tessellator.getInstance();
         BufferBuilder buf = tes.getBuffer();
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
+        MatrixStack renderStack = new MatrixStack();
 
-        GlStateManager.pushMatrix();
         slice.ifPresent(ySlice -> this.world.pushContentFilter((pos) -> pos.getY() == ySlice));
 
-        GlStateManager.translated(x + 16D / scale, y + 16D / scale, 512);
-        GlStateManager.translated(dr, dr, dr);
-        GlStateManager.rotatef((float) rotationX, 1, 0, 0);
-        GlStateManager.rotatef((float) rotationY, 0, 1, 0);
-        GlStateManager.rotatef((float) rotationZ, 0, 0, 1);
-        GlStateManager.translated(-dr, -dr, -dr);
-        GlStateManager.scaled(-size * mul, -size * mul, -size * mul);
-        slice.ifPresent(ySlice -> GlStateManager.scaled(0, -ySlice, 0));
+        renderStack.translate(x + 16D / scale, y + 16D / scale, 512);
+        renderStack.translate(dr, dr, dr);
+        renderStack.rotate(Vector3f.XP.rotationDegrees((float) rotationX));
+        renderStack.rotate(Vector3f.YP.rotationDegrees((float) rotationY));
+        renderStack.rotate(Vector3f.ZP.rotationDegrees((float) rotationZ));
+        renderStack.translate(-dr, -dr, -dr);
+        renderStack.scale(-size * mul, -size * mul, -size * mul);
+        slice.ifPresent(ySlice -> renderStack.scale(0, -ySlice, 0));
 
         buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
         this.structure.getContents().keySet()
@@ -154,13 +155,15 @@ public class StructureRenderer {
                         if (!view.getFluidState().isEmpty()) {
                             this.renderFluid(pos, view.getFluidState(), buf);
                         }
+                        renderStack.push();
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
-                            this.renderBlock(pos, view, buf);
+                            this.renderBlock(pos, view, buf, renderStack);
                             this.world.popContentFilter();
                         } else {
-                            this.renderBlock(pos, view, buf);
+                            this.renderBlock(pos, view, buf, renderStack);
                         }
+                        renderStack.pop();
                     }
                 });
         tes.draw();
@@ -174,7 +177,9 @@ public class StructureRenderer {
                     if (tile != null) {
                         TileEntityRenderer tesr = TileEntityRendererDispatcher.instance.getRenderer(tile);
                         if (tesr != null) {
-                            tesr.render(tile, pos.getX(), pos.getY(), pos.getZ(), pTicks, -1);
+                            renderStack.push();
+                            tesr.render(tile, 0, renderStack, (renderType) -> buf, WorldRenderer.getCombinedLight(this.world, pos), OverlayTexture.NO_OVERLAY);
+                            renderStack.pop();
                         }
                     }
                     if (this.isolateIndividualBlockRender) {
@@ -183,7 +188,7 @@ public class StructureRenderer {
                 });
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
-        GlStateManager.popMatrix();
+        RenderSystem.popMatrix();
     }
 
     private void renderFluid(BlockPos pos, IFluidState fluidState, BufferBuilder buf) {
@@ -191,16 +196,16 @@ public class StructureRenderer {
         brd.renderFluid(pos, this.world, buf, fluidState);
     }
 
-    private void renderBlock(BlockPos offset, BlockState state, BufferBuilder buf) {
+    private void renderBlock(BlockPos offset, BlockState state, IVertexBuilder vb, MatrixStack renderStack) {
         BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
         try {
-            brd.renderBlock(state, offset, this.world, buf, rand, EmptyModelData.INSTANCE);
+            brd.renderModel(state, offset, this.world, renderStack, vb, EmptyModelData.INSTANCE);
         } catch (Exception exc) {
             BlockRenderType type = state.getRenderType();
             if (type == BlockRenderType.MODEL) {
                 IBakedModel model = brd.getModelForState(state);
                 long posRandom = state.getPositionRandom(offset);
-                brd.getBlockModelRenderer().renderModel(this.world, model, state, offset, buf, true, rand, posRandom, EmptyModelData.INSTANCE);
+                brd.getBlockModelRenderer().renderModel(this.world, model, state, offset, renderStack, vb, true, rand, posRandom, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
             }
         }
     }

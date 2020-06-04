@@ -3,6 +3,7 @@ package hellfirepvp.observerlib.api.client;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
+import hellfirepvp.observerlib.api.util.SingleBiomeManager;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -16,11 +17,13 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -44,6 +47,7 @@ public class StructureRenderWorld implements IWorldReader {
     private static final int MAX_LIGHT = 15;
 
     private final Biome globalBiome;
+    private final SingleBiomeManager biomeManager;
     private final Dimension thisDim;
     private final WorldBorder maxBorder;
 
@@ -53,6 +57,7 @@ public class StructureRenderWorld implements IWorldReader {
     public StructureRenderWorld(Structure structure, Biome globalBiome) {
         this.structure = structure;
         this.globalBiome = globalBiome;
+        this.biomeManager = new SingleBiomeManager(this.globalBiome);
         this.thisDim = Minecraft.getInstance().world.getDimension();
         this.maxBorder = this.thisDim.createWorldBorder();
     }
@@ -85,8 +90,7 @@ public class StructureRenderWorld implements IWorldReader {
         if (tile == null) {
             return null;
         }
-        tile.setWorld(Minecraft.getInstance().world);
-        tile.setPos(pos);
+        tile.setWorldAndPos(Minecraft.getInstance().world, pos);
 
         MatchableTile tileMatch = this.structure.getTileEntityAt(pos);
         if (tileMatch == null) {
@@ -116,8 +120,8 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public Biome getBiome(BlockPos pos) {
-        return globalBiome;
+    public WorldLightManager getLightManager() {
+        return null;
     }
 
     @Override
@@ -154,6 +158,16 @@ public class StructureRenderWorld implements IWorldReader {
     @Override
     public int getSkylightSubtracted() {
         return 0;
+    }
+
+    @Override
+    public BiomeManager getBiomeManager() {
+        return biomeManager;
+    }
+
+    @Override
+    public Biome getNoiseBiomeRaw(int x, int y, int z) {
+        return globalBiome;
     }
 
     @Override

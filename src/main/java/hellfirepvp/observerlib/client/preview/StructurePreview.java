@@ -1,7 +1,9 @@
 package hellfirepvp.observerlib.client.preview;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.client.StructureRenderWorld;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
@@ -115,7 +117,7 @@ public class StructurePreview {
         StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), Biomes.PLAINS);
         drawWorld.pushContentFilter(pos -> pos.getY() == displaySlice.get());
 
-        float[] fullBright = new float[] { 15, 15 };
+        int[] fullBright = new int[] { 15, 15 };
         BlockMismatchColorDecorator colorDecorator = new BlockMismatchColorDecorator();
 
         Tessellator tes = Tessellator.getInstance();
@@ -124,17 +126,19 @@ public class StructurePreview {
         decorated.setLightmapDecorator((skyLight, blockLight) -> fullBright);
         decorated.setColorDecorator(colorDecorator);
 
-        GlStateManager.disableAlphaTest();
-        GlStateManager.disableDepthTest();
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_SRC_ALPHA);
+        MatrixStack renderStack = new MatrixStack();
 
-        GlStateManager.pushMatrix();
+        RenderSystem.disableAlphaTest();
+        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA,
+                GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+
         Vec3d vec = new Vec3d(0, 0, 0);
         if (Minecraft.getInstance().gameRenderer != null) {
             vec = Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
         }
-        GlStateManager.translated(-vec.getX(), -vec.getY(), -vec.getZ());
+        renderStack.translate(-vec.getX(), -vec.getY(), -vec.getZ());
 
         List<Tuple<BlockPos, ? extends MatchableState>> structureSlice = this.snapshot.getStructure().getStructureSlice(displaySlice.get());
         structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distanceSq(playerPos.x, playerPos.y, playerPos.z, false)));
@@ -154,9 +158,9 @@ public class StructurePreview {
                 data = renderTile.getModelData();
             }
 
-            GlStateManager.pushMatrix();
-            GlStateManager.translatef(at.getX() + 0.2F, at.getY() + 0.2F, at.getZ() + 0.2F);
-            GlStateManager.scalef(0.6F, 0.6F, 0.6F);
+            renderStack.push();
+            renderStack.translate(at.getX() + 0.2F, at.getY() + 0.2F, at.getZ() + 0.2F);
+            renderStack.scale(0.6F, 0.6F, 0.6F);
 
             decorated.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
             if (!actual.isAir(renderWorld, at)) {
@@ -166,22 +170,20 @@ public class StructurePreview {
             if (!renderState.getFluidState().isEmpty()) {
                 brd.renderFluid(BlockPos.ZERO, drawWorld, decorated, renderState.getFluidState());
             }
-            brd.renderBlock(renderState, BlockPos.ZERO, drawWorld, decorated, rand, data);
+            brd.renderModel(renderState, BlockPos.ZERO, drawWorld, renderStack, decorated, true, rand, data);
             drawWorld.popContentFilter();
             colorDecorator.isMismatch = false;
             tes.draw();
 
-            GlStateManager.popMatrix();
+            renderStack.pop();
         }
 
-        GlStateManager.popMatrix();
         drawWorld.popContentFilter();
 
-        GlStateManager.color4f(1F, 1F, 1F, 1F);
-        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        GlStateManager.disableBlend();
-        GlStateManager.enableDepthTest();
-        GlStateManager.enableAlphaTest();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.disableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableAlphaTest();
     }
 
     public static class Builder {
