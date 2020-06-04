@@ -1,6 +1,5 @@
 package hellfirepvp.observerlib.client.preview;
 
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -8,13 +7,12 @@ import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.client.StructureRenderWorld;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.util.StructureUtil;
-import hellfirepvp.observerlib.client.util.BufferBuilderDecorator;
+import hellfirepvp.observerlib.client.util.BufferDecoratorBuilder;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.client.util.SimpleBossInfo;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Tuple;
@@ -28,7 +26,6 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL14;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -108,7 +105,7 @@ public class StructurePreview {
         }
     }
 
-    void render(World renderWorld, Vec3d playerPos) {
+    void render(World renderWorld, MatrixStack renderStack, Vec3d playerPos) {
         Optional<Integer> displaySlice = StructureUtil.getLowestMismatchingSlice(this.snapshot.getStructure(), renderWorld, this.origin);
         if (!displaySlice.isPresent()) {
             return; //Nothing to render
@@ -120,13 +117,11 @@ public class StructurePreview {
         int[] fullBright = new int[] { 15, 15 };
         BlockMismatchColorDecorator colorDecorator = new BlockMismatchColorDecorator();
 
-        Tessellator tes = Tessellator.getInstance();
         BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
-        BufferBuilderDecorator decorated = BufferBuilderDecorator.decorate(tes.getBuffer());
-        decorated.setLightmapDecorator((skyLight, blockLight) -> fullBright);
-        decorated.setColorDecorator(colorDecorator);
-
-        MatrixStack renderStack = new MatrixStack();
+        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+        BufferDecoratorBuilder decorator = new BufferDecoratorBuilder()
+                .setLightmapDecorator((skyLight, blockLight) -> fullBright)
+                .setColorDecorator(colorDecorator);
 
         RenderSystem.disableAlphaTest();
         RenderSystem.disableDepthTest();
@@ -138,6 +133,8 @@ public class StructurePreview {
         if (Minecraft.getInstance().gameRenderer != null) {
             vec = Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
         }
+
+        renderStack.push();
         renderStack.translate(-vec.getX(), -vec.getY(), -vec.getZ());
 
         List<Tuple<BlockPos, ? extends MatchableState>> structureSlice = this.snapshot.getStructure().getStructureSlice(displaySlice.get());
@@ -153,32 +150,35 @@ public class StructurePreview {
                 continue;
             }
 
-            IModelData data = EmptyModelData.INSTANCE;
-            if (renderTile != null) {
-                data = renderTile.getModelData();
-            }
+            IModelData data = renderTile != null ? renderTile.getModelData() : EmptyModelData.INSTANCE;
 
             renderStack.push();
             renderStack.translate(at.getX() + 0.2F, at.getY() + 0.2F, at.getZ() + 0.2F);
             renderStack.scale(0.6F, 0.6F, 0.6F);
 
-            decorated.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
             if (!actual.isAir(renderWorld, at)) {
                 colorDecorator.isMismatch = true;
             }
             drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
             if (!renderState.getFluidState().isEmpty()) {
-                brd.renderFluid(BlockPos.ZERO, drawWorld, decorated, renderState.getFluidState());
+                decorator.decorate(buffers.getBuffer(RenderType.getTranslucent()), buf -> {
+                    brd.renderFluid(BlockPos.ZERO, drawWorld, buf, renderState.getFluidState());
+                });
             }
-            brd.renderModel(renderState, BlockPos.ZERO, drawWorld, renderStack, decorated, true, rand, data);
+            decorator.decorate(buffers.getBuffer(RenderTypeLookup.getRenderType(renderState)), buf -> {
+                brd.renderModel(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data);
+            });
+            buffers.finish();
+
             drawWorld.popContentFilter();
             colorDecorator.isMismatch = false;
-            tes.draw();
 
             renderStack.pop();
         }
 
         drawWorld.popContentFilter();
+
+        renderStack.pop();
 
         RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         RenderSystem.disableBlend();
@@ -230,7 +230,7 @@ public class StructurePreview {
         }
     }
 
-    private static class BlockMismatchColorDecorator implements BufferBuilderDecorator.ColorDecorator {
+    private static class BlockMismatchColorDecorator implements BufferDecoratorBuilder.ColorDecorator {
 
         private static final int[] errorColor = new int[] { 255, 0, 0, 128 };
 

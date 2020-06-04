@@ -90,11 +90,11 @@ public class StructureRenderer {
         return y >= this.structure.getMinimumOffset().getY() && y <= this.structure.getMaximumOffset().getY();
     }
 
-    public void render3DGUI(double x, double y, float pTicks) {
-        render3DSliceGUI(x, y, pTicks, Optional.empty());
+    public void render3DGUI(MatrixStack renderStack, double x, double y, float pTicks) {
+        render3DSliceGUI(renderStack, x, y, pTicks, Optional.empty());
     }
 
-    public void render3DSliceGUI(double x, double y, float pTicks, Optional<Integer> slice) {
+    public void render3DSliceGUI(MatrixStack renderStack, double x, double y, float pTicks, Optional<Integer> slice) {
         Screen currentScreen = Minecraft.getInstance().currentScreen;
         if (currentScreen == null) {
             return;
@@ -131,13 +131,12 @@ public class StructureRenderer {
 
         float dr = -5.75F * size;
 
-        Tessellator tes = Tessellator.getInstance();
-        BufferBuilder buf = tes.getBuffer();
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        MatrixStack renderStack = new MatrixStack();
+        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
 
         slice.ifPresent(ySlice -> this.world.pushContentFilter((pos) -> pos.getY() == ySlice));
 
+        renderStack.push();
         renderStack.translate(x + 16D / scale, y + 16D / scale, 512);
         renderStack.translate(dr, dr, dr);
         renderStack.rotate(Vector3f.XP.rotationDegrees((float) rotationX));
@@ -147,26 +146,25 @@ public class StructureRenderer {
         renderStack.scale(-size * mul, -size * mul, -size * mul);
         slice.ifPresent(ySlice -> renderStack.scale(0, -ySlice, 0));
 
-        buf.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
         this.structure.getContents().keySet()
                 .forEach(pos -> {
                     BlockState view = this.world.getBlockState(pos);
                     if (!view.getBlock().equals(Blocks.AIR)) {
                         if (!view.getFluidState().isEmpty()) {
-                            this.renderFluid(pos, view.getFluidState(), buf);
+                            this.renderFluid(pos, view.getFluidState(), buffers.getBuffer(RenderType.getTranslucent()));
                         }
                         renderStack.push();
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
-                            this.renderBlock(pos, view, buf, renderStack);
+                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
                             this.world.popContentFilter();
                         } else {
-                            this.renderBlock(pos, view, buf, renderStack);
+                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
                         }
                         renderStack.pop();
                     }
                 });
-        tes.draw();
+        buffers.finish();
 
         this.structure.getContents().keySet()
                 .forEach(pos -> {
@@ -178,7 +176,7 @@ public class StructureRenderer {
                         TileEntityRenderer tesr = TileEntityRendererDispatcher.instance.getRenderer(tile);
                         if (tesr != null) {
                             renderStack.push();
-                            tesr.render(tile, 0, renderStack, (renderType) -> buf, WorldRenderer.getCombinedLight(this.world, pos), OverlayTexture.NO_OVERLAY);
+                            tesr.render(tile, 0, renderStack, buffers, WorldRenderer.getCombinedLight(this.world, pos), OverlayTexture.NO_OVERLAY);
                             renderStack.pop();
                         }
                     }
@@ -186,12 +184,13 @@ public class StructureRenderer {
                         this.world.popContentFilter();
                     }
                 });
+        buffers.finish();
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
-        RenderSystem.popMatrix();
+        renderStack.pop();
     }
 
-    private void renderFluid(BlockPos pos, IFluidState fluidState, BufferBuilder buf) {
+    private void renderFluid(BlockPos pos, IFluidState fluidState, IVertexBuilder buf) {
         BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
         brd.renderFluid(pos, this.world, buf, fluidState);
     }
