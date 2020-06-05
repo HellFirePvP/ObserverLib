@@ -1,9 +1,17 @@
 package hellfirepvp.observerlib.client.util;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.mojang.blaze3d.vertex.IVertexConsumer;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Matrix3f;
+import net.minecraft.client.renderer.Matrix4f;
+import net.minecraft.client.renderer.model.BakedQuad;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.renderer.vertex.VertexFormatElement;
 
+import java.nio.ByteBuffer;
 import java.util.function.Consumer;
 
 /**
@@ -63,6 +71,10 @@ public class BufferDecoratorBuilder {
 
     public void decorate(IVertexConsumer consumer, Consumer<IVertexConsumer> runDecorated) {
         runDecorated.accept(new DecoratedConsumer(consumer, this));
+    }
+
+    public void decorate(BufferBuilder buf, Consumer<BufferBuilder> runDecorated) {
+        runDecorated.accept(new DecoratedBufferBuilder(buf, this));
     }
 
     private static class DecoratedBuilder implements IVertexBuilder {
@@ -178,6 +190,183 @@ public class BufferDecoratorBuilder {
             this.vertexConsumer.putFloat(i, f);
         }
 
+    }
+
+    //Well, gotta do it all over again for this one..
+    private static class DecoratedBufferBuilder extends BufferBuilder {
+
+        private BufferBuilder decorated;
+        private BufferDecoratorBuilder decorator;
+        private DecoratedConsumer decoratedDelegate;
+
+        public DecoratedBufferBuilder(BufferBuilder decorated, BufferDecoratorBuilder decorator) {
+            super(0);
+            this.decorated = decorated;
+            this.decoratedDelegate = new DecoratedConsumer(this.decorated, decorator);
+            this.decorator = decorator;
+        }
+
+        @Override
+        public void sortVertexData(float cameraX, float cameraY, float cameraZ) {
+            this.decorated.sortVertexData(cameraX, cameraY, cameraZ);
+        }
+
+        @Override
+        public State getVertexState() {
+            return this.decorated.getVertexState();
+        }
+
+        @Override
+        public void begin(int glMode, VertexFormat format) {
+            this.decorated.begin(glMode, format);
+        }
+
+        @Override
+        public void finishDrawing() {
+            this.decorated.finishDrawing();
+        }
+
+        @Override
+        public boolean isDrawing() {
+            return this.decorated.isDrawing();
+        }
+
+        @Override
+        public Pair<DrawState, ByteBuffer> getNextBuffer() {
+            return this.decorated.getNextBuffer();
+        }
+
+        @Override
+        public void reset() {
+            this.decorated.reset();
+        }
+
+        @Override
+        public void discard() {
+            this.decorated.discard();
+        }
+
+        @Override
+        public void setVertexState(State state) {
+            this.decorated.setVertexState(state);
+        }
+
+        @Override
+        public void endVertex() {
+            this.decorated.endVertex();
+        }
+
+        //TODO re-check on this. we might need to unpack & repack data here
+        @Override
+        public void putBulkData(ByteBuffer buffer) {
+            this.decorated.putBulkData(buffer);
+        }
+
+        @Override
+        public VertexFormat getVertexFormat() {
+            return super.getVertexFormat();
+        }
+
+        @Override
+        public void addVertex(float x, float y, float z,
+                              float red, float green, float blue, float alpha,
+                              float texU, float texV,
+                              int overlayUV, int lightmapUV,
+                              float normalX, float normalY, float normalZ) {
+            if (this.decorator.positionDecorator != null) {
+                double[] newPosition = this.decorator.positionDecorator.decorate(x, y, z);
+                x = (float) newPosition[0];
+                y = (float) newPosition[1];
+                z = (float) newPosition[2];
+            }
+            if (this.decorator.colorDecorator != null) {
+                int[] newColors = this.decorator.colorDecorator.decorate((int) red * 255, (int) green * 255, (int) blue * 255, (int) alpha * 255);
+                red   = newColors[0] / 255F;
+                green = newColors[1] / 255F;
+                blue  = newColors[2] / 255F;
+                alpha = newColors[3] / 255F;
+            }
+            if (this.decorator.uvDecorator != null) {
+                float[] newUV = this.decorator.uvDecorator.decorate(texU, texV);
+                texU = newUV[0];
+                texV = newUV[1];
+            }
+            if (this.decorator.overlayDecorator != null) {
+                int[] newOverlayCoords = this.decorator.overlayDecorator.decorate(overlayUV & 0xFFFF, (overlayUV >> 16) & 0xFFFF);
+                overlayUV = newOverlayCoords[0] | (newOverlayCoords[1] << 16);
+            }
+            if (this.decorator.lightmapDecorator != null) {
+                int[] newLightMapCoords = this.decorator.lightmapDecorator.decorate(lightmapUV & 0xFFFF, (lightmapUV >> 16) & 0xFFFF);
+                lightmapUV = newLightMapCoords[0] | (newLightMapCoords[1] << 16);
+            }
+            if (this.decorator.normalDecorator != null) {
+                float[] newNormals = this.decorator.normalDecorator.decorate(normalX, normalY, normalZ);
+                normalX = newNormals[0];
+                normalY = newNormals[1];
+                normalZ = newNormals[2];
+            }
+            super.addVertex(x, y, z, red, green, blue, alpha, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
+        }
+
+        @Override
+        public VertexFormatElement getCurrentElement() {
+            return this.decoratedDelegate.getCurrentElement();
+        }
+
+        @Override
+        public void nextVertexFormatIndex() {
+            this.decoratedDelegate.nextVertexFormatIndex();
+        }
+
+        @Override
+        public void putByte(int i, byte b) {
+            this.decoratedDelegate.putByte(i, b);
+        }
+
+        @Override
+        public void putFloat(int i, float f) {
+            this.decoratedDelegate.putFloat(i, f);
+        }
+
+        @Override
+        public void putShort(int i, short s) {
+            this.decoratedDelegate.putShort(i, s);
+        }
+
+        @Override
+        public void setDefaultColor(int red, int green, int blue, int alpha) {
+            this.decorated.setDefaultColor(red, green, blue, alpha);
+        }
+
+        @Override
+        public IVertexBuilder pos(double x, double y, double z) {
+            return this.decoratedDelegate.pos(x, y, z);
+        }
+
+        @Override
+        public IVertexBuilder color(int red, int green, int blue, int alpha) {
+            return this.decoratedDelegate.color(red, green, blue, alpha);
+        }
+
+        @Override
+        public IVertexBuilder tex(float u, float v) {
+            return this.decoratedDelegate.tex(u, v);
+        }
+
+        @Override
+        public IVertexBuilder overlay(int u, int v) {
+            return this.decoratedDelegate.overlay(u, v);
+        }
+
+        @Override
+        public IVertexBuilder lightmap(int u, int v) {
+            return this.decoratedDelegate.lightmap(u, v);
+        }
+
+        @Override
+        public IVertexBuilder normal(float x, float y, float z) {
+            return this.decoratedDelegate.normal(x, y, z);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
