@@ -121,7 +121,7 @@ public class StructureRenderWorld implements IWorldReader {
 
     @Override
     public WorldLightManager getLightManager() {
-        return null;
+        return new StructureRenderLightManager(MAX_LIGHT);
     }
 
     @Override
@@ -131,6 +131,11 @@ public class StructureRenderWorld implements IWorldReader {
 
     @Override
     public int getLightSubtracted(BlockPos pos, int amount) {
+        return MAX_LIGHT;
+    }
+
+    @Override
+    public int getMaxLightLevel() {
         return MAX_LIGHT;
     }
 
