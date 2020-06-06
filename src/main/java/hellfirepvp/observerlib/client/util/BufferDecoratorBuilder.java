@@ -34,10 +34,17 @@ public class BufferDecoratorBuilder {
     //      Decoration options
     ///////////////////////////////////////////////////////////////////////////
 
+    public static BufferDecoratorBuilder withPosition(PositionDecorator positionDecorator) {
+        return new BufferDecoratorBuilder().setPositionDecorator(positionDecorator);
+    }
 
     public BufferDecoratorBuilder setPositionDecorator(PositionDecorator positionDecorator) {
         this.positionDecorator = positionDecorator;
         return this;
+    }
+
+    public static BufferDecoratorBuilder withColor(ColorDecorator colorDecorator) {
+        return new BufferDecoratorBuilder().setColorDecorator(colorDecorator);
     }
 
     public BufferDecoratorBuilder setColorDecorator(ColorDecorator colorDecorator) {
@@ -45,9 +52,17 @@ public class BufferDecoratorBuilder {
         return this;
     }
 
+    public static BufferDecoratorBuilder withUV(UVDecorator uvDecorator) {
+        return new BufferDecoratorBuilder().setUvDecorator(uvDecorator);
+    }
+
     public BufferDecoratorBuilder setUvDecorator(UVDecorator uvDecorator) {
         this.uvDecorator = uvDecorator;
         return this;
+    }
+
+    public static BufferDecoratorBuilder withOverly(IntMapDecorator overlayDecorator) {
+        return new BufferDecoratorBuilder().setOverlayDecorator(overlayDecorator);
     }
 
     public BufferDecoratorBuilder setOverlayDecorator(IntMapDecorator overlayDecorator) {
@@ -55,9 +70,17 @@ public class BufferDecoratorBuilder {
         return this;
     }
 
+    public static BufferDecoratorBuilder withLightmap(IntMapDecorator lightmapDecorator) {
+        return new BufferDecoratorBuilder().setLightmapDecorator(lightmapDecorator);
+    }
+
     public BufferDecoratorBuilder setLightmapDecorator(IntMapDecorator lightmapDecorator) {
         this.lightmapDecorator = lightmapDecorator;
         return this;
+    }
+
+    public static BufferDecoratorBuilder withNormal(NormalDecorator normalDecorator) {
+        return new BufferDecoratorBuilder().setNormalDecorator(normalDecorator);
     }
 
     public BufferDecoratorBuilder setNormalDecorator(NormalDecorator normalDecorator) {
@@ -75,6 +98,18 @@ public class BufferDecoratorBuilder {
 
     public void decorate(BufferBuilder buf, Consumer<BufferBuilder> runDecorated) {
         runDecorated.accept(new DecoratedBufferBuilder(buf, this));
+    }
+
+    public IVertexBuilder decorate(IVertexBuilder builder) {
+        return new DecoratedBuilder(builder, this);
+    }
+
+    public IVertexConsumer decorate(IVertexConsumer builder) {
+        return new DecoratedConsumer(builder, this);
+    }
+
+    public BufferBuilder decorate(BufferBuilder builder) {
+        return new DecoratedBufferBuilder(builder, this);
     }
 
     private static class DecoratedBuilder implements IVertexBuilder {
