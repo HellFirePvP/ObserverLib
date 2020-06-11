@@ -166,9 +166,9 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder lightmap(int u, int v) {
             if (this.decorator.lightmapDecorator != null) {
                 int[] newUV = this.decorator.lightmapDecorator.decorate(u, v);
-                return this.vertexBuilder.overlay(newUV[0], newUV[1]);
+                return this.vertexBuilder.lightmap(newUV[0], newUV[1]);
             }
-            return this.vertexBuilder.overlay(u, v);
+            return this.vertexBuilder.lightmap(u, v);
         }
 
         @Override
