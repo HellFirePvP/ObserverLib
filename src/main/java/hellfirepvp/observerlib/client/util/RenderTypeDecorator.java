@@ -89,6 +89,6 @@ public class RenderTypeDecorator extends RenderType {
 
     @Override
     public Optional<RenderType> func_230169_u_() {
-        return this.decorated.func_230169_u_();
+        return Optional.of(this);
     }
 }

@@ -9,6 +9,7 @@ import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.util.StructureUtil;
 import hellfirepvp.observerlib.client.util.BufferDecoratorBuilder;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
+import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import hellfirepvp.observerlib.client.util.SimpleBossInfo;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
@@ -123,11 +124,19 @@ public class StructurePreview {
                 .setLightmapDecorator((skyLight, blockLight) -> fullBright)
                 .setColorDecorator(colorDecorator);
 
-        RenderSystem.disableAlphaTest();
-        RenderSystem.disableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA,
-                GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        Runnable transparentSetup = () -> {
+            RenderSystem.disableAlphaTest();
+            RenderSystem.disableDepthTest();
+            RenderSystem.enableBlend();
+            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA,
+                    GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        };
+        Runnable transparentClean = () -> {
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.disableBlend();
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableAlphaTest();
+        };
 
         Vec3d vec = new Vec3d(0, 0, 0);
         if (Minecraft.getInstance().gameRenderer != null) {
@@ -161,11 +170,14 @@ public class StructurePreview {
             }
             drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
             if (!renderState.getFluidState().isEmpty()) {
-                decorator.decorate(buffers.getBuffer(RenderType.getTranslucent()), buf -> {
+                RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderType.getTranslucent(), transparentSetup, transparentClean);
+                decorator.decorate(buffers.getBuffer(decorated), buf -> {
                     brd.renderFluid(BlockPos.ZERO, drawWorld, buf, renderState.getFluidState());
                 });
             }
-            decorator.decorate(buffers.getBuffer(RenderTypeLookup.getRenderType(renderState)), buf -> {
+
+            RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderTypeLookup.getRenderType(renderState), transparentSetup, transparentClean);
+            decorator.decorate(buffers.getBuffer(decorated), buf -> {
                 brd.renderModel(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data);
             });
             buffers.finish();
@@ -179,11 +191,6 @@ public class StructurePreview {
         drawWorld.popContentFilter();
 
         renderStack.pop();
-
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        RenderSystem.disableBlend();
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableAlphaTest();
     }
 
     public static class Builder {
