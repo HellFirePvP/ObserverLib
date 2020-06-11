@@ -36,20 +36,20 @@ public class RenderTypeDecorator extends RenderType {
 
     @Override
     public void setupRenderState() {
-        super.setupRenderState();
+        this.decorated.setupRenderState();
         this.afterSetup.run();
     }
 
     @Override
     public void clearRenderState() {
         this.beforeClean.run();
-        super.clearRenderState();
+        this.decorated.clearRenderState();
     }
 
     //The ints are currently unused/always 0
     @Override
     public void finish(BufferBuilder buf, int sortOffsetX, int sortOffsetY, int sortOffsetZ) {
-        this.decorated.finish(buf, sortOffsetX, sortOffsetY, sortOffsetZ);
+        super.finish(buf, sortOffsetX, sortOffsetY, sortOffsetZ);
     }
 
     @Override
