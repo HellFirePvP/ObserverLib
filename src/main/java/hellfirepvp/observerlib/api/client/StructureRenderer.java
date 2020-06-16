@@ -150,10 +150,12 @@ public class StructureRenderer {
                 .forEach(pos -> {
                     BlockState view = this.world.getBlockState(pos);
                     if (!view.getBlock().equals(Blocks.AIR)) {
+                        renderStack.push();
+                        renderStack.translate(pos.getX(), pos.getY(), pos.getZ());
+
                         if (!view.getFluidState().isEmpty()) {
                             this.renderFluid(pos, view.getFluidState(), buffers.getBuffer(RenderType.getTranslucent()));
                         }
-                        renderStack.push();
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
                             this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
@@ -176,6 +178,7 @@ public class StructureRenderer {
                         TileEntityRenderer tesr = TileEntityRendererDispatcher.instance.getRenderer(tile);
                         if (tesr != null) {
                             renderStack.push();
+                            renderStack.translate(pos.getX(), pos.getY(), pos.getZ());
                             tesr.render(tile, 0, renderStack, buffers, WorldRenderer.getCombinedLight(this.world, pos), OverlayTexture.NO_OVERLAY);
                             renderStack.pop();
                         }
