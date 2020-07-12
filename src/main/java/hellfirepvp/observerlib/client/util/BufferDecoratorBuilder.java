@@ -1,13 +1,9 @@
 package hellfirepvp.observerlib.client.util;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import com.mojang.blaze3d.vertex.IVertexConsumer;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Matrix3f;
-import net.minecraft.client.renderer.Matrix4f;
-import net.minecraft.client.renderer.model.BakedQuad;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.renderer.vertex.VertexFormatElement;
 
@@ -130,7 +126,8 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder pos(double x, double y, double z) {
             if (this.decorator.positionDecorator != null) {
                 double[] newPosition = this.decorator.positionDecorator.decorate(x, y, z);
-                return this.vertexBuilder.pos(newPosition[0], newPosition[1], newPosition[2]);
+                this.vertexBuilder.pos(newPosition[0], newPosition[1], newPosition[2]);
+                return this;
             }
             return this.vertexBuilder.pos(x, y, z);
         }
@@ -139,7 +136,8 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder color(int red, int green, int blue, int alpha) {
             if (this.decorator.colorDecorator != null) {
                 int[] newColor = this.decorator.colorDecorator.decorate(red, green, blue, alpha);
-                return this.vertexBuilder.color(newColor[0], newColor[1], newColor[2], newColor[3]);
+                this.vertexBuilder.color(newColor[0], newColor[1], newColor[2], newColor[3]);
+                return this;
             }
             return this.vertexBuilder.color(red, green, blue, alpha);
         }
@@ -148,7 +146,8 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder tex(float u, float v) {
             if (this.decorator.uvDecorator != null) {
                 float[] newUV = this.decorator.uvDecorator.decorate(u, v);
-                return this.vertexBuilder.tex(newUV[0], newUV[1]);
+                this.vertexBuilder.tex(newUV[0], newUV[1]);
+                return this;
             }
             return this.vertexBuilder.tex(u, v);
         }
@@ -157,7 +156,8 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder overlay(int u, int v) {
             if (this.decorator.overlayDecorator != null) {
                 int[] newUV = this.decorator.overlayDecorator.decorate(u, v);
-                return this.vertexBuilder.overlay(newUV[0], newUV[1]);
+                this.vertexBuilder.overlay(newUV[0], newUV[1]);
+                return this;
             }
             return this.vertexBuilder.overlay(u, v);
         }
@@ -166,7 +166,8 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder lightmap(int u, int v) {
             if (this.decorator.lightmapDecorator != null) {
                 int[] newUV = this.decorator.lightmapDecorator.decorate(u, v);
-                return this.vertexBuilder.lightmap(newUV[0], newUV[1]);
+                this.vertexBuilder.lightmap(newUV[0], newUV[1]);
+                return this;
             }
             return this.vertexBuilder.lightmap(u, v);
         }
@@ -175,7 +176,8 @@ public class BufferDecoratorBuilder {
         public IVertexBuilder normal(float x, float y, float z) {
             if (this.decorator.normalDecorator != null) {
                 float[] newNormals = this.decorator.normalDecorator.decorate(x, y, z);
-                return this.vertexBuilder.normal(newNormals[0], newNormals[1], newNormals[2]);
+                this.vertexBuilder.normal(newNormals[0], newNormals[1], newNormals[2]);
+                return this;
             }
             return this.vertexBuilder.normal(x, y, z);
         }
