@@ -129,7 +129,8 @@ public class BufferDecoratorBuilder {
                 this.vertexBuilder.pos(newPosition[0], newPosition[1], newPosition[2]);
                 return this;
             }
-            return this.vertexBuilder.pos(x, y, z);
+            this.vertexBuilder.pos(x, y, z);
+            return this;
         }
 
         @Override
@@ -139,7 +140,8 @@ public class BufferDecoratorBuilder {
                 this.vertexBuilder.color(newColor[0], newColor[1], newColor[2], newColor[3]);
                 return this;
             }
-            return this.vertexBuilder.color(red, green, blue, alpha);
+            this.vertexBuilder.color(red, green, blue, alpha);
+            return this;
         }
 
         @Override
@@ -149,7 +151,8 @@ public class BufferDecoratorBuilder {
                 this.vertexBuilder.tex(newUV[0], newUV[1]);
                 return this;
             }
-            return this.vertexBuilder.tex(u, v);
+            this.vertexBuilder.tex(u, v);
+            return this;
         }
 
         @Override
@@ -159,7 +162,8 @@ public class BufferDecoratorBuilder {
                 this.vertexBuilder.overlay(newUV[0], newUV[1]);
                 return this;
             }
-            return this.vertexBuilder.overlay(u, v);
+            this.vertexBuilder.overlay(u, v);
+            return this;
         }
 
         @Override
@@ -169,7 +173,8 @@ public class BufferDecoratorBuilder {
                 this.vertexBuilder.lightmap(newUV[0], newUV[1]);
                 return this;
             }
-            return this.vertexBuilder.lightmap(u, v);
+            this.vertexBuilder.lightmap(u, v);
+            return this;
         }
 
         @Override
@@ -179,7 +184,8 @@ public class BufferDecoratorBuilder {
                 this.vertexBuilder.normal(newNormals[0], newNormals[1], newNormals[2]);
                 return this;
             }
-            return this.vertexBuilder.normal(x, y, z);
+            this.vertexBuilder.normal(x, y, z);
+            return this;
         }
 
         @Override
