@@ -1,24 +1,20 @@
 package hellfirepvp.observerlib.common.change;
 
-import hellfirepvp.observerlib.api.ObservableAreaBoundingBox;
-import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ObservableArea;
+import hellfirepvp.observerlib.api.ObservableAreaBoundingBox;
+import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * This class is part of the ObserverLib Mod

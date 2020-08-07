@@ -1,7 +1,6 @@
 package hellfirepvp.observerlib.api.client;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import hellfirepvp.observerlib.api.structure.Structure;
 import net.minecraft.block.BlockRenderType;
@@ -16,15 +15,14 @@ import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.biome.Biomes;
 import net.minecraftforge.client.model.data.EmptyModelData;
-import org.lwjgl.opengl.GL11;
 
 import java.util.Optional;
 import java.util.Random;
@@ -107,8 +105,8 @@ public class StructureRenderer {
         float size = 2;
         float minSize = 0.5F;
 
-        Vec3i max = this.structure.getMaximumOffset();//Ja.. ne IDE is nur so gut wie der entwickler/in davor :P
-        Vec3i min = this.structure.getMinimumOffset();
+        Vector3i max = this.structure.getMaximumOffset();//Ja.. ne IDE is nur so gut wie der entwickler/in davor :P
+        Vector3i min = this.structure.getMinimumOffset();
 
         float maxLength = 0;
         float pointDst = max.getX() - min.getX();
@@ -158,10 +156,10 @@ public class StructureRenderer {
                         }
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
-                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
+                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.func_239221_b_(view)), renderStack);
                             this.world.popContentFilter();
                         } else {
-                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
+                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.func_239221_b_(view)), renderStack);
                         }
                         renderStack.pop();
                     }
@@ -193,7 +191,7 @@ public class StructureRenderer {
         renderStack.pop();
     }
 
-    private void renderFluid(BlockPos pos, IFluidState fluidState, IVertexBuilder buf) {
+    private void renderFluid(BlockPos pos, FluidState fluidState, IVertexBuilder buf) {
         BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
         brd.renderFluid(pos, this.world, buf, fluidState);
     }
@@ -201,7 +199,8 @@ public class StructureRenderer {
     private void renderBlock(BlockPos offset, BlockState state, IVertexBuilder vb, MatrixStack renderStack) {
         BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
         try {
-            brd.renderModel(state, offset, this.world, renderStack, vb, EmptyModelData.INSTANCE);
+            //random is given position-based seed later on
+            brd.renderModel(state, offset, this.world, renderStack, vb, false, rand, EmptyModelData.INSTANCE);
         } catch (Exception exc) {
             BlockRenderType type = state.getRenderType();
             if (type == BlockRenderType.MODEL) {

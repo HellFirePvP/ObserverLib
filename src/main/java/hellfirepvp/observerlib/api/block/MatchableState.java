@@ -22,7 +22,7 @@ public interface MatchableState {
     /**
      * An exemplary matcher that accepts air-like blocks and displays nothing in rendering.
      */
-    public static final MatchableState IS_AIR = new MatchableState() {
+    public static final MatchableState AIR = new MatchableState() {
         @Nonnull
         @Override
         public BlockState getDescriptiveState(long tick) {

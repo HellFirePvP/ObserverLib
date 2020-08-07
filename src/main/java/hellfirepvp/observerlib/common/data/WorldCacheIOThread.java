@@ -3,6 +3,8 @@ package hellfirepvp.observerlib.common.data;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import hellfirepvp.observerlib.ObserverLib;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SharedConstants;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import org.apache.commons.io.FileUtils;
@@ -24,8 +26,8 @@ public class WorldCacheIOThread extends TimerTask {
     private static WorldCacheIOThread saveTask;
     private static Timer ioThread;
 
-    private Map<WorldCacheDomain, Map<Integer, List<IWorldRelatedData>>> worldSaveQueue = Maps.newHashMap();
-    private Map<WorldCacheDomain, Map<Integer, List<IWorldRelatedData>>> awaitingSaveQueue = Maps.newHashMap();
+    private Map<WorldCacheDomain, Map<ResourceLocation, List<IWorldRelatedData>>> worldSaveQueue = Maps.newHashMap();
+    private Map<WorldCacheDomain, Map<ResourceLocation, List<IWorldRelatedData>>> awaitingSaveQueue = Maps.newHashMap();
     private boolean inSave = false, skipTick = false;
 
     private WorldCacheIOThread() {}
@@ -59,7 +61,7 @@ public class WorldCacheIOThread extends TimerTask {
         worldSaveQueue.clear();
 
         for (WorldCacheDomain domain : this.awaitingSaveQueue.keySet()) {
-            for (Map.Entry<Integer, List<IWorldRelatedData>> entry : this.awaitingSaveQueue.get(domain).entrySet()) {
+            for (Map.Entry<ResourceLocation, List<IWorldRelatedData>> entry : this.awaitingSaveQueue.get(domain).entrySet()) {
                 this.worldSaveQueue.computeIfAbsent(domain, d -> new HashMap<>()).put(entry.getKey(), entry.getValue());
             }
         }
@@ -70,7 +72,7 @@ public class WorldCacheIOThread extends TimerTask {
     private void flushAndSaveAll() {
         skipTick = true;
         for (WorldCacheDomain domain : this.awaitingSaveQueue.keySet()) {
-            for (Map.Entry<Integer, List<IWorldRelatedData>> entry : this.awaitingSaveQueue.get(domain).entrySet()) {
+            for (Map.Entry<ResourceLocation, List<IWorldRelatedData>> entry : this.awaitingSaveQueue.get(domain).entrySet()) {
                 this.worldSaveQueue.computeIfAbsent(domain, d -> new HashMap<>()).put(entry.getKey(), entry.getValue());
             }
         }
@@ -83,51 +85,51 @@ public class WorldCacheIOThread extends TimerTask {
         inSave = false;
     }
 
-    static void scheduleSave(WorldCacheDomain domain, int dimensionId, IWorldRelatedData worldRelatedData) {
+    static void scheduleSave(WorldCacheDomain domain, ResourceLocation dimTypeName, IWorldRelatedData worldRelatedData) {
         WorldCacheIOThread tr = saveTask;
         if (saveTask == null) { //Server startup didn't finish
             return;
         }
         if (tr.inSave) {
             tr.awaitingSaveQueue.computeIfAbsent(domain, d -> new HashMap<>())
-                    .computeIfAbsent(dimensionId, id -> new ArrayList<>())
+                    .computeIfAbsent(dimTypeName, id -> new ArrayList<>())
                     .add(worldRelatedData);
         } else {
             tr.worldSaveQueue.computeIfAbsent(domain, d -> new HashMap<>())
-                    .computeIfAbsent(dimensionId, id -> new ArrayList<>())
+                    .computeIfAbsent(dimTypeName, id -> new ArrayList<>())
                     .add(worldRelatedData);
         }
     }
 
     @Nonnull
     static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, IWorld world, WorldCacheDomain.SaveKey<T> key) {
-        T loaded = loadDataFromFile(domain, world.getDimension().getType().getId(), key);
+        T loaded = loadDataFromFile(domain, world.getWorld().func_234922_V_().func_240901_a_(), key);
         loaded.onLoad(world);
         return loaded;
     }
 
     private void saveAllNow() {
         for (WorldCacheDomain domain : this.worldSaveQueue.keySet()) {
-            for (Map.Entry<Integer, List<IWorldRelatedData>> entry : this.worldSaveQueue.get(domain).entrySet()) {
+            for (Map.Entry<ResourceLocation, List<IWorldRelatedData>> entry : this.worldSaveQueue.get(domain).entrySet()) {
                 entry.getValue().forEach(data -> saveNow(domain, entry.getKey(), data));
             }
         }
     }
 
-    private void saveNow(WorldCacheDomain domain, int dimensionId, IWorldRelatedData data) {
+    private void saveNow(WorldCacheDomain domain, ResourceLocation dimTypeName, IWorldRelatedData data) {
         try {
-            saveDataToFile(domain.getSaveDirectory(), dimensionId, data);
+            saveDataToFile(domain.getSaveDirectory(), dimTypeName, data);
         } catch (IOException e) {
             ObserverLib.log.warn("Unable to save WorldData!");
-            ObserverLib.log.warn("Affected data: Dim=" + dimensionId + " key=" + data.getSaveKey().getIdentifier());
+            ObserverLib.log.warn("Affected data: Dim=" + dimTypeName + " key=" + data.getSaveKey().getIdentifier());
             ObserverLib.log.warn("Printing StackTrace details...");
             e.printStackTrace();
         }
         data.markSaved();
     }
 
-    private static void saveDataToFile(File baseDirectory, int dimensionId, IWorldRelatedData data) throws IOException {
-        DirectorySet f = getDirectorySet(baseDirectory, dimensionId, data.getSaveKey());
+    private static void saveDataToFile(File baseDirectory, ResourceLocation dimTypeName, IWorldRelatedData data) throws IOException {
+        DirectorySet f = getDirectorySet(baseDirectory, dimTypeName, data.getSaveKey());
         if (!f.getParentDirectory().exists()) {
             f.getParentDirectory().mkdirs();
         }
@@ -135,12 +137,12 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     @Nonnull
-    private static <T extends CachedWorldData> T loadDataFromFile(WorldCacheDomain domain, int dimensionId, WorldCacheDomain.SaveKey<T> key) {
-        DirectorySet f = getDirectorySet(domain.getSaveDirectory(), dimensionId, key);
+    private static <T extends CachedWorldData> T loadDataFromFile(WorldCacheDomain domain, ResourceLocation dimTypeName, WorldCacheDomain.SaveKey<T> key) {
+        DirectorySet f = getDirectorySet(domain.getSaveDirectory(), dimTypeName, key);
         if (!f.getActualDirectory().exists() && !f.getBackupDirectory().exists()) {
             return key.getNewInstance(key);
         }
-        ObserverLib.log.info("Load CachedWorldData '" + key.getIdentifier() + "' for world " + dimensionId);
+        ObserverLib.log.info("Load CachedWorldData '" + key.getIdentifier() + "' for world " + dimTypeName);
         boolean errored = false;
         T data = null;
         try {
@@ -180,7 +182,7 @@ public class WorldCacheIOThread extends TimerTask {
         if (data == null) {
             data = key.getNewInstance(key);
         }
-        ObserverLib.log.info("Loading of '" + key.getIdentifier() + "' for world " + dimensionId + " finished.");
+        ObserverLib.log.info("Loading of '" + key.getIdentifier() + "' for world " + dimTypeName + " finished.");
         return data;
     }
 
@@ -190,8 +192,8 @@ public class WorldCacheIOThread extends TimerTask {
         return data;
     }
 
-    private synchronized static DirectorySet getDirectorySet(File baseDirectory, int dimId, WorldCacheDomain.SaveKey<?> key) {
-        File worldDir = new File(baseDirectory, "DIM_" + dimId);
+    private synchronized static DirectorySet getDirectorySet(File baseDirectory, ResourceLocation dimTypeName, WorldCacheDomain.SaveKey<?> key) {
+        File worldDir = new File(baseDirectory, "DIM_" + sanitizeFileName(dimTypeName.toString()));
         if (!worldDir.exists()) {
             worldDir.mkdirs();
         } else {
@@ -215,6 +217,15 @@ public class WorldCacheIOThread extends TimerTask {
             ObserverLib.log.warn("Encountered illegal state. Crashing to prevent further, harder to resolve errors!");
             throw new IllegalStateException("Affected file: " + f.getAbsolutePath());
         }
+    }
+
+    private static String sanitizeFileName(String name) {
+        name = name.trim().replace(' ', '_').toLowerCase();
+        for (char c0 : SharedConstants.ILLEGAL_FILE_CHARACTERS) {
+            name = name.replace(c0, '_');
+        }
+        name = name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_"); //Anything else that falls through
+        return name;
     }
 
     private static class DirectorySet {

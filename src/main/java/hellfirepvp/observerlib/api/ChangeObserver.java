@@ -4,7 +4,7 @@ import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
@@ -57,7 +57,7 @@ public abstract class ChangeObserver {
      *
      * This ObservableArea is not offset by the center, so its always centered at 0, 0, 0 so to speak.
      * It is to be shifted/queried at the accurate position on demand.
-     * See {@link ObservableArea#getAffectedChunks(Vec3i)}.
+     * See {@link ObservableArea#getAffectedChunks(Vector3i)}.
      *
      * @return the observable area
      */

@@ -6,7 +6,7 @@ import hellfirepvp.observerlib.api.util.ContentSerializable;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.IBlockReader;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -49,12 +49,12 @@ public interface Structure extends ContentSerializable {
     /**
      * @return the maximum offset any position can be in any x/y/z direction in {@link #getContents()}
      */
-    public Vec3i getMaximumOffset();
+    public Vector3i getMaximumOffset();
 
     /**
      * @return the minimum offset any position can be in any x/y/z direction in {@link #getContents()}
      */
-    public Vec3i getMinimumOffset();
+    public Vector3i getMinimumOffset();
 
     /**
      * Checks if there's a blockstate at the current offset.
@@ -69,7 +69,7 @@ public interface Structure extends ContentSerializable {
 
     /**
      * Returns the blockstate at the given offset.
-     * Returns {@link MatchableState#IS_AIR} if not present.
+     * Returns {@link MatchableState#AIR} if not present.
      *
      * @param offset the offset to get the blockstate at
      *
@@ -78,9 +78,9 @@ public interface Structure extends ContentSerializable {
     @Nonnull
     default public MatchableState getBlockStateAt(BlockPos offset) {
         if (!hasBlockAt(offset)) {
-            return MatchableState.IS_AIR;
+            return MatchableState.AIR;
         }
-        return ObjectUtils.firstNonNull(getContents().get(offset), MatchableState.IS_AIR);
+        return ObjectUtils.firstNonNull(getContents().get(offset), MatchableState.AIR);
     }
 
     /**

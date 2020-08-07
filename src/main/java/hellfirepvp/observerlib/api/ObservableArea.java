@@ -3,8 +3,7 @@ package hellfirepvp.observerlib.api;
 import com.google.common.collect.Lists;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,7 +26,7 @@ public interface ObservableArea {
      *
      * @return the chunks this observer's area is watching
      */
-    public Collection<ChunkPos> getAffectedChunks(Vec3i offset);
+    public Collection<ChunkPos> getAffectedChunks(Vector3i offset);
 
     /**
      * Test if the passed relative position (relative to the observer's center position) is a position
@@ -37,21 +36,21 @@ public interface ObservableArea {
      *
      * @return true, if this position is observed by the observer, false if not
      */
-    public boolean observes(Vec3i relativePos);
+    public boolean observes(Vector3i relativePos);
 
     /**
      * Helper-method to resolve the chunks an observer-box is in.
      */
-    default Collection<ChunkPos> calculateAffectedChunks(AxisAlignedBB box, Vec3i offset) {
+    default Collection<ChunkPos> calculateAffectedChunks(AxisAlignedBB box, Vector3i offset) {
         return calculateAffectedChunks(
-                new Vec3i(Math.round(box.minX + offset.getX()), Math.round(box.minY + offset.getY()), Math.round(box.minZ + offset.getZ())),
-                new Vec3i(Math.round(box.maxX + offset.getX()), Math.round(box.maxY + offset.getY()), Math.round(box.maxZ + offset.getZ())));
+                new Vector3i(Math.round(box.minX + offset.getX()), Math.round(box.minY + offset.getY()), Math.round(box.minZ + offset.getZ())),
+                new Vector3i(Math.round(box.maxX + offset.getX()), Math.round(box.maxY + offset.getY()), Math.round(box.maxZ + offset.getZ())));
     }
 
     /**
      * Helper-method to resolve the chunks an observer-box is in.
      */
-    default Collection<ChunkPos> calculateAffectedChunks(Vec3i min, Vec3i max) {
+    default Collection<ChunkPos> calculateAffectedChunks(Vector3i min, Vector3i max) {
         List<ChunkPos> affected = Lists.newArrayList();
         int maxX = max.getX() >> 4;
         int maxZ = max.getZ() >> 4;

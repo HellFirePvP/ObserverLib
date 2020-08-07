@@ -34,11 +34,11 @@ public class WorldCacheManager implements ITickHandler {
 
     public static void scheduleSaveAll() {
         for (WorldCacheDomain domain : domains.values()) {
-            for (int dimId : domain.getUsedWorlds()) {
+            for (ResourceLocation dimTypeName : domain.getUsedWorlds()) {
                 for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
-                    CachedWorldData data = domain.getCachedData(dimId, key);
+                    CachedWorldData data = domain.getCachedData(dimTypeName, key);
                     if (data != null && data.needsSaving()) {
-                        WorldCacheIOThread.scheduleSave(domain, dimId, data);
+                        WorldCacheIOThread.scheduleSave(domain, dimTypeName, data);
                     }
                 }
             }
@@ -80,12 +80,12 @@ public class WorldCacheManager implements ITickHandler {
     }
 
     public void doSave(IWorld world) {
-        int dimId = world.getDimension().getType().getId();
+        ResourceLocation dimTypeName = world.getWorld().func_234922_V_().func_240901_a_();
         for (WorldCacheDomain domain : domains.values()) {
             for (WorldCacheDomain.SaveKey key : domain.getKnownSaveKeys()) {
-                CachedWorldData data = domain.getCachedData(dimId, key);
+                CachedWorldData data = domain.getCachedData(dimTypeName, key);
                 if (data != null && data.needsSaving()) {
-                    WorldCacheIOThread.scheduleSave(domain, dimId, data);
+                    WorldCacheIOThread.scheduleSave(domain, dimTypeName, data);
                 }
             }
         }

@@ -13,20 +13,21 @@ import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import hellfirepvp.observerlib.client.util.SimpleBossInfo;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.*;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.BossInfo;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
-import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -74,7 +75,7 @@ public class StructurePreview {
     }
 
     boolean canRender(World renderWorld, BlockPos renderPosition) {
-        if (!this.dimType.equals(renderWorld.getDimension().getType())) {
+        if (!this.dimType.equals(renderWorld.func_230315_m_())) {
             return false;
         }
         return this.isInRenderDistance(renderPosition);
@@ -86,7 +87,7 @@ public class StructurePreview {
 
     public void tick(World renderWorld, BlockPos position) {
         if (this.barText != null) {
-            if (this.dimType.equals(renderWorld.getDimension().getType()) && this.isInRenderDistance(position)) {
+            if (this.dimType.equals(renderWorld.func_230315_m_()) && this.isInRenderDistance(position)) {
                 if (this.bossInfo == null) {
                     this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.WHITE, BossInfo.Overlay.PROGRESS).build();
                     this.bossInfo.displayInfo();
@@ -106,7 +107,7 @@ public class StructurePreview {
         }
     }
 
-    void render(World renderWorld, MatrixStack renderStack, Vec3d playerPos) {
+    void render(World renderWorld, MatrixStack renderStack, Vector3d playerPos) {
         Optional<Integer> displaySlice = StructureUtil.getLowestMismatchingSlice(this.snapshot.getStructure(), renderWorld, this.origin);
         if (!displaySlice.isPresent()) {
             return; //Nothing to render
@@ -138,7 +139,7 @@ public class StructurePreview {
             RenderSystem.enableAlphaTest();
         };
 
-        Vec3d vec = new Vec3d(0, 0, 0);
+        Vector3d vec = new Vector3d(0, 0, 0);
         if (Minecraft.getInstance().gameRenderer != null) {
             vec = Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
         }
@@ -176,7 +177,7 @@ public class StructurePreview {
                 });
             }
 
-            RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderTypeLookup.getRenderType(renderState), transparentSetup, transparentClean);
+            RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderTypeLookup.func_239221_b_(renderState), transparentSetup, transparentClean);
             decorator.decorate(buffers.getBuffer(decorated), buf -> {
                 brd.renderModel(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data);
             });
@@ -217,7 +218,7 @@ public class StructurePreview {
         }
 
         public Builder removeIfOutInDifferentWorld() {
-            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimType.equals(world.getDimension().getType()));
+            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimType.equals(world.func_230315_m_()));
             return this;
         }
 

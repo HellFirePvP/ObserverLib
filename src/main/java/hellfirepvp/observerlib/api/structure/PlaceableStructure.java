@@ -41,7 +41,7 @@ public interface PlaceableStructure extends Structure {
             BlockState existing = world.getBlockState(at);
             if (!existing.getFluidState().isEmpty() &&
                     existing.getFluidState().isTagged(FluidTags.WATER) &&
-                    state.has(BlockStateProperties.WATERLOGGED)) {
+                    state.hasProperty(BlockStateProperties.WATERLOGGED)) {
                 state = state.with(BlockStateProperties.WATERLOGGED, true);
             }
 

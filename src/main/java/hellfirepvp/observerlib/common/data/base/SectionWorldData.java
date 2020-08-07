@@ -7,7 +7,7 @@ import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import hellfirepvp.observerlib.common.util.AlternatingSet;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,7 +41,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.precision = sectionPrecision;
     }
 
-    public void markDirty(Vec3i absolute) {
+    public void markDirty(Vector3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
         T section = getSection(key);
         if (section != null) {
@@ -56,17 +56,17 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     protected abstract T createNewSection(int sectionX, int sectionZ);
 
     @Nonnull
-    public Collection<T> getSections(Vec3i absoluteMin, Vec3i absoluteMax) {
+    public Collection<T> getSections(Vector3i absoluteMin, Vector3i absoluteMax) {
         return resolveSections(absoluteMin, absoluteMax, this::getSection);
     }
 
     @Nonnull
-    public Collection<T> getOrCreateSections(Vec3i absoluteMin, Vec3i absoluteMax) {
+    public Collection<T> getOrCreateSections(Vector3i absoluteMin, Vector3i absoluteMax) {
         return resolveSections(absoluteMin, absoluteMax, this::getOrCreateSection);
     }
 
     @Nonnull
-    private Collection<T> resolveSections(Vec3i absoluteMin, Vec3i absoluteMax, Function<SectionKey, T> sectionFct) {
+    private Collection<T> resolveSections(Vector3i absoluteMin, Vector3i absoluteMax, Function<SectionKey, T> sectionFct) {
         SectionKey lower = SectionKey.resolve(absoluteMin, this.precision);
         SectionKey higher = SectionKey.resolve(absoluteMax, this.precision);
         Collection<T> out = new HashSet<>();
@@ -82,7 +82,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Nonnull
-    public T getOrCreateSection(Vec3i absolute) {
+    public T getOrCreateSection(Vector3i absolute) {
         return getOrCreateSection(SectionKey.resolve(absolute, this.precision));
     }
 
@@ -92,7 +92,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Nullable
-    public T getSection(Vec3i absolute) {
+    public T getSection(Vector3i absolute) {
         return this.getSection(SectionKey.resolve(absolute, this.precision));
     }
 
@@ -106,7 +106,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         return this.sections.remove(key) == section && this.removedSections.add(key);
     }
 
-    public boolean removeSection(Vec3i absolute) {
+    public boolean removeSection(Vector3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
         return this.sections.remove(key) != null && this.removedSections.add(key);
     }
@@ -234,7 +234,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             return new SectionKey(section.getSectionX(), section.getSectionZ());
         }
 
-        private static SectionKey resolve(Vec3i absolute, int shift) {
+        private static SectionKey resolve(Vector3i absolute, int shift) {
             return new SectionKey(absolute.getX() >> shift, absolute.getZ() >> shift);
         }
 

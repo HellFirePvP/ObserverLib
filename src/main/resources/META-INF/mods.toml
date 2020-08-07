@@ -1,9 +1,9 @@
 modLoader="javafml"
-loaderVersion="[31,)"
+loaderVersion="[32,)"
 issueTrackerURL="https://github.com/HellFirePvP/ObserverLib/issues"
 [[mods]] #mandatory
 modId="observerlib"
-version="1.15.2-1.2.0"
+version="${file.jarVersion}"
 displayName="ObserverLib"
 displayURL="https://minecraft.curseforge.com/projects/observerlib"
 logoFile="logo.png"
@@ -12,12 +12,12 @@ description='''Cached world structure and change monitoring library.'''
 [[dependencies.observerlib]]
     modId="forge"
     mandatory=true
-    versionRange="[31,)"
+    versionRange="[32,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.observerlib]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.2]"
+    versionRange="[1.16.1]"
     ordering="NONE"
     side="BOTH"

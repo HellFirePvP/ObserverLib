@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.api.tile;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -22,7 +23,7 @@ public interface MatchableTile<T extends TileEntity> {
 
     /**
      * Write tileentity data to set onto the tileentity for rendering
-     * via {@link TileEntity#read(CompoundNBT)}
+     * via {@link TileEntity#read(BlockState, CompoundNBT)}
      *
      * @param tile the created client tileentity
      * @param tick an ongoing client tick to cycle through things or related

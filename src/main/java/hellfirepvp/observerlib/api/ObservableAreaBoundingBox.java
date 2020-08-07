@@ -1,6 +1,7 @@
 package hellfirepvp.observerlib.api;
 
 import net.minecraft.util.math.*;
+import net.minecraft.util.math.vector.Vector3i;
 
 import java.util.Collection;
 
@@ -15,7 +16,7 @@ public class ObservableAreaBoundingBox implements ObservableArea {
 
     private final AxisAlignedBB box;
 
-    public ObservableAreaBoundingBox(Vec3i min, Vec3i max) {
+    public ObservableAreaBoundingBox(Vector3i min, Vector3i max) {
         this(new AxisAlignedBB(min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ()));
     }
 
@@ -24,12 +25,12 @@ public class ObservableAreaBoundingBox implements ObservableArea {
     }
 
     @Override
-    public Collection<ChunkPos> getAffectedChunks(Vec3i offset) {
+    public Collection<ChunkPos> getAffectedChunks(Vector3i offset) {
         return calculateAffectedChunks(this.box, offset);
     }
 
     @Override
-    public boolean observes(Vec3i relativePos) {
+    public boolean observes(Vector3i relativePos) {
         int x = relativePos.getX();
         int y = relativePos.getY();
         int z = relativePos.getZ();

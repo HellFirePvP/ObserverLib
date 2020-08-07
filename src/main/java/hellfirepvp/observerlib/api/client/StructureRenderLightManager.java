@@ -60,7 +60,7 @@ public class StructureRenderLightManager extends WorldLightManager {
     }
 
     @Override
-    public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array) {}
+    public void func_215567_a(BlockPos p_215567_1_, boolean p_215567_2_) {}
 
     @Override
     public void retainData(ChunkPos pos, boolean retain) {}

@@ -4,6 +4,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.LogicalSidedProvider;
 
@@ -24,7 +25,7 @@ public class WorldCacheDomain {
 
     private final ResourceLocation key;
     private Set<SaveKey<? extends CachedWorldData>> knownSaveKeys = new HashSet<>();
-    private Map<Integer, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
+    private Map<ResourceLocation, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
 
     WorldCacheDomain(ResourceLocation key) {
         this.key = key;
@@ -62,12 +63,12 @@ public class WorldCacheDomain {
     }
 
     void tick(World world) {
-        int dimId = world.getDimension().getType().getId();
-        if (!this.domainData.containsKey(dimId)) {
+        ResourceLocation dimTypeName = world.getWorld().func_234922_V_().func_240901_a_();
+        if (!this.domainData.containsKey(dimTypeName)) {
             return;
         }
 
-        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimId);
+        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimTypeName);
         for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
             if (dataMap.containsKey(key)) {
                 dataMap.get(key).updateTick(world);
@@ -76,14 +77,17 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    <T extends CachedWorldData> T getCachedData(int dimId, SaveKey<T> key) {
-        if (!domainData.containsKey(dimId)) {
-            return null;
-        }
-        return (T) domainData.get(dimId).get(key);
+    <T extends CachedWorldData> T getCachedData(ResourceLocation dimTypeName, SaveKey<T> key) {
+        return (T) domainData.getOrDefault(dimTypeName, Collections.emptyMap()).get(key);
     }
 
-    Collection<Integer> getUsedWorlds() {
+    @Nullable
+    private <T extends CachedWorldData> T getFromCache(IWorld world, SaveKey<T> key) {
+        ResourceLocation dimTypeName = world.getWorld().func_234922_V_().func_240901_a_();
+        return getCachedData(dimTypeName, key);
+    }
+
+    Collection<ResourceLocation> getUsedWorlds() {
         return this.domainData.keySet();
     }
 
@@ -93,21 +97,11 @@ public class WorldCacheDomain {
         if (data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
 
-            int dimId = world.getDimension().getType().getId();
-            this.domainData.computeIfAbsent(dimId, i -> new HashMap<>())
+            ResourceLocation dimTypeName = world.getWorld().func_234922_V_().func_240901_a_();
+            this.domainData.computeIfAbsent(dimTypeName, i -> new HashMap<>())
                     .put(key, data);
         }
         return (T) data;
-    }
-
-    @Nullable
-    private <T extends CachedWorldData> T getFromCache(IWorld world, SaveKey<T> key) {
-        int dimId = world.getDimension().getType().getId();
-        if (!domainData.containsKey(dimId)) {
-            return null;
-        }
-        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = domainData.get(dimId);
-        return (T) dataMap.get(key);
     }
 
     public File getSaveDirectory() {
@@ -115,7 +109,7 @@ public class WorldCacheDomain {
         if (server == null) {
             return null;
         }
-        File dataDir = server.getActiveAnvilConverter().getFile(server.getFolderName(), key.getNamespace());
+        File dataDir = server.func_240776_a_(new FolderName(key.getNamespace())).toFile();
         if (!dataDir.exists()) {
             dataDir.mkdirs();
         }

@@ -9,11 +9,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.Dimension;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
@@ -21,7 +25,6 @@ import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraftforge.api.distmarker.Dist;
@@ -31,6 +34,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Stack;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * This class supports to render a structure, centered around structure origin 0, 0, 0.
@@ -48,7 +52,7 @@ public class StructureRenderWorld implements IWorldReader {
 
     private final Biome globalBiome;
     private final SingleBiomeManager biomeManager;
-    private final Dimension thisDim;
+    private final DimensionType thisDimType;
     private final WorldBorder maxBorder;
 
     private final Structure structure;
@@ -58,8 +62,21 @@ public class StructureRenderWorld implements IWorldReader {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
-        this.thisDim = Minecraft.getInstance().world.getDimension();
-        this.maxBorder = this.thisDim.createWorldBorder();
+        this.thisDimType = Minecraft.getInstance().world.func_230315_m_();
+
+        if (this.thisDimType.func_236045_g_()) {
+            this.maxBorder = new WorldBorder() {
+                public double getCenterX() {
+                    return super.getCenterX() / 8.0D;
+                }
+
+                public double getCenterZ() {
+                    return super.getCenterZ() / 8.0D;
+                }
+            };
+        } else {
+            this.maxBorder = new WorldBorder();
+        }
     }
 
     public void pushContentFilter(@Nonnull Predicate<BlockPos> blockFilter) {
@@ -99,7 +116,7 @@ public class StructureRenderWorld implements IWorldReader {
         CompoundNBT tag = new CompoundNBT();
         tile.write(tag);
         tileMatch.writeDisplayData(tile, ClientTickHelper.getClientTick(), tag);
-        tile.read(tag);
+        tile.read(state.getDescriptiveState(0), tag);
 
         tileMatch.postPlacement(tile, this, pos);
         return tile;
@@ -115,8 +132,16 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public IFluidState getFluidState(BlockPos pos) {
+    public FluidState getFluidState(BlockPos pos) {
         return getBlockState(pos).getFluidState();
+    }
+
+    //Something with lighting and AO it seems?
+    //Some light-multiplier based on direction? seems sketchy tbh
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public float func_230487_a_(Direction direction, boolean b) {
+        return 1F;
     }
 
     @Override
@@ -186,6 +211,11 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
+    public Stream<VoxelShape> func_230318_c_(@Nullable Entity entity, AxisAlignedBB axisAlignedBB, Predicate<Entity> predicate) {
+        return Stream.empty();
+    }
+
+    @Override
     public boolean isRemote() {
         return true;
     }
@@ -196,7 +226,7 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public Dimension getDimension() {
-        return thisDim;
+    public DimensionType func_230315_m_() {
+        return this.thisDimType;
     }
 }

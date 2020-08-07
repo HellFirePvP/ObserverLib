@@ -3,18 +3,14 @@ package hellfirepvp.observerlib.api.util;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.IBlockReader;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
@@ -63,7 +59,7 @@ public interface ContentSerializable {
             if (stack.isEmpty()) {
                 try {
                     stack = sample.getBlock().getPickBlock(sample,
-                            new BlockRayTraceResult(Vec3d.ZERO, Direction.UP, pos, false), world, pos, player);
+                            new BlockRayTraceResult(Vector3d.ZERO, Direction.UP, pos, false), world, pos, player);
                 } catch (Exception ignored) {}
             }
 

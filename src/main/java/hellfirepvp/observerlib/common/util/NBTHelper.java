@@ -5,7 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
-import net.minecraft.state.IProperty;
+import net.minecraft.state.Property;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.Constants;
@@ -35,7 +35,7 @@ public class NBTHelper {
         CompoundNBT tag = new CompoundNBT();
         tag.putString("registryName", state.getBlock().getRegistryName().toString());
         ListNBT properties = new ListNBT();
-        for (IProperty property : state.getProperties()) {
+        for (Property property : state.getProperties()) {
             CompoundNBT propTag = new CompoundNBT();
             try {
                 propTag.putString("value", property.getName(state.get(property)));
@@ -55,13 +55,13 @@ public class NBTHelper {
         Block block = ForgeRegistries.BLOCKS.getValue(key);
         if(block == null || block == Blocks.AIR) return _default;
         BlockState state = block.getDefaultState();
-        Collection<IProperty<?>> properties = state.getProperties();
+        Collection<Property<?>> properties = state.getProperties();
         ListNBT list = cmp.getList("properties", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundNBT propertyTag = list.getCompound(i);
             String valueStr = propertyTag.getString("value");
             String propertyStr = propertyTag.getString("property");
-            IProperty<T> match = (IProperty<T>) iterativeSearch(properties, prop -> prop.getName().equalsIgnoreCase(propertyStr));
+            Property<T> match = (Property<T>) iterativeSearch(properties, prop -> prop.getName().equalsIgnoreCase(propertyStr));
             if(match != null) {
                 try {
                     Optional<T> opt = match.parseValue(valueStr);

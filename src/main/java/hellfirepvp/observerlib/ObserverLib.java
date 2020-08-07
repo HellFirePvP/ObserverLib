@@ -36,7 +36,7 @@ public class ObserverLib {
         instance = this;
         this.modContainer = ModList.get().getModContainerById(MODID).get();
 
-        this.proxy = DistExecutor.runForDist(() -> ClientProxy::new, () -> CommonProxy::new);
+        this.proxy = DistExecutor.unsafeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
         this.proxy.initialize();
         this.proxy.attachLifecycle(FMLJavaModLoadingContext.get().getModEventBus());
         this.proxy.attachEventHandlers(MinecraftForge.EVENT_BUS);
