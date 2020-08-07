@@ -1,5 +1,6 @@
 modLoader="javafml"
 loaderVersion="[32,)"
+license="GNU Lesser General Public License v3.0"
 issueTrackerURL="https://github.com/HellFirePvP/ObserverLib/issues"
 [[mods]] #mandatory
 modId="observerlib"
