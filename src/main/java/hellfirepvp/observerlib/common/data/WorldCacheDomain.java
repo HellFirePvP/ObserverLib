@@ -2,7 +2,6 @@ package hellfirepvp.observerlib.common.data;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.fml.LogicalSide;
@@ -63,12 +62,12 @@ public class WorldCacheDomain {
     }
 
     void tick(World world) {
-        ResourceLocation dimTypeName = world.func_230315_m_().func_242725_p();
-        if (!this.domainData.containsKey(dimTypeName)) {
+        ResourceLocation dimName = world.func_234923_W_().func_240901_a_();
+        if (!this.domainData.containsKey(dimName)) {
             return;
         }
 
-        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimTypeName);
+        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimName);
         for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
             if (dataMap.containsKey(key)) {
                 dataMap.get(key).updateTick(world);
@@ -82,9 +81,8 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    private <T extends CachedWorldData> T getFromCache(IWorld world, SaveKey<T> key) {
-        ResourceLocation dimTypeName = world.func_230315_m_().func_242725_p();
-        return getCachedData(dimTypeName, key);
+    private <T extends CachedWorldData> T getFromCache(World world, SaveKey<T> key) {
+        return getCachedData(world.func_234923_W_().func_240901_a_(), key);
     }
 
     Collection<ResourceLocation> getUsedWorlds() {
@@ -92,13 +90,12 @@ public class WorldCacheDomain {
     }
 
     @Nonnull
-    public <T extends CachedWorldData> T getData(IWorld world, SaveKey<T> key) {
+    public <T extends CachedWorldData> T getData(World world, SaveKey<T> key) {
         T data = getFromCache(world, key);
         if (data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
 
-            ResourceLocation dimTypeName = world.func_230315_m_().func_242725_p();
-            this.domainData.computeIfAbsent(dimTypeName, i -> new HashMap<>())
+            this.domainData.computeIfAbsent(world.func_234923_W_().func_240901_a_(), i -> new HashMap<>())
                     .put(key, data);
         }
         return (T) data;

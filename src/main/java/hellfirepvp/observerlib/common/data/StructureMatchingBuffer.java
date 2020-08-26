@@ -16,7 +16,6 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
@@ -47,11 +46,11 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     public void updateTick(World world) {}
 
     @Nonnull
-    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(IWorld world, BlockPos center, ObserverProvider provider) {
+    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(World world, BlockPos center, ObserverProvider provider) {
         MatchChangeSubscriber<T> existing;
         if ((existing = (MatchChangeSubscriber<T>) getSubscriber(center)) != null) {
             if (!existing.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {
-                ObserverLib.log.warn("Trying to observe area at dim=" + world.func_230315_m_().func_242725_p() + " " + center.toString() +
+                ObserverLib.log.warn("Trying to observe area at dim=" + world.func_234923_W_().func_240901_a_() + " " + center.toString() +
                         " while it is already being observed by " + existing.getObserver().getProviderRegistryName());
                 ObserverLib.log.warn("Removing existing observer!");
                 this.removeSubscriber(center);

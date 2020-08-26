@@ -76,7 +76,7 @@ public abstract class ChangeObserver {
      *
      * @return true, if this current state is now considered valid, false otherwise
      */
-    public abstract boolean notifyChange(IWorld world, BlockPos center, BlockChangeSet changeSet);
+    public abstract boolean notifyChange(World world, BlockPos center, BlockChangeSet changeSet);
 
     /**
      * Read persistent information back into this observer.

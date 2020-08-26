@@ -18,13 +18,13 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.BossInfo;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
@@ -45,7 +45,7 @@ public class StructurePreview {
 
     private static final Random rand = new Random();
 
-    private DimensionType dimType;
+    private RegistryKey<World> dimension;
     private BlockPos origin;
     private final StructureSnapshot snapshot;
 
@@ -56,18 +56,18 @@ public class StructurePreview {
     private ITextComponent barText = null;
     private SimpleBossInfo bossInfo = null;
 
-    private StructurePreview(DimensionType dimType, BlockPos origin, StructureSnapshot snapshot) {
-        this.dimType = dimType;
+    private StructurePreview(RegistryKey<World> dimension, BlockPos origin, StructureSnapshot snapshot) {
+        this.dimension = dimension;
         this.origin = origin;
         this.snapshot = snapshot;
     }
 
-    public static Builder newBuilder(DimensionType sourceWorld, BlockPos source, MatchableStructure structure) {
-        return newBuilder(sourceWorld, source, structure, ClientTickHelper.getClientTick());
+    public static Builder newBuilder(RegistryKey<World> dimension, BlockPos source, MatchableStructure structure) {
+        return newBuilder(dimension, source, structure, ClientTickHelper.getClientTick());
     }
 
-    public static Builder newBuilder(DimensionType sourceWorld, BlockPos source, MatchableStructure structure, long tick) {
-        return new Builder(sourceWorld, source, structure, tick);
+    public static Builder newBuilder(RegistryKey<World> dimension, BlockPos source, MatchableStructure structure, long tick) {
+        return new Builder(dimension, source, structure, tick);
     }
 
     private boolean isInRenderDistance(BlockPos position) {
@@ -77,7 +77,7 @@ public class StructurePreview {
     }
 
     boolean canRender(World renderWorld, BlockPos renderPosition) {
-        if (!this.dimType.equals(renderWorld.func_230315_m_())) {
+        if (!this.dimension.equals(renderWorld.func_234923_W_())) {
             return false;
         }
         return this.isInRenderDistance(renderPosition);
@@ -89,7 +89,7 @@ public class StructurePreview {
 
     public void tick(World renderWorld, BlockPos position) {
         if (this.barText != null) {
-            if (this.dimType.equals(renderWorld.func_230315_m_()) && this.isInRenderDistance(position)) {
+            if (this.dimension.equals(renderWorld.func_234923_W_()) && this.isInRenderDistance(position)) {
                 if (this.bossInfo == null) {
                     this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.WHITE, BossInfo.Overlay.PROGRESS).build();
                     this.bossInfo.displayInfo();
@@ -201,8 +201,8 @@ public class StructurePreview {
 
         private final StructurePreview preview;
 
-        private Builder(DimensionType dimType, BlockPos origin, MatchableStructure structure, long tick) {
-            this.preview = new StructurePreview(dimType, origin, new StructureSnapshot(structure, tick));
+        private Builder(RegistryKey<World> dimension, BlockPos origin, MatchableStructure structure, long tick) {
+            this.preview = new StructurePreview(dimension, origin, new StructureSnapshot(structure, tick));
         }
 
         public Builder setMinimumDisplayDistance(double minimumDisplayDistance) {
@@ -221,7 +221,7 @@ public class StructurePreview {
         }
 
         public Builder removeIfOutInDifferentWorld() {
-            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimType.equals(world.func_230315_m_()));
+            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimension.equals(world.func_234923_W_()));
             return this;
         }
 

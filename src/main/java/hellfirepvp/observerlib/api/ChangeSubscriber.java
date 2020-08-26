@@ -4,6 +4,7 @@ import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
@@ -43,7 +44,7 @@ public interface ChangeSubscriber<T extends ChangeObserver> {
      * valid at the current state of the world, false if any part is mismatching.
      *
      * What "valid" means in this context is up to the ChangeObserver's
-     * {@link ChangeObserver#notifyChange(IWorld, BlockPos, BlockChangeSet)}.
+     * {@link ChangeObserver#notifyChange(World, BlockPos, BlockChangeSet)}.
      * This method is ONLY CALLED IF it has never been called ever since observations have started for this Observer, OR
      * if the current {@link BlockChangeSet} for the subscriber is not empty and needs to be processed by the Observer.
      * The result of that is CACHED, until there is any change.
@@ -52,6 +53,6 @@ public interface ChangeSubscriber<T extends ChangeObserver> {
      *
      * @return true, if the current state is valid, false if not.
      */
-    public boolean isValid(IWorld world);
+    public boolean isValid(World world);
 
 }

@@ -7,6 +7,7 @@ import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -24,7 +25,8 @@ public class StructureIntegrityObserver implements BlockChangeNotifier.Listener 
 
     @Override
     public void onChange(World world, Chunk chunk, BlockPos pos, BlockState oldState, BlockState newState) {
-        if (world.isRemote() || !chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
+        if (world.isRemote() ||
+                !chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
             return;
         }
 

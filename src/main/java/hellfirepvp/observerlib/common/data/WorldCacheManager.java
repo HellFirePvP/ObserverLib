@@ -79,13 +79,13 @@ public class WorldCacheManager implements ITickHandler {
         }
     }
 
-    public void doSave(IWorld world) {
-        ResourceLocation dimTypeName = world.func_230315_m_().func_242725_p();
+    public void doSave(World world) {
+        ResourceLocation worldName = world.func_234923_W_().func_240901_a_();
         for (WorldCacheDomain domain : domains.values()) {
-            for (WorldCacheDomain.SaveKey key : domain.getKnownSaveKeys()) {
-                CachedWorldData data = domain.getCachedData(dimTypeName, key);
+            for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
+                CachedWorldData data = domain.getCachedData(worldName, key);
                 if (data != null && data.needsSaving()) {
-                    WorldCacheIOThread.scheduleSave(domain, dimTypeName, data);
+                    WorldCacheIOThread.scheduleSave(domain, worldName, data);
                 }
             }
         }

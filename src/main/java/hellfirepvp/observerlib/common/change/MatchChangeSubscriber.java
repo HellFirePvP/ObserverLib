@@ -10,7 +10,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -70,16 +69,14 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
     }
 
     @Override
-    public boolean isValid(IWorld world) {
+    public boolean isValid(World world) {
         if (this.isMatching != null && this.changeSet.isEmpty()) {
             return isMatching;
         }
 
         this.isMatching = this.matcher.notifyChange(world, this.getCenter(), this.changeSet);
         this.changeSet.reset();
-        if (world instanceof World) {
-            MatcherObserverHelper.getBuffer(world).markDirty(this.getCenter());
-        }
+        MatcherObserverHelper.getBuffer(world).markDirty(this.getCenter());
 
         return this.isMatching;
     }

@@ -5,6 +5,7 @@ import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
 import hellfirepvp.observerlib.api.util.SingleBiomeManager;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
+import hellfirepvp.observerlib.common.util.RegistryUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
@@ -16,7 +17,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.Dimension;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.LightType;
@@ -62,7 +63,7 @@ public class StructureRenderWorld implements IWorldReader {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
-        this.thisDimType = Minecraft.getInstance().world.func_230315_m_();
+        this.thisDimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_KEY, DimensionType.OVERWORLD);
 
         if (this.thisDimType.func_242724_f() != 1.0D) {
             this.maxBorder = new WorldBorder() {

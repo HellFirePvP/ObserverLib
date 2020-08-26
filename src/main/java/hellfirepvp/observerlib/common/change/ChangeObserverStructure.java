@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
@@ -52,7 +53,7 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public boolean notifyChange(IWorld world, BlockPos center, BlockChangeSet changeSet) {
+    public boolean notifyChange(World world, BlockPos center, BlockChangeSet changeSet) {
         for (BlockStateChangeSet.StateChange change : changeSet.getChanges()) {
             if (this.structure.hasBlockAt(change.getRelativePosition()) &&
                     !this.structure.matchesSingleBlock(world, center, change.getRelativePosition(), change.getNewState(),
