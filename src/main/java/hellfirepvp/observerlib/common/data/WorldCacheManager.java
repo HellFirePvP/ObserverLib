@@ -80,7 +80,7 @@ public class WorldCacheManager implements ITickHandler {
     }
 
     public void doSave(IWorld world) {
-        ResourceLocation dimTypeName = world.getWorld().func_234922_V_().func_240901_a_();
+        ResourceLocation dimTypeName = world.func_230315_m_().func_242725_p();
         for (WorldCacheDomain domain : domains.values()) {
             for (WorldCacheDomain.SaveKey key : domain.getKnownSaveKeys()) {
                 CachedWorldData data = domain.getCachedData(dimTypeName, key);

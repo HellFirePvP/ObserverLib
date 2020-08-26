@@ -1,6 +1,5 @@
 package hellfirepvp.observerlib.api.util;
 
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.biome.provider.BiomeProvider;
@@ -14,20 +13,12 @@ import net.minecraft.world.biome.provider.BiomeProvider;
  */
 public class SingleBiomeManager extends BiomeManager {
 
-    private final Biome globalBiome;
-
     public SingleBiomeManager(Biome globalBiome) {
-        super(null, 0, null);
-        this.globalBiome = globalBiome;
+        super((x, y, z) -> globalBiome, 0, (l, i, i1, i2, iBiomeReader) -> globalBiome);
     }
 
     @Override
     public BiomeManager copyWithProvider(BiomeProvider newProvider) {
         return this;
-    }
-
-    @Override
-    public Biome getBiome(BlockPos pos) {
-        return this.globalBiome;
     }
 }

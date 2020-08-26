@@ -21,10 +21,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.BossInfo;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
@@ -113,7 +115,8 @@ public class StructurePreview {
             return; //Nothing to render
         }
 
-        StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), Biomes.PLAINS);
+        Biome plainsBiome = renderWorld.func_241828_r().func_243612_b(Registry.BIOME_KEY).getValueForKey(Biomes.PLAINS);
+        StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), plainsBiome);
         drawWorld.pushContentFilter(pos -> pos.getY() == displaySlice.get());
 
         int[] fullBright = new int[] { 15, 15 };

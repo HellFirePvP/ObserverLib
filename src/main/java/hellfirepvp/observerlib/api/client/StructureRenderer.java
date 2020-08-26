@@ -20,7 +20,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.registry.DynamicRegistries;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorldReader;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biomes;
 import net.minecraftforge.client.model.data.EmptyModelData;
 
@@ -47,7 +50,9 @@ public class StructureRenderer {
 
     public StructureRenderer(Structure structure) {
         this.structure = structure;
-        this.world = new StructureRenderWorld(this.structure, Biomes.PLAINS);
+        DynamicRegistries registries = Minecraft.getInstance().getConnection().func_239165_n_();
+        Biome plainsBiome = registries.func_243612_b(Registry.BIOME_KEY).getValueForKey(Biomes.PLAINS);
+        this.world = new StructureRenderWorld(this.structure, plainsBiome);
         this.resetRotation();
     }
 

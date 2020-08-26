@@ -64,7 +64,7 @@ public class StructureRenderWorld implements IWorldReader {
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
         this.thisDimType = Minecraft.getInstance().world.func_230315_m_();
 
-        if (this.thisDimType.func_236045_g_()) {
+        if (this.thisDimType.func_242724_f() != 1.0D) {
             this.maxBorder = new WorldBorder() {
                 public double getCenterX() {
                     return super.getCenterX() / 8.0D;
