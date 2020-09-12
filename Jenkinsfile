@@ -10,19 +10,11 @@ pipeline {
 rm -rf README.md'''
       }
     }
-    stage('Build only') {
+    stage('Build') {
       when {
         not {
           branch 'master'
         }
-      }
-      steps {
-        sh '''./gradlew build'''
-      }
-    }
-    stage('Build and Publish') {
-      when{
-        branch 'master'
       }
       steps {
         sh '''./gradlew build publish'''

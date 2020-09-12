@@ -29,8 +29,8 @@ public class ObserverLib {
     public static final Logger log = LogManager.getLogger(NAME);
     private static ObserverLib instance;
 
-    private ModContainer modContainer;
-    private CommonProxy proxy;
+    private final ModContainer modContainer;
+    private final CommonProxy proxy;
 
     public ObserverLib() {
         instance = this;
