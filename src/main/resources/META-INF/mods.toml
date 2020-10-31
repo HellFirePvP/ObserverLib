@@ -3,7 +3,7 @@ loaderVersion="[31,)"
 issueTrackerURL="https://github.com/HellFirePvP/ObserverLib/issues"
 [[mods]] #mandatory
 modId="observerlib"
-version="1.15.2-1.2.1"
+version="${file.jarVersion}"
 displayName="ObserverLib"
 displayURL="https://minecraft.curseforge.com/projects/observerlib"
 logoFile="logo.png"

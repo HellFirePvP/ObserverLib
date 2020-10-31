@@ -40,12 +40,16 @@ public class StructureRenderer {
 
     private static final Random rand = new Random();
 
+    public static boolean displayRequiredAir = false;
+
     private final StructureRenderWorld world;
     private final Structure structure;
 
     //In degrees
     private double rotationX = 0, rotationY = 0, rotationZ = 0;
     private boolean isolateIndividualBlockRender = false;
+
+    private boolean displayWithRequiredAir = false;
 
     public StructureRenderer(Structure structure) {
         this.structure = structure;
@@ -63,6 +67,10 @@ public class StructureRenderer {
         this.rotationX += x;
         this.rotationY += y;
         this.rotationZ += z;
+    }
+
+    public void setRenderWithRequiredAir(boolean displayWithRequiredAir) {
+        this.displayWithRequiredAir = displayWithRequiredAir;
     }
 
     public StructureRenderer setIsolateIndividualBlock(boolean isolateIndividualBlockRender) {
@@ -146,6 +154,12 @@ public class StructureRenderer {
         renderStack.scale(-size * mul, -size * mul, -size * mul);
         slice.ifPresent(ySlice -> renderStack.scale(0, -ySlice, 0));
 
+        if (this.displayWithRequiredAir) {
+            displayRequiredAir = true;
+        } else {
+            displayRequiredAir = false;
+        }
+
         this.structure.getContents().keySet()
                 .forEach(pos -> {
                     BlockState view = this.world.getBlockState(pos);
@@ -188,6 +202,10 @@ public class StructureRenderer {
                     }
                 });
         buffers.finish();
+
+        if (this.displayWithRequiredAir) {
+            displayRequiredAir = false;
+        }
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
         renderStack.pop();
