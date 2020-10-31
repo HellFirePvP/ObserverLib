@@ -1,5 +1,8 @@
 package hellfirepvp.observerlib.api.block;
 
+import hellfirepvp.observerlib.api.ObserverHelper;
+import hellfirepvp.observerlib.api.client.StructureRenderer;
+import hellfirepvp.observerlib.common.CommonProxy;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.BlockState;
@@ -32,6 +35,27 @@ public interface MatchableState {
         @Override
         public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
             return state.getMaterial() == Material.AIR;
+        }
+    };
+
+    /**
+     * A default matcher allowing for the display of a blockstate that has to be air.
+     *
+     * Works in conjunction with {@link StructureRenderer} in case it displays required air blocks.
+     */
+    public static final MatchableState REQUIRES_AIR = new MatchableState() {
+        @Nonnull
+        @Override
+        public BlockState getDescriptiveState(long tick) {
+            if (StructureRenderer.displayRequiredAir) {
+                return ObserverHelper.blockAirRequirement.getDefaultState();
+            }
+            return Blocks.AIR.getDefaultState();
+        }
+
+        @Override
+        public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
+            return state.isAir(reader, absolutePosition);
         }
     };
 

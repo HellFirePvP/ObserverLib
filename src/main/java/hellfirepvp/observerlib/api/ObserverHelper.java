@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.api;
 
+import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -17,6 +18,14 @@ public abstract class ObserverHelper {
 
     //The current API instance.
     private static ObserverHelper helperInstance = null;
+
+    /**
+     * A air-like block that is solely used for display in structure previews to inform the player
+     * about certain parts of the structure that MUST be air-like.
+     *
+     * Does not have a corresponding BlockItem and tries to remove itself when placed in world.
+     */
+    public static Block blockAirRequirement;
 
     /**
      * Retrieve the current API instance using this getter.

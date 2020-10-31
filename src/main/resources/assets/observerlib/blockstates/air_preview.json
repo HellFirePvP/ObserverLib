@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "observerlib:block/air_preview"
+    }
+  }
+}
