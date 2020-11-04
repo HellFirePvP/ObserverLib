@@ -4,6 +4,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import hellfirepvp.observerlib.api.structure.Structure;
+import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -115,7 +116,7 @@ public class StructureRenderer {
         float size = 2;
         float minSize = 0.5F;
 
-        Vec3i max = this.structure.getMaximumOffset();//Ja.. ne IDE is nur so gut wie der entwickler/in davor :P
+        Vec3i max = this.structure.getMaximumOffset();
         Vec3i min = this.structure.getMinimumOffset();
 
         float maxLength = 0;
@@ -140,7 +141,7 @@ public class StructureRenderer {
         float dr = -5.75F * size;
 
         Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+        IRenderTypeBuffer.Impl buffers = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
 
         slice.ifPresent(ySlice -> this.world.pushContentFilter((pos) -> pos.getY() == ySlice));
 
@@ -152,13 +153,9 @@ public class StructureRenderer {
         renderStack.rotate(Vector3f.ZP.rotationDegrees((float) rotationZ));
         renderStack.translate(-dr, -dr, -dr);
         renderStack.scale(-size * mul, -size * mul, -size * mul);
-        slice.ifPresent(ySlice -> renderStack.scale(0, -ySlice, 0));
+        slice.ifPresent(ySlice -> renderStack.translate(0, -ySlice, 0));
 
-        if (this.displayWithRequiredAir) {
-            displayRequiredAir = true;
-        } else {
-            displayRequiredAir = false;
-        }
+        displayRequiredAir = this.displayWithRequiredAir;
 
         this.structure.getContents().keySet()
                 .forEach(pos -> {
@@ -168,14 +165,15 @@ public class StructureRenderer {
                         renderStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
                         if (!view.getFluidState().isEmpty()) {
-                            this.renderFluid(pos, view.getFluidState(), buffers.getBuffer(RenderType.getTranslucent()));
+                            this.renderFluid(pos, view.getFluidState(), buffers.getBuffer(wrapBlockRenderType(RenderType.getTranslucent())));
                         }
+                        RenderType type = wrapBlockRenderType(RenderTypeLookup.getRenderType(view));
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
-                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
+                            this.renderBlock(pos, view, buffers.getBuffer(type), renderStack);
                             this.world.popContentFilter();
                         } else {
-                            this.renderBlock(pos, view, buffers.getBuffer(RenderTypeLookup.getRenderType(view)), renderStack);
+                            this.renderBlock(pos, view, buffers.getBuffer(type), renderStack);
                         }
                         renderStack.pop();
                     }
@@ -209,6 +207,10 @@ public class StructureRenderer {
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
         renderStack.pop();
+    }
+
+    private RenderType wrapBlockRenderType(RenderType type) {
+        return RenderTypeDecorator.wrapSetup(type, RenderSystem::disableLighting, () -> {});
     }
 
     private void renderFluid(BlockPos pos, IFluidState fluidState, IVertexBuilder buf) {

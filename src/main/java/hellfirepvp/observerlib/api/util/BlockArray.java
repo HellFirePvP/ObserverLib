@@ -30,8 +30,8 @@ import java.util.function.Consumer;
  */
 public class BlockArray implements Structure {
 
-    private Map<BlockPos, MatchableState> blocks = new HashMap<>();
-    private Map<BlockPos, MatchableTile<? extends TileEntity>> tiles = new HashMap<>();
+    private final Map<BlockPos, MatchableState> blocks = new HashMap<>();
+    private final Map<BlockPos, MatchableTile<? extends TileEntity>> tiles = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0);
     private Vec3i max = new Vec3i(0, 0, 0);
 
@@ -108,7 +108,11 @@ public class BlockArray implements Structure {
         this.forAllInCube(ox, oy, oz, tx, ty, tz, (x, y, z) -> this.addBlock(state, x, y, z));
     }
 
-    private void forAllInCube(int ox, int oy, int oz, int tx, int ty, int tz, TriConsumer<Integer, Integer, Integer> fct) {
+    public void addBlockCube(MatchableState state, int ox, int oy, int oz, int tx, int ty, int tz) {
+        this.forAllInCube(ox, oy, oz, tx, ty, tz, (x, y, z) -> this.addBlock(state, x, y, z));
+    }
+
+    public void forAllInCube(int ox, int oy, int oz, int tx, int ty, int tz, TriConsumer<Integer, Integer, Integer> posFunction) {
         int lx, ly, lz;
         int hx, hy, hz;
         if(ox < tx) {
@@ -136,7 +140,7 @@ public class BlockArray implements Structure {
         for (int xx = lx; xx <= hx; xx++) {
             for (int zz = lz; zz <= hz; zz++) {
                 for (int yy = ly; yy <= hy; yy++) {
-                    fct.accept(xx, yy, zz);
+                    posFunction.accept(xx, yy, zz);
                 }
             }
         }
