@@ -12,6 +12,7 @@ import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import hellfirepvp.observerlib.client.util.SimpleBossInfo;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -151,12 +152,17 @@ public class StructurePreview {
         Collections.reverse(structureSlice);
         for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : structureSlice) {
             BlockPos at = expectedBlock.getA().add(this.origin);
-            BlockState renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             TileEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, this.snapshot.getSnapshotTick());
             BlockState actual = renderWorld.getBlockState(at);
 
             if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), actual, renderWorld.getTileEntity(at))) {
                 continue;
+            }
+            BlockState renderState;
+            if (expectedBlock.getB() == MatchableState.REQUIRES_AIR) {
+                renderState = Blocks.WHITE_WOOL.getDefaultState(); //choosing a very visible blockstate for required air
+            } else {
+                renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             }
 
             IModelData data = renderTile != null ? renderTile.getModelData() : EmptyModelData.INSTANCE;
