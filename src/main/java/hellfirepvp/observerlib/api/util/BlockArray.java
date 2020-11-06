@@ -29,8 +29,8 @@ import java.util.Map;
  */
 public class BlockArray implements Structure {
 
-    private Map<BlockPos, MatchableState> blocks = new HashMap<>();
-    private Map<BlockPos, MatchableTile<? extends TileEntity>> tiles = new HashMap<>();
+    private final Map<BlockPos, MatchableState> blocks = new HashMap<>();
+    private final Map<BlockPos, MatchableTile<? extends TileEntity>> tiles = new HashMap<>();
     private Vector3i min = new Vector3i(0, 0, 0);
     private Vector3i max = new Vector3i(0, 0, 0);
 
@@ -107,7 +107,11 @@ public class BlockArray implements Structure {
         this.forAllInCube(ox, oy, oz, tx, ty, tz, (x, y, z) -> this.addBlock(state, x, y, z));
     }
 
-    private void forAllInCube(int ox, int oy, int oz, int tx, int ty, int tz, TriConsumer<Integer, Integer, Integer> fct) {
+    public void addBlockCube(MatchableState state, int ox, int oy, int oz, int tx, int ty, int tz) {
+        this.forAllInCube(ox, oy, oz, tx, ty, tz, (x, y, z) -> this.addBlock(state, x, y, z));
+    }
+
+    public void forAllInCube(int ox, int oy, int oz, int tx, int ty, int tz, TriConsumer<Integer, Integer, Integer> fct) {
         int lx, ly, lz;
         int hx, hy, hz;
         if(ox < tx) {

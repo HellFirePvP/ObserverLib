@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public class BlockStateChangeSet implements BlockChangeSet {
 
-    private Map<BlockPos, BlockStateChange> changes = Maps.newHashMap();
+    private final Map<BlockPos, BlockStateChange> changes = Maps.newHashMap();
 
     public void addChange(BlockPos pos, BlockPos absolute, BlockState oldState, BlockState newState) {
         BlockStateChange oldChangeSet = this.changes.get(pos);

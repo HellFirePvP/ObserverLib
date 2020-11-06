@@ -59,30 +59,30 @@ public class RegistryUtil {
 
     @Nullable
     public <V> RegistryKey<V> getRegistryKey(@Nonnull RegistryKey<Registry<V>> registry, V value) {
-        return this.registries.func_243612_b(registry).func_230519_c_(value).orElse(null);
+        return this.registries.getRegistry(registry).getOptionalKey(value).orElse(null);
     }
 
     @Nullable
     public <V> ResourceLocation getKey(@Nonnull RegistryKey<Registry<V>> registry, V value) {
-        return this.registries.func_243612_b(registry).getKey(value);
+        return this.registries.getRegistry(registry).getKey(value);
     }
 
     @Nullable
     public <V> V getValue(@Nonnull RegistryKey<Registry<V>> registry, RegistryKey<V> key) {
-        return this.registries.func_243612_b(registry).getValueForKey(key);
+        return this.registries.getRegistry(registry).getValueForKey(key);
     }
 
     @Nullable
     public <V> V getValue(@Nonnull RegistryKey<Registry<V>> registry, ResourceLocation key) {
-        return this.registries.func_243612_b(registry).getOrDefault(key);
+        return this.registries.getRegistry(registry).getOrDefault(key);
     }
 
     public <V> Collection<Map.Entry<RegistryKey<V>, V>> getEntries(@Nonnull RegistryKey<Registry<V>> registry) {
-        return this.registries.func_243612_b(registry).getEntries();
+        return this.registries.getRegistry(registry).getEntries();
     }
 
     public <V> Collection<ResourceLocation> getKeys(@Nonnull RegistryKey<Registry<V>> registry) {
-        return this.registries.func_243612_b(registry).keySet();
+        return this.registries.getRegistry(registry).keySet();
     }
 
     public <V> Collection<V> getValues(@Nonnull RegistryKey<Registry<V>> registry) {

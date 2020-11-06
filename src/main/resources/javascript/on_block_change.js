@@ -5,7 +5,7 @@ function initializeCoreMod() {
                 'type': 'METHOD',
                 'class': 'net.minecraft.world.World',
                 'methodName': 'markAndNotifyBlock',
-                'methodDesc': '(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;I)V'
+                'methodDesc': '(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/world/chunk/Chunk;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;II)V'
             },
             'transformer': function(method) {
                 var ASMAPI = Java.type('net.minecraftforge.coremod.api.ASMAPI');

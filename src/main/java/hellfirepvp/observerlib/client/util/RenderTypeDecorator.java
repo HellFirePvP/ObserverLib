@@ -78,8 +78,8 @@ public class RenderTypeDecorator extends RenderType {
     }
 
     @Override
-    public boolean func_230041_s_() {
-        return this.decorated.func_230041_s_();
+    public boolean isColoredOutlineBuffer() {
+        return this.decorated.isColoredOutlineBuffer();
     }
 
     @Override
@@ -88,7 +88,7 @@ public class RenderTypeDecorator extends RenderType {
     }
 
     @Override
-    public Optional<RenderType> func_230169_u_() {
+    public Optional<RenderType> getRenderType() {
         return Optional.of(this);
     }
 }

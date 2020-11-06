@@ -26,8 +26,8 @@ import javax.annotation.Nullable;
  */
 public class MatcherObserverHelper extends ObserverHelper {
 
-    private static WorldCacheDomain WORLD_DOMAIN = WorldCacheManager.createDomain(ObserverLib.MODID);
-    private static WorldCacheDomain.SaveKey<StructureMatchingBuffer> STRUCTURE_BUFFER_KEY =
+    private static final WorldCacheDomain WORLD_DOMAIN = WorldCacheManager.createDomain(ObserverLib.MODID);
+    private static final WorldCacheDomain.SaveKey<StructureMatchingBuffer> STRUCTURE_BUFFER_KEY =
             WORLD_DOMAIN.createSaveKey("structure_buffer", StructureMatchingBuffer::new);
 
     public static StructureMatchingBuffer getBuffer(World world) {

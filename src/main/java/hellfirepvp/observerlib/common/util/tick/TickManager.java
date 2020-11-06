@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class TickManager {
 
-    private Map<TickEvent.Type, List<ITickHandler>> registeredTickHandlers = new HashMap<>();
+    private final Map<TickEvent.Type, List<ITickHandler>> registeredTickHandlers = new HashMap<>();
 
     public TickManager() {
         for (TickEvent.Type type : TickEvent.Type.values()) {

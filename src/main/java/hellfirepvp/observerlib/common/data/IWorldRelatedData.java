@@ -12,7 +12,7 @@ import java.io.IOException;
  */
 public interface IWorldRelatedData {
 
-    public WorldCacheDomain.SaveKey getSaveKey();
+    public WorldCacheDomain.SaveKey<?> getSaveKey();
 
     public abstract void markSaved();
 

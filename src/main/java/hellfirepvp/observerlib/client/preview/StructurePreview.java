@@ -12,6 +12,7 @@ import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import hellfirepvp.observerlib.client.util.SimpleBossInfo;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -45,8 +46,8 @@ public class StructurePreview {
 
     private static final Random rand = new Random();
 
-    private RegistryKey<World> dimension;
-    private BlockPos origin;
+    private final RegistryKey<World> dimension;
+    private final BlockPos origin;
     private final StructureSnapshot snapshot;
 
     private double minimumDisplayDistanceSq = 64;
@@ -77,7 +78,7 @@ public class StructurePreview {
     }
 
     boolean canRender(World renderWorld, BlockPos renderPosition) {
-        if (!this.dimension.equals(renderWorld.func_234923_W_())) {
+        if (!this.dimension.equals(renderWorld.getDimensionKey())) {
             return false;
         }
         return this.isInRenderDistance(renderPosition);
@@ -89,7 +90,7 @@ public class StructurePreview {
 
     public void tick(World renderWorld, BlockPos position) {
         if (this.barText != null) {
-            if (this.dimension.equals(renderWorld.func_234923_W_()) && this.isInRenderDistance(position)) {
+            if (this.dimension.equals(renderWorld.getDimensionKey()) && this.isInRenderDistance(position)) {
                 if (this.bossInfo == null) {
                     this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.WHITE, BossInfo.Overlay.PROGRESS).build();
                     this.bossInfo.displayInfo();
@@ -115,7 +116,7 @@ public class StructurePreview {
             return; //Nothing to render
         }
 
-        Biome plainsBiome = renderWorld.func_241828_r().func_243612_b(Registry.BIOME_KEY).getValueForKey(Biomes.PLAINS);
+        Biome plainsBiome = renderWorld.func_241828_r().getRegistry(Registry.BIOME_KEY).getValueForKey(Biomes.PLAINS);
         StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), plainsBiome);
         drawWorld.pushContentFilter(pos -> pos.getY() == displaySlice.get());
 
@@ -155,12 +156,17 @@ public class StructurePreview {
         Collections.reverse(structureSlice);
         for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : structureSlice) {
             BlockPos at = expectedBlock.getA().add(this.origin);
-            BlockState renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             TileEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, this.snapshot.getSnapshotTick());
             BlockState actual = renderWorld.getBlockState(at);
 
             if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), actual, renderWorld.getTileEntity(at))) {
                 continue;
+            }
+            BlockState renderState;
+            if (expectedBlock.getB() == MatchableState.REQUIRES_AIR) {
+                renderState = Blocks.WHITE_WOOL.getDefaultState(); //choosing a very visible blockstate for required air
+            } else {
+                renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             }
 
             IModelData data = renderTile != null ? renderTile.getModelData() : EmptyModelData.INSTANCE;
@@ -221,7 +227,7 @@ public class StructurePreview {
         }
 
         public Builder removeIfOutInDifferentWorld() {
-            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimension.equals(world.func_234923_W_()));
+            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimension.equals(world.getDimensionKey()));
             return this;
         }
 

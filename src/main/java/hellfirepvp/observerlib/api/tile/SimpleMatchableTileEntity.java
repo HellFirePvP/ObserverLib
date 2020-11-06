@@ -24,8 +24,8 @@ import java.util.function.Consumer;
 public class SimpleMatchableTileEntity<T extends TileEntity> implements MatchableTile<T> {
 
     private final TileEntityType<T> tileType;
-    private BiConsumer<T, CompoundNBT> writeDisplayData;
-    private Consumer<T> writePlacement;
+    private final BiConsumer<T, CompoundNBT> writeDisplayData;
+    private final Consumer<T> writePlacement;
 
     public SimpleMatchableTileEntity(TileEntityType<T> tileType, BiConsumer<T, CompoundNBT> writeDisplayData, Consumer<T> writePlacement) {
         this.tileType = tileType;

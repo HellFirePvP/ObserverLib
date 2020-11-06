@@ -57,7 +57,7 @@ public class StructureRenderWorld implements IWorldReader {
     private final WorldBorder maxBorder;
 
     private final Structure structure;
-    private Stack<Predicate<BlockPos>> blockFilter = new Stack<>();
+    private final Stack<Predicate<BlockPos>> blockFilter = new Stack<>();
 
     public StructureRenderWorld(Structure structure, Biome globalBiome) {
         this.structure = structure;
@@ -65,14 +65,14 @@ public class StructureRenderWorld implements IWorldReader {
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
         this.thisDimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_KEY, DimensionType.OVERWORLD);
 
-        if (this.thisDimType.func_242724_f() != 1.0D) {
+        if (this.thisDimType.getCoordinateScale() != 1.0D) {
             this.maxBorder = new WorldBorder() {
                 public double getCenterX() {
-                    return super.getCenterX() / 8.0D;
+                    return super.getCenterX() / thisDimType.getCoordinateScale();
                 }
 
                 public double getCenterZ() {
-                    return super.getCenterZ() / 8.0D;
+                    return super.getCenterZ() / thisDimType.getCoordinateScale();
                 }
             };
         } else {
@@ -227,7 +227,7 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public DimensionType func_230315_m_() {
+    public DimensionType getDimensionType() {
         return this.thisDimType;
     }
 }

@@ -23,8 +23,8 @@ public class WorldCacheManager implements ITickHandler {
 
     private static final String DEFAULT_DOMAIN_NAME = "worlddata";
 
-    private static WorldCacheManager instance = new WorldCacheManager();
-    private static Map<ResourceLocation, WorldCacheDomain> domains = new HashMap<>();
+    private static final WorldCacheManager instance = new WorldCacheManager();
+    private static final Map<ResourceLocation, WorldCacheDomain> domains = new HashMap<>();
 
     private WorldCacheManager() {}
 
@@ -80,7 +80,7 @@ public class WorldCacheManager implements ITickHandler {
     }
 
     public void doSave(World world) {
-        ResourceLocation worldName = world.func_234923_W_().func_240901_a_();
+        ResourceLocation worldName = world.getDimensionKey().getLocation();
         for (WorldCacheDomain domain : domains.values()) {
             for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
                 CachedWorldData data = domain.getCachedData(worldName, key);

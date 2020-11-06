@@ -50,7 +50,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         MatchChangeSubscriber<T> existing;
         if ((existing = (MatchChangeSubscriber<T>) getSubscriber(center)) != null) {
             if (!existing.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {
-                ObserverLib.log.warn("Trying to observe area at dim=" + world.func_234923_W_().func_240901_a_() + " " + center.toString() +
+                ObserverLib.log.warn("Trying to observe area at dim=" + world.getDimensionKey().getLocation() + " " + center.toString() +
                         " while it is already being observed by " + existing.getObserver().getProviderRegistryName());
                 ObserverLib.log.warn("Removing existing observer!");
                 this.removeSubscriber(center);

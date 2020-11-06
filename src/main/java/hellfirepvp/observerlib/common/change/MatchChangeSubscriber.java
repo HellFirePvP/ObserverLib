@@ -25,9 +25,9 @@ import java.util.Collection;
 public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSubscriber<T> {
 
     private BlockPos center;
-    private T matcher;
+    private final T matcher;
 
-    private BlockStateChangeSet changeSet = new BlockStateChangeSet();
+    private final BlockStateChangeSet changeSet = new BlockStateChangeSet();
     private Boolean isMatching = null;
 
     private Collection<ChunkPos> affectedChunkCache = null;

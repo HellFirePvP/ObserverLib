@@ -103,7 +103,7 @@ public class WorldCacheIOThread extends TimerTask {
 
     @Nonnull
     static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, World world, WorldCacheDomain.SaveKey<T> key) {
-        T loaded = loadDataFromFile(domain, world.func_234923_W_().func_240901_a_(), key);
+        T loaded = loadDataFromFile(domain, world.getDimensionKey().getLocation(), key);
         loaded.onLoad(world);
         return loaded;
     }

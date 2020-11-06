@@ -62,7 +62,7 @@ public class WorldCacheDomain {
     }
 
     void tick(World world) {
-        ResourceLocation dimName = world.func_234923_W_().func_240901_a_();
+        ResourceLocation dimName = world.getDimensionKey().getLocation();
         if (!this.domainData.containsKey(dimName)) {
             return;
         }
@@ -82,7 +82,7 @@ public class WorldCacheDomain {
 
     @Nullable
     private <T extends CachedWorldData> T getFromCache(World world, SaveKey<T> key) {
-        return getCachedData(world.func_234923_W_().func_240901_a_(), key);
+        return getCachedData(world.getDimensionKey().getLocation(), key);
     }
 
     Collection<ResourceLocation> getUsedWorlds() {
@@ -95,7 +95,7 @@ public class WorldCacheDomain {
         if (data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
 
-            this.domainData.computeIfAbsent(world.func_234923_W_().func_240901_a_(), i -> new HashMap<>())
+            this.domainData.computeIfAbsent(world.getDimensionKey().getLocation(), i -> new HashMap<>())
                     .put(key, data);
         }
         return (T) data;

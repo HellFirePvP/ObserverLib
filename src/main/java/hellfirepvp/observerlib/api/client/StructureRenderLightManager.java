@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  */
 public class StructureRenderLightManager extends WorldLightManager {
 
-    private int lightLevel;
+    private final int lightLevel;
 
     public StructureRenderLightManager(int lightLevel) {
         super(null, false, false);
@@ -70,9 +70,12 @@ public class StructureRenderLightManager extends WorldLightManager {
         return MathHelper.clamp(this.lightLevel - amount, 0, 15);
     }
 
+    @Override
+    public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean p_215574_4_) {}
+
     private static class ConstantLightEngine implements IWorldLightListener {
 
-        private int lightLevel;
+        private final int lightLevel;
 
         public ConstantLightEngine(int lightLevel) {
             this.lightLevel = lightLevel;
