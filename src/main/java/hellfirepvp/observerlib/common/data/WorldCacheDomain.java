@@ -23,8 +23,8 @@ import java.util.function.Function;
 public class WorldCacheDomain {
 
     private final ResourceLocation key;
-    private Set<SaveKey<? extends CachedWorldData>> knownSaveKeys = new HashSet<>();
-    private Map<ResourceLocation, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
+    private final Set<SaveKey<? extends CachedWorldData>> knownSaveKeys = new HashSet<>();
+    private final Map<ResourceLocation, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
 
     WorldCacheDomain(ResourceLocation key) {
         this.key = key;
@@ -98,7 +98,7 @@ public class WorldCacheDomain {
             this.domainData.computeIfAbsent(world.getDimensionKey().getLocation(), i -> new HashMap<>())
                     .put(key, data);
         }
-        return (T) data;
+        return data;
     }
 
     public File getSaveDirectory() {

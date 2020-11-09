@@ -1,6 +1,5 @@
 package hellfirepvp.observerlib.common.data;
 
-import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -29,6 +28,6 @@ public abstract class CachedWorldData implements IWorldRelatedData {
         return key;
     }
 
-    public void onLoad(IWorld world) {}
+    public void onLoad(World world) {}
 
 }
