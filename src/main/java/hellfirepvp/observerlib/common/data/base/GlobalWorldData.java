@@ -37,6 +37,12 @@ public abstract class GlobalWorldData extends CachedWorldData {
 
     @Override
     public final void writeData(File baseDirectory, File backupDirectory) throws IOException {
+        if (!baseDirectory.exists()) {
+            baseDirectory.mkdirs();
+        }
+        if (!backupDirectory.exists()) {
+            backupDirectory.mkdirs();
+        }
         File saveFile = this.getSaveFile(baseDirectory);
         if (saveFile.exists()) {
             try {
