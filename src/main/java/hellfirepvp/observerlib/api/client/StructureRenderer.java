@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
+import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -42,8 +43,6 @@ import java.util.Random;
 public class StructureRenderer {
 
     private static final Random rand = new Random();
-
-    public static boolean displayRequiredAir = false;
 
     private final StructureRenderWorld world;
     private final Structure structure;
@@ -158,7 +157,7 @@ public class StructureRenderer {
         renderStack.scale(-size * mul, -size * mul, -size * mul);
         slice.ifPresent(ySlice -> renderStack.translate(0, -ySlice, 0));
 
-        displayRequiredAir = this.displayWithRequiredAir;
+        BlockAirRequirement.displayRequiredAir = this.displayWithRequiredAir;
 
         this.structure.getContents().keySet()
                 .forEach(pos -> {
@@ -205,7 +204,7 @@ public class StructureRenderer {
         buffers.finish();
 
         if (this.displayWithRequiredAir) {
-            displayRequiredAir = false;
+            BlockAirRequirement.displayRequiredAir = false;
         }
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
