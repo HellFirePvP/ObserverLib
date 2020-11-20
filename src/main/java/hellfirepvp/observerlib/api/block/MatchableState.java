@@ -3,6 +3,7 @@ package hellfirepvp.observerlib.api.block;
 import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.api.client.StructureRenderer;
 import hellfirepvp.observerlib.common.CommonProxy;
+import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.BlockState;
@@ -47,7 +48,7 @@ public interface MatchableState {
         @Nonnull
         @Override
         public BlockState getDescriptiveState(long tick) {
-            if (StructureRenderer.displayRequiredAir) {
+            if (BlockAirRequirement.displayRequiredAir) {
                 return ObserverHelper.blockAirRequirement.getDefaultState();
             }
             return Blocks.AIR.getDefaultState();

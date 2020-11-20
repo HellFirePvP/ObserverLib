@@ -25,6 +25,8 @@ import java.util.Random;
  */
 public class BlockAirRequirement extends AirBlock {
 
+    public static boolean displayRequiredAir = false;
+
     public BlockAirRequirement() {
         super(Properties.create(Material.AIR)
                 .doesNotBlockMovement()
