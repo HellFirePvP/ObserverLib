@@ -169,7 +169,7 @@ public class StructureRenderer {
                         if (!view.getFluidState().isEmpty()) {
                             this.renderFluid(pos, view.getFluidState(), buffers.getBuffer(wrapBlockRenderType(RenderType.getTranslucent())));
                         }
-                        RenderType type = wrapBlockRenderType(RenderTypeLookup.func_239220_a_(view, true));
+                        RenderType type = wrapBlockRenderType(RenderTypeLookup.func_239221_b_(view));
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
                             this.renderBlock(pos, view, buffers.getBuffer(type), renderStack);
