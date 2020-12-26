@@ -30,11 +30,11 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     public static final int PRECISION_SECTION = 5;
     public static final int PRECISION_CHUNK = 4;
 
-    private Map<SectionKey, T> sections = new HashMap<>();
+    private final Map<SectionKey, T> sections = new HashMap<>();
     private final int precision;
 
-    private AlternatingSet<SectionKey> dirtySections = new AlternatingSet<>();
-    private Set<SectionKey> removedSections = new HashSet<>();
+    private final AlternatingSet<SectionKey> dirtySections = new AlternatingSet<>();
+    private final Set<SectionKey> removedSections = new HashSet<>();
 
     protected SectionWorldData(WorldCacheDomain.SaveKey<?> key, int sectionPrecision) {
         super(key);
@@ -45,12 +45,12 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         SectionKey key = SectionKey.resolve(absolute, this.precision);
         T section = getSection(key);
         if (section != null) {
-            this.dirtySections.add(key);
+            this.write(() -> this.dirtySections.add(key));
         }
     }
 
     public void markDirty(T section) {
-        this.dirtySections.add(SectionKey.from(section));
+        this.write(() -> this.dirtySections.add(SectionKey.from(section)));
     }
 
     protected abstract T createNewSection(int sectionX, int sectionZ);
@@ -88,7 +88,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
     @Nonnull
     private T getOrCreateSection(SectionKey key) {
-        return this.sections.computeIfAbsent(key, sectionKey -> createNewSection(sectionKey.x, sectionKey.z));
+        return this.write(() -> this.sections.computeIfAbsent(key, sectionKey -> createNewSection(sectionKey.x, sectionKey.z)));
     }
 
     @Nullable
@@ -98,7 +98,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
     @Nullable
     private T getSection(SectionKey key) {
-        return this.sections.get(key);
+        return this.read(() -> this.sections.get(key));
     }
 
     public boolean removeSection(T section) {
@@ -123,7 +123,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
     @Override
     public void markSaved() {
-        this.dirtySections.clear();
+        this.write(() -> this.dirtySections.clear());
     }
 
     public abstract void writeToNBT(CompoundNBT nbt);
@@ -157,8 +157,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         } else {
             generalSaveFile.createNewFile();
         }
+
         CompoundNBT generalData = new CompoundNBT();
-        this.writeToNBT(generalData);
+        this.readIO(() -> this.writeToNBT(generalData));
         CompressedStreamTools.write(generalData, generalSaveFile);
 
         this.dirtySections.forEach(key -> {
@@ -178,7 +179,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
                 }
 
                 CompoundNBT data = new CompoundNBT();
-                section.writeToNBT(data);
+                this.readIO(() -> section.writeToNBT(data));
                 CompressedStreamTools.write(data, saveFile);
             }
             return false;
@@ -192,9 +193,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         File generalSaveFile = new File(baseDirectory, "general.dat");
         if (generalSaveFile.exists()) {
             CompoundNBT tag = CompressedStreamTools.read(generalSaveFile);
-            this.readFromNBT(tag);
+            this.writeIO(() -> this.readFromNBT(tag));
         } else {
-            this.readFromNBT(new CompoundNBT());
+            this.writeIO(() -> this.readFromNBT(new CompoundNBT()));
         }
 
         for (File subFile : baseDirectory.listFiles()) {
@@ -215,9 +216,11 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
                 continue;
             }
 
-            T section = createNewSection(sX, sZ);
-            section.readFromNBT(CompressedStreamTools.read(subFile));
-            this.sections.put(new SectionKey(sX, sZ), section);
+            this.writeIO(() -> {
+                T section = createNewSection(sX, sZ);
+                section.readFromNBT(CompressedStreamTools.read(subFile));
+                this.sections.put(new SectionKey(sX, sZ), section);
+            });
         }
     }
 

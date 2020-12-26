@@ -56,13 +56,13 @@ public abstract class GlobalWorldData extends CachedWorldData {
         }
 
         CompoundNBT data = new CompoundNBT();
-        this.writeToNBT(data);
+        this.readIO(() -> this.writeToNBT(data));
         CompressedStreamTools.write(data, saveFile);
     }
 
     @Override
     public final void readData(File baseDirectory) throws IOException {
-        this.readFromNBT(CompressedStreamTools.read(this.getSaveFile(baseDirectory)));
+        this.writeIO(() -> this.readFromNBT(CompressedStreamTools.read(this.getSaveFile(baseDirectory))));
     }
 
     public abstract void writeToNBT(CompoundNBT tag);

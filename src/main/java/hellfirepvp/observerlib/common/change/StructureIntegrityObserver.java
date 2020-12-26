@@ -32,8 +32,7 @@ public class StructureIntegrityObserver implements BlockChangeNotifier.Listener 
 
         StructureMatchingBuffer buf = MatcherObserverHelper.getBuffer(world);
         ChunkPos ch = chunk.getPos();
-        Collection<MatchChangeSubscriber<?>> subscribers = buf.getSubscribers(ch);
-        for (MatchChangeSubscriber<?> subscriber : subscribers) {
+        for (MatchChangeSubscriber<?> subscriber : buf.getSubscribers(ch)) {
             if (subscriber.observes(pos)) {
                 subscriber.addChange(pos, oldState, newState);
                 buf.markDirty(pos);

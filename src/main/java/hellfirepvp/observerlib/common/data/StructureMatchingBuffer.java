@@ -21,6 +21,7 @@ import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -53,7 +54,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
                 ObserverLib.log.warn("Trying to observe area at dim=" + world.getDimensionKey().getLocation() + " " + center.toString() +
                         " while it is already being observed by " + existing.getObserver().getProviderRegistryName());
                 ObserverLib.log.warn("Removing existing observer!");
-                this.removeSubscriber(center);
+                this.write(() -> this.removeSubscriber(center));
             } else {
                 return existing;
             }
@@ -64,7 +65,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
         for (ChunkPos chPos : subscriber.getObservableChunks()) {
             MatcherSectionData data = getOrCreateSection(chPos.asBlockPos());
-            data.addSubscriber(center, subscriber);
+            this.write(() -> data.addSubscriber(center, subscriber));
             markDirty(data);
         }
         observer.initialize(world, center);
@@ -74,12 +75,12 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     public boolean removeSubscriber(BlockPos pos) {
         MatcherSectionData data = getOrCreateSection(pos);
 
-        ChangeSubscriber<? extends ChangeObserver> removed = data.removeSubscriber(pos);
+        ChangeSubscriber<? extends ChangeObserver> removed = this.write(() -> data.removeSubscriber(pos));
         if (removed != null) {
             ObservableArea area = removed.getObserver().getObservableArea();
             for (ChunkPos chPos : area.getAffectedChunks(pos)) {
                 MatcherSectionData matchData = getOrCreateSection(chPos.asBlockPos());
-                matchData.removeSubscriber(pos);
+                this.write(() -> matchData.removeSubscriber(pos));
                 markDirty(matchData);
             }
         }
@@ -88,13 +89,13 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
     @Nullable
     public ChangeSubscriber<? extends ChangeObserver> getSubscriber(BlockPos pos) {
-        return getOrCreateSection(pos).getSubscriber(pos);
+        return this.read(() -> getOrCreateSection(pos).getSubscriber(pos));
     }
 
     @Nonnull
     public Collection<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
         MatcherSectionData data = getOrCreateSection(pos.asBlockPos());
-        return data.requestSubscribers.values();
+        return this.read(() -> new ArrayList<>(data.requestSubscribers.values()));
     }
 
     @Override
@@ -103,9 +104,9 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     @Override
     public void readFromNBT(CompoundNBT nbt) {}
 
-    public class MatcherSectionData extends WorldSection {
+    public static class MatcherSectionData extends WorldSection {
 
-        private Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
+        private final Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver>> requestSubscribers = Maps.newHashMap();
 
         private MatcherSectionData(int sX, int sZ) {
             super(sX, sZ);
