@@ -89,7 +89,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
     @Nullable
     public ChangeSubscriber<? extends ChangeObserver> getSubscriber(BlockPos pos) {
-        return this.read(() -> getOrCreateSection(pos).getSubscriber(pos));
+        return this.write(() -> getOrCreateSection(pos).getSubscriber(pos));
     }
 
     @Nonnull
