@@ -162,10 +162,15 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.readIO(() -> this.writeToNBT(generalData));
         CompressedStreamTools.write(generalData, generalSaveFile);
 
+        Set<SectionKey> sections = new HashSet<>();
         this.dirtySections.forEach(key -> {
-            T section = getSection(key);
-            if (section != null) {
+            sections.add(key);
+            return false;
+        });
 
+        for (SectionKey sectionKey : sections) {
+            T section = getSection(sectionKey);
+            if (section != null) {
                 File saveFile = this.getSaveFile(baseDirectory, section);
                 if (saveFile.exists()) {
                     try {
@@ -182,8 +187,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
                 this.readIO(() -> section.writeToNBT(data));
                 CompressedStreamTools.write(data, saveFile);
             }
-            return false;
-        });
+        }
     }
 
     @Override
