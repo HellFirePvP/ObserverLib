@@ -6,6 +6,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is part of the Astral Sorcery Mod
@@ -16,13 +18,10 @@ import javax.annotation.Nullable;
  */
 public class BlockChangeNotifier {
 
-    private static Listener[] listeners = new Listener[0];
+    private static final List<Listener> listeners = new ArrayList<>();
 
-    public static void addListener(Listener listener) {
-        Listener[] copy = new Listener[listeners.length + 1];
-        System.arraycopy(listeners, 0, copy, 0, listeners.length);
-        copy[listeners.length] = listener;
-        listeners = copy;
+    public static synchronized void addListener(Listener listener) {
+        listeners.add(listener);
     }
 
     public static void onBlockChange(World world, @Nullable Chunk chunk, BlockPos pos, BlockState oldS, BlockState newS) {
