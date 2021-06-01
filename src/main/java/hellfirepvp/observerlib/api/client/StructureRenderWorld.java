@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.api.client;
 
+import com.google.common.collect.Iterables;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
@@ -63,7 +64,11 @@ public class StructureRenderWorld implements IWorldReader {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
-        this.thisDimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_KEY, DimensionType.OVERWORLD);
+        DimensionType dimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_KEY, DimensionType.OVERWORLD);
+        if (dimType == null) {
+            dimType = Iterables.getFirst(RegistryUtil.client().getValues(Registry.DIMENSION_TYPE_KEY), null);
+        }
+        this.thisDimType = dimType;
 
         if (this.thisDimType.getCoordinateScale() != 1.0D) {
             this.maxBorder = new WorldBorder() {
