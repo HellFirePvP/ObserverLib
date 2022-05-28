@@ -5,9 +5,9 @@ import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import hellfirepvp.observerlib.common.util.AlternatingSet;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Vec3i;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,7 +41,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.precision = sectionPrecision;
     }
 
-    public void markDirty(Vector3i absolute) {
+    public void markDirty(Vec3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
         T section = getSection(key);
         if (section != null) {
@@ -56,17 +56,17 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     protected abstract T createNewSection(int sectionX, int sectionZ);
 
     @Nonnull
-    public Collection<T> getSections(Vector3i absoluteMin, Vector3i absoluteMax) {
+    public Collection<T> getSections(Vec3i absoluteMin, Vec3i absoluteMax) {
         return resolveSections(absoluteMin, absoluteMax, this::getSection);
     }
 
     @Nonnull
-    public Collection<T> getOrCreateSections(Vector3i absoluteMin, Vector3i absoluteMax) {
+    public Collection<T> getOrCreateSections(Vec3i absoluteMin, Vec3i absoluteMax) {
         return resolveSections(absoluteMin, absoluteMax, this::getOrCreateSection);
     }
 
     @Nonnull
-    private Collection<T> resolveSections(Vector3i absoluteMin, Vector3i absoluteMax, Function<SectionKey, T> sectionFct) {
+    private Collection<T> resolveSections(Vec3i absoluteMin, Vec3i absoluteMax, Function<SectionKey, T> sectionFct) {
         SectionKey lower = SectionKey.resolve(absoluteMin, this.precision);
         SectionKey higher = SectionKey.resolve(absoluteMax, this.precision);
         Collection<T> out = new HashSet<>();
@@ -82,7 +82,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Nonnull
-    public T getOrCreateSection(Vector3i absolute) {
+    public T getOrCreateSection(Vec3i absolute) {
         return getOrCreateSection(SectionKey.resolve(absolute, this.precision));
     }
 
@@ -92,7 +92,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
     }
 
     @Nullable
-    public T getSection(Vector3i absolute) {
+    public T getSection(Vec3i absolute) {
         return this.getSection(SectionKey.resolve(absolute, this.precision));
     }
 
@@ -106,7 +106,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         return this.sections.remove(key) == section && this.removedSections.add(key);
     }
 
-    public boolean removeSection(Vector3i absolute) {
+    public boolean removeSection(Vec3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
         return this.sections.remove(key) != null && this.removedSections.add(key);
     }
@@ -126,9 +126,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
         this.write(() -> this.dirtySections.clear());
     }
 
-    public abstract void writeToNBT(CompoundNBT nbt);
+    public abstract void writeToNBT(CompoundTag nbt);
 
-    public abstract void readFromNBT(CompoundNBT nbt);
+    public abstract void readFromNBT(CompoundTag nbt);
 
     private File getSaveFile(File directory, T section) {
         String name = String.format("%s_%s_%s.dat",
@@ -158,9 +158,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             generalSaveFile.createNewFile();
         }
 
-        CompoundNBT generalData = new CompoundNBT();
+        CompoundTag generalData = new CompoundTag();
         this.readIO(() -> this.writeToNBT(generalData));
-        CompressedStreamTools.write(generalData, generalSaveFile);
+        NbtIo.write(generalData, generalSaveFile);
 
         Set<SectionKey> sections = new HashSet<>();
         this.dirtySections.forEach(key -> {
@@ -183,9 +183,9 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
                     saveFile.createNewFile();
                 }
 
-                CompoundNBT data = new CompoundNBT();
+                CompoundTag data = new CompoundTag();
                 this.readIO(() -> section.writeToNBT(data));
-                CompressedStreamTools.write(data, saveFile);
+                NbtIo.write(data, saveFile);
             }
         }
     }
@@ -196,10 +196,10 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
         File generalSaveFile = new File(baseDirectory, "general.dat");
         if (generalSaveFile.exists()) {
-            CompoundNBT tag = CompressedStreamTools.read(generalSaveFile);
+            CompoundTag tag = NbtIo.read(generalSaveFile);
             this.writeIO(() -> this.readFromNBT(tag));
         } else {
-            this.writeIO(() -> this.readFromNBT(new CompoundNBT()));
+            this.writeIO(() -> this.readFromNBT(new CompoundTag()));
         }
 
         for (File subFile : baseDirectory.listFiles()) {
@@ -222,7 +222,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
             this.writeIO(() -> {
                 T section = createNewSection(sX, sZ);
-                section.readFromNBT(CompressedStreamTools.read(subFile));
+                section.readFromNBT(NbtIo.read(subFile));
                 this.sections.put(new SectionKey(sX, sZ), section);
             });
         }
@@ -241,7 +241,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
             return new SectionKey(section.getSectionX(), section.getSectionZ());
         }
 
-        private static SectionKey resolve(Vector3i absolute, int shift) {
+        private static SectionKey resolve(Vec3i absolute, int shift) {
             return new SectionKey(absolute.getX() >> shift, absolute.getZ() >> shift);
         }
 

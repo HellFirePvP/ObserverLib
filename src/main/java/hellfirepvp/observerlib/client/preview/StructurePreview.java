@@ -1,34 +1,32 @@
 package hellfirepvp.observerlib.client.preview;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.client.StructureRenderWorld;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.util.StructureUtil;
-import hellfirepvp.observerlib.client.util.BufferDecoratorBuilder;
-import hellfirepvp.observerlib.client.util.ClientTickHelper;
-import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
-import hellfirepvp.observerlib.client.util.SimpleBossInfo;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import hellfirepvp.observerlib.client.util.*;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.RegistryKey;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.BossInfo;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biomes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.client.model.data.EmptyModelData;
 import net.minecraftforge.client.model.data.IModelData;
 
@@ -46,57 +44,57 @@ public class StructurePreview {
 
     private static final Random rand = new Random();
 
-    private final RegistryKey<World> dimension;
+    private final ResourceKey<Level> dimension;
     private final BlockPos origin;
     private final StructureSnapshot snapshot;
 
     private double minimumDisplayDistanceSq = 64;
     private double displayDistanceMultiplier = 1.75;
-    private BiPredicate<World, BlockPos> persistenceTest = (world, pos) -> true;
+    private BiPredicate<Level, BlockPos> persistenceTest = (world, pos) -> true;
 
-    private ITextComponent barText = null;
+    private Component barText = null;
     private SimpleBossInfo bossInfo = null;
 
-    private StructurePreview(RegistryKey<World> dimension, BlockPos origin, StructureSnapshot snapshot) {
+    private StructurePreview(ResourceKey<Level> dimension, BlockPos origin, StructureSnapshot snapshot) {
         this.dimension = dimension;
         this.origin = origin;
         this.snapshot = snapshot;
     }
 
-    public static Builder newBuilder(RegistryKey<World> dimension, BlockPos source, MatchableStructure structure) {
+    public static Builder newBuilder(ResourceKey<Level> dimension, BlockPos source, MatchableStructure structure) {
         return newBuilder(dimension, source, structure, ClientTickHelper.getClientTick());
     }
 
-    public static Builder newBuilder(RegistryKey<World> dimension, BlockPos source, MatchableStructure structure, long tick) {
+    public static Builder newBuilder(ResourceKey<Level> dimension, BlockPos source, MatchableStructure structure, long tick) {
         return new Builder(dimension, source, structure, tick);
     }
 
     private boolean isInRenderDistance(BlockPos position) {
-        double distanceSq = Math.max(this.minimumDisplayDistanceSq, this.snapshot.getStructure().getMaximumOffset().distanceSq(this.snapshot.getStructure().getMinimumOffset()));
+        double distanceSq = Math.max(this.minimumDisplayDistanceSq, this.snapshot.getStructure().getMaximumOffset().distSqr(this.snapshot.getStructure().getMinimumOffset()));
         distanceSq *= Math.max(1, displayDistanceMultiplier);
-        return this.origin.distanceSq(position) <= distanceSq;
+        return this.origin.distSqr(position) <= distanceSq;
     }
 
-    boolean canRender(World renderWorld, BlockPos renderPosition) {
-        if (!this.dimension.equals(renderWorld.getDimensionKey())) {
+    boolean canRender(Level renderWorld, BlockPos renderPosition) {
+        if (!this.dimension.equals(renderWorld.dimension())) {
             return false;
         }
         return this.isInRenderDistance(renderPosition);
     }
 
-    boolean canPersist(World renderWorld, BlockPos position) {
+    boolean canPersist(Level renderWorld, BlockPos position) {
         return this.persistenceTest.test(renderWorld, position);
     }
 
-    public void tick(World renderWorld, BlockPos position) {
+    public void tick(Level renderWorld, BlockPos position) {
         if (this.barText != null) {
-            if (this.dimension.equals(renderWorld.getDimensionKey()) && this.isInRenderDistance(position)) {
+            if (this.dimension.equals(renderWorld.dimension()) && this.isInRenderDistance(position)) {
                 if (this.bossInfo == null) {
-                    this.bossInfo = SimpleBossInfo.newBuilder(this.barText, BossInfo.Color.WHITE, BossInfo.Overlay.PROGRESS).build();
+                    this.bossInfo = SimpleBossInfo.create(this.barText, BossEvent.BossBarColor.WHITE, BossEvent.BossBarOverlay.PROGRESS);
                     this.bossInfo.displayInfo();
                 }
                 float percFinished = StructureUtil.getMismatches(this.snapshot.getStructure(), renderWorld, this.origin).size() / ((float) this.snapshot.getStructure().getContents().size());
-                this.bossInfo.setPercent(1F - percFinished);
+                this.bossInfo.setProgress(1F - percFinished);
             } else if (this.bossInfo != null) {
                 this.bossInfo.removeInfo();
                 this.bossInfo = null;
@@ -110,27 +108,27 @@ public class StructurePreview {
         }
     }
 
-    void render(World renderWorld, MatrixStack renderStack, Vector3d playerPos) {
+    void render(Level renderWorld, PoseStack renderStack, Vec3 playerPos) {
         Optional<Integer> displaySlice = StructureUtil.getLowestMismatchingSlice(this.snapshot.getStructure(), renderWorld, this.origin);
         if (!displaySlice.isPresent()) {
             return; //Nothing to render
         }
 
-        Biome plainsBiome = renderWorld.func_241828_r().getRegistry(Registry.BIOME_KEY).getValueForKey(Biomes.PLAINS);
+        Holder<Biome> plainsBiome = renderWorld.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getOrCreateHolder(Biomes.PLAINS);
         StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), plainsBiome);
         drawWorld.pushContentFilter(pos -> pos.getY() == displaySlice.get());
 
         int[] fullBright = new int[] { 15, 15 };
         BlockMismatchColorDecorator colorDecorator = new BlockMismatchColorDecorator();
 
-        BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
-        IRenderTypeBuffer.Impl buffers = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+        BlockRenderDispatcher brd = Minecraft.getInstance().getBlockRenderer();
+        MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         BufferDecoratorBuilder decorator = new BufferDecoratorBuilder()
                 .setLightmapDecorator((skyLight, blockLight) -> fullBright)
                 .setColorDecorator(colorDecorator);
 
         Runnable transparentSetup = () -> {
-            RenderSystem.disableAlphaTest();
+            RenderSystemUtil.disableAlphaTest();
             RenderSystem.disableDepthTest();
             RenderSystem.enableBlend();
             RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA,
@@ -140,74 +138,74 @@ public class StructurePreview {
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();
             RenderSystem.enableDepthTest();
-            RenderSystem.enableAlphaTest();
+            RenderSystemUtil.enableAlphaTest();
         };
 
-        Vector3d vec = new Vector3d(0, 0, 0);
+        Vec3 vec = new Vec3(0, 0, 0);
         if (Minecraft.getInstance().gameRenderer != null) {
-            vec = Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
+            vec = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         }
 
-        renderStack.push();
-        renderStack.translate(-vec.getX(), -vec.getY(), -vec.getZ());
+        renderStack.pushPose();
+        renderStack.translate(-vec.x(), -vec.y(), -vec.z());
 
         List<Tuple<BlockPos, ? extends MatchableState>> structureSlice = this.snapshot.getStructure().getStructureSlice(displaySlice.get());
-        structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distanceSq(playerPos.x, playerPos.y, playerPos.z, false)));
+        structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distToLowCornerSqr(playerPos.x, playerPos.y, playerPos.z)));
         Collections.reverse(structureSlice);
         for (Tuple<BlockPos, ? extends MatchableState> expectedBlock : structureSlice) {
-            BlockPos at = expectedBlock.getA().add(this.origin);
-            TileEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, this.snapshot.getSnapshotTick());
+            BlockPos at = expectedBlock.getA().offset(this.origin);
+            BlockEntity renderTile = expectedBlock.getB().createTileEntity(drawWorld, at, this.snapshot.getSnapshotTick());
             BlockState actual = renderWorld.getBlockState(at);
 
-            if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), actual, renderWorld.getTileEntity(at))) {
+            if (this.snapshot.getStructure().matchesSingleBlock(renderWorld, this.origin, expectedBlock.getA(), actual, renderWorld.getBlockEntity(at))) {
                 continue;
             }
             BlockState renderState;
             if (expectedBlock.getB() == MatchableState.REQUIRES_AIR) {
-                renderState = Blocks.WHITE_WOOL.getDefaultState(); //choosing a very visible blockstate for required air
+                renderState = Blocks.WHITE_WOOL.defaultBlockState(); //choosing a very visible blockstate for required air
             } else {
                 renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             }
 
             IModelData data = renderTile != null ? renderTile.getModelData() : EmptyModelData.INSTANCE;
 
-            renderStack.push();
+            renderStack.pushPose();
             renderStack.translate(at.getX() + 0.2F, at.getY() + 0.2F, at.getZ() + 0.2F);
             renderStack.scale(0.6F, 0.6F, 0.6F);
 
-            if (!actual.isAir(renderWorld, at)) {
+            if (!actual.isAir()) {
                 colorDecorator.isMismatch = true;
             }
             drawWorld.pushContentFilter(pos -> pos.equals(expectedBlock.getA()));
             if (!renderState.getFluidState().isEmpty()) {
-                RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderType.getTranslucent(), transparentSetup, transparentClean);
+                RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderType.translucent(), transparentSetup, transparentClean);
                 decorator.decorate(buffers.getBuffer(decorated), buf -> {
-                    brd.renderFluid(BlockPos.ZERO, drawWorld, buf, renderState.getFluidState());
+                    brd.renderLiquid(BlockPos.ZERO, drawWorld, buf, renderState, renderState.getFluidState());
                 });
             }
 
-            RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(RenderTypeLookup.func_239221_b_(renderState), transparentSetup, transparentClean);
+            RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(ItemBlockRenderTypes.getMovingBlockRenderType(renderState), transparentSetup, transparentClean);
             decorator.decorate(buffers.getBuffer(decorated), buf -> {
-                brd.renderModel(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data);
+                brd.renderBatched(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data);
             });
-            buffers.finish();
+            buffers.endBatch();
 
             drawWorld.popContentFilter();
             colorDecorator.isMismatch = false;
 
-            renderStack.pop();
+            renderStack.popPose();
         }
 
         drawWorld.popContentFilter();
 
-        renderStack.pop();
+        renderStack.popPose();
     }
 
     public static class Builder {
 
         private final StructurePreview preview;
 
-        private Builder(RegistryKey<World> dimension, BlockPos origin, MatchableStructure structure, long tick) {
+        private Builder(ResourceKey<Level> dimension, BlockPos origin, MatchableStructure structure, long tick) {
             this.preview = new StructurePreview(dimension, origin, new StructureSnapshot(structure, tick));
         }
 
@@ -227,16 +225,16 @@ public class StructurePreview {
         }
 
         public Builder removeIfOutInDifferentWorld() {
-            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimension.equals(world.getDimensionKey()));
+            this.preview.persistenceTest = this.preview.persistenceTest.and((world, pos) -> this.preview.dimension.equals(world.dimension()));
             return this;
         }
 
-        public Builder andPersistOnlyIf(BiPredicate<World, BlockPos> test) {
+        public Builder andPersistOnlyIf(BiPredicate<Level, BlockPos> test) {
             this.preview.persistenceTest = this.preview.persistenceTest.and(test);
             return this;
         }
 
-        public Builder showBar(ITextComponent headline) {
+        public Builder showBar(Component headline) {
             this.preview.barText = headline;
             return this;
         }

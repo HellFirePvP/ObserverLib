@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.common.data;
 
 import hellfirepvp.observerlib.common.util.IORunnable;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import java.io.IOException;
 import java.util.Random;
@@ -29,13 +29,13 @@ public abstract class CachedWorldData implements IWorldRelatedData {
 
     public abstract boolean needsSaving();
 
-    public abstract void updateTick(World world);
+    public abstract void updateTick(Level world);
 
     public final WorldCacheDomain.SaveKey<?> getSaveKey() {
         return key;
     }
 
-    public void onLoad(World world) {}
+    public void onLoad(Level world) {}
 
     public <T> T write(Supplier<T> fn) {
         return this.lock(this.rwLock::writeLock, fn);

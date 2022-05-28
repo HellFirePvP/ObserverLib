@@ -5,12 +5,12 @@ import hellfirepvp.observerlib.api.block.SimpleMatchableBlockState;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import javax.annotation.Nonnull;
@@ -30,9 +30,9 @@ import java.util.Map;
 public class BlockArray implements Structure {
 
     private final Map<BlockPos, MatchableState> blocks = new HashMap<>();
-    private final Map<BlockPos, MatchableTile<? extends TileEntity>> tiles = new HashMap<>();
-    private Vector3i min = new Vector3i(0, 0, 0);
-    private Vector3i max = new Vector3i(0, 0, 0);
+    private final Map<BlockPos, MatchableTile<? extends BlockEntity>> tiles = new HashMap<>();
+    private Vec3i min = new Vec3i(0, 0, 0);
+    private Vec3i max = new Vec3i(0, 0, 0);
 
     @Override
     @Nonnull
@@ -42,17 +42,17 @@ public class BlockArray implements Structure {
 
     @Nonnull
     @Override
-    public Map<BlockPos, ? extends MatchableTile<? extends TileEntity>> getTileEntities() {
+    public Map<BlockPos, ? extends MatchableTile<? extends BlockEntity>> getTileEntities() {
         return Collections.unmodifiableMap(this.tiles);
     }
 
     @Override
-    public Vector3i getMaximumOffset() {
+    public Vec3i getMaximumOffset() {
         return max;
     }
 
     @Override
-    public Vector3i getMinimumOffset() {
+    public Vec3i getMinimumOffset() {
         return min;
     }
 
@@ -79,7 +79,7 @@ public class BlockArray implements Structure {
 
     public void addBlock(BlockState state, BlockPos pos) {
         MatchableState match = new SimpleMatchableBlockState(state);
-        if (state == Blocks.AIR.getDefaultState()) {
+        if (state == Blocks.AIR.defaultBlockState()) {
             match = MatchableState.AIR;
         }
         this.addBlock(match, pos);
@@ -147,22 +147,22 @@ public class BlockArray implements Structure {
 
     private void updateSize(BlockPos addedPos) {
         if(addedPos.getX() < min.getX()) {
-            min = new Vector3i(addedPos.getX(), min.getY(), min.getZ());
+            min = new Vec3i(addedPos.getX(), min.getY(), min.getZ());
         }
         if(addedPos.getX() > max.getX()) {
-            max = new Vector3i(addedPos.getX(), max.getY(), max.getZ());
+            max = new Vec3i(addedPos.getX(), max.getY(), max.getZ());
         }
         if(addedPos.getY() < min.getY()) {
-            min = new Vector3i(min.getX(), addedPos.getY(), min.getZ());
+            min = new Vec3i(min.getX(), addedPos.getY(), min.getZ());
         }
         if(addedPos.getY() > max.getY()) {
-            max = new Vector3i(max.getX(), addedPos.getY(), max.getZ());
+            max = new Vec3i(max.getX(), addedPos.getY(), max.getZ());
         }
         if(addedPos.getZ() < min.getZ()) {
-            min = new Vector3i(min.getX(), min.getY(), addedPos.getZ());
+            min = new Vec3i(min.getX(), min.getY(), addedPos.getZ());
         }
         if(addedPos.getZ() > max.getZ()) {
-            max = new Vector3i(max.getX(), max.getY(), addedPos.getZ());
+            max = new Vec3i(max.getX(), max.getY(), addedPos.getZ());
         }
     }
 }

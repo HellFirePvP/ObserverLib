@@ -1,39 +1,42 @@
 package hellfirepvp.observerlib.api.client;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
 import hellfirepvp.observerlib.api.util.SingleBiomeManager;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.LightType;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeManager;
-import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.lighting.WorldLightManager;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -48,11 +51,11 @@ import java.util.stream.Stream;
  * Date: 30.04.2019 / 22:22
  */
 @OnlyIn(Dist.CLIENT)
-public class StructureRenderWorld implements IWorldReader {
+public class StructureRenderWorld implements LevelReader {
 
     private static final int MAX_LIGHT = 15;
 
-    private final Biome globalBiome;
+    private final Holder<Biome> globalBiome;
     private final SingleBiomeManager biomeManager;
     private final DimensionType thisDimType;
     private final WorldBorder maxBorder;
@@ -60,24 +63,24 @@ public class StructureRenderWorld implements IWorldReader {
     private final Structure structure;
     private final Stack<Predicate<BlockPos>> blockFilter = new Stack<>();
 
-    public StructureRenderWorld(Structure structure, Biome globalBiome) {
+    public StructureRenderWorld(Structure structure, Holder<Biome> globalBiome) {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
-        DimensionType dimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_KEY, DimensionType.OVERWORLD);
+        DimensionType dimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_REGISTRY, DimensionType.OVERWORLD_LOCATION);
         if (dimType == null) {
-            dimType = Iterables.getFirst(RegistryUtil.client().getValues(Registry.DIMENSION_TYPE_KEY), null);
+            dimType = Iterables.getFirst(RegistryUtil.client().getValues(Registry.DIMENSION_TYPE_REGISTRY), null);
         }
         this.thisDimType = dimType;
 
-        if (this.thisDimType.getCoordinateScale() != 1.0D) {
+        if (this.thisDimType.coordinateScale() != 1.0D) {
             this.maxBorder = new WorldBorder() {
                 public double getCenterX() {
-                    return super.getCenterX() / thisDimType.getCoordinateScale();
+                    return super.getCenterX() / thisDimType.coordinateScale();
                 }
 
                 public double getCenterZ() {
-                    return super.getCenterZ() / thisDimType.getCoordinateScale();
+                    return super.getCenterZ() / thisDimType.coordinateScale();
                 }
             };
         } else {
@@ -104,25 +107,24 @@ public class StructureRenderWorld implements IWorldReader {
 
     @Nullable
     @Override
-    public TileEntity getTileEntity(BlockPos pos) {
+    public BlockEntity getBlockEntity(BlockPos pos) {
         if (!this.structure.hasBlockAt(pos) || !allowAccess(pos)) {
             return null;
         }
         MatchableState state = this.structure.getBlockStateAt(pos);
-        TileEntity tile = state.createTileEntity(this, ClientTickHelper.getClientTick());
+        BlockEntity tile = state.createTileEntity(this, pos, ClientTickHelper.getClientTick());
         if (tile == null) {
             return null;
         }
-        tile.setWorldAndPos(Minecraft.getInstance().world, pos);
+        tile.setLevel(Minecraft.getInstance().level);
 
         MatchableTile tileMatch = this.structure.getTileEntityAt(pos);
         if (tileMatch == null) {
             return tile;
         }
-        CompoundNBT tag = new CompoundNBT();
-        tile.write(tag);
+        CompoundTag tag = tile.saveWithoutMetadata();
         tileMatch.writeDisplayData(tile, ClientTickHelper.getClientTick(), tag);
-        tile.read(state.getDescriptiveState(0), tag);
+        tile.load(tag);
 
         tileMatch.postPlacement(tile, this, pos);
         return tile;
@@ -131,10 +133,10 @@ public class StructureRenderWorld implements IWorldReader {
     @Override
     public BlockState getBlockState(BlockPos pos) {
         if (!this.structure.hasBlockAt(pos) || !allowAccess(pos)) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
         MatchableState state = this.structure.getContents().get(pos);
-        return state == null ? Blocks.AIR.getDefaultState() : state.getDescriptiveState(ClientTickHelper.getClientTick());
+        return state == null ? Blocks.AIR.defaultBlockState() : state.getDescriptiveState(ClientTickHelper.getClientTick());
     }
 
     @Override
@@ -146,22 +148,22 @@ public class StructureRenderWorld implements IWorldReader {
     //Some light-multiplier based on direction? seems sketchy tbh
     @Override
     @OnlyIn(Dist.CLIENT)
-    public float func_230487_a_(Direction direction, boolean b) {
+    public float getShade(Direction direction, boolean b) {
         return 1F;
     }
 
     @Override
-    public WorldLightManager getLightManager() {
+    public LevelLightEngine getLightEngine() {
         return new StructureRenderLightManager(MAX_LIGHT);
     }
 
     @Override
-    public int getLightFor(LightType lightType, BlockPos blockPos) {
+    public int getBrightness(LightLayer lightType, BlockPos blockPos) {
         return MAX_LIGHT;
     }
 
     @Override
-    public int getLightSubtracted(BlockPos pos, int amount) {
+    public int getRawBrightness(BlockPos pos, int amount) {
         return MAX_LIGHT;
     }
 
@@ -172,27 +174,27 @@ public class StructureRenderWorld implements IWorldReader {
 
     @Nullable
     @Override
-    public IChunk getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
+    public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
         return null;
     }
 
     @Override
-    public boolean chunkExists(int chunkX, int chunkZ) {
+    public boolean hasChunk(int chunkX, int chunkZ) {
         return false;
     }
 
     @Override
-    public BlockPos getHeight(Heightmap.Type heightmapType, BlockPos pos) {
+    public BlockPos getHeightmapPos(Heightmap.Types heightmapType, BlockPos pos) {
         return null;
     }
 
     @Override
-    public int getHeight(Heightmap.Type heightmapType, int x, int z) {
+    public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         return 0;
     }
 
     @Override
-    public int getSkylightSubtracted() {
+    public int getSkyDarken() {
         return 0;
     }
 
@@ -202,7 +204,7 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public Biome getNoiseBiomeRaw(int x, int y, int z) {
+    public Holder<Biome> getUncachedNoiseBiome(int x, int y, int z) {
         return globalBiome;
     }
 
@@ -212,17 +214,17 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public boolean checkNoEntityCollision(@Nullable Entity entityIn, VoxelShape shape) {
+    public boolean isUnobstructed(@Nullable Entity entityIn, VoxelShape shape) {
         return true;
     }
 
     @Override
-    public Stream<VoxelShape> func_230318_c_(@Nullable Entity entity, AxisAlignedBB axisAlignedBB, Predicate<Entity> predicate) {
-        return Stream.empty();
+    public List<VoxelShape> getEntityCollisions(@Nullable Entity p_186427_, AABB p_186428_) {
+        return Lists.newArrayList();
     }
 
     @Override
-    public boolean isRemote() {
+    public boolean isClientSide() {
         return true;
     }
 
@@ -232,7 +234,7 @@ public class StructureRenderWorld implements IWorldReader {
     }
 
     @Override
-    public DimensionType getDimensionType() {
+    public DimensionType dimensionType() {
         return this.thisDimType;
     }
 }

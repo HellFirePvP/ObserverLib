@@ -11,13 +11,13 @@ import hellfirepvp.observerlib.common.data.base.SectionWorldData;
 import hellfirepvp.observerlib.common.data.base.WorldSection;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -44,14 +44,14 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     }
 
     @Override
-    public void updateTick(World world) {}
+    public void updateTick(Level world) {}
 
     @Nonnull
-    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(World world, BlockPos center, ObserverProvider provider) {
+    public <T extends ChangeObserver> MatchChangeSubscriber<T> observeArea(Level world, BlockPos center, ObserverProvider provider) {
         MatchChangeSubscriber<T> existing;
         if ((existing = (MatchChangeSubscriber<T>) getSubscriber(center)) != null) {
             if (!existing.getObserver().getProviderRegistryName().equals(provider.getRegistryName())) {
-                ObserverLib.log.warn("Trying to observe area at dim=" + world.getDimensionKey().getLocation() + " " + center.toString() +
+                ObserverLib.log.warn("Trying to observe area at dim=" + world.dimension().location() + " " + center.toString() +
                         " while it is already being observed by " + existing.getObserver().getProviderRegistryName());
                 ObserverLib.log.warn("Removing existing observer!");
                 this.write(() -> this.removeSubscriber(center));
@@ -64,7 +64,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         MatchChangeSubscriber<T> subscriber = new MatchChangeSubscriber<>(center, observer);
 
         for (ChunkPos chPos : subscriber.getObservableChunks()) {
-            MatcherSectionData data = getOrCreateSection(chPos.asBlockPos());
+            MatcherSectionData data = getOrCreateSection(chPos.getWorldPosition());
             this.write(() -> data.addSubscriber(center, subscriber));
             markDirty(data);
         }
@@ -79,7 +79,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         if (removed != null) {
             ObservableArea area = removed.getObserver().getObservableArea();
             for (ChunkPos chPos : area.getAffectedChunks(pos)) {
-                MatcherSectionData matchData = getOrCreateSection(chPos.asBlockPos());
+                MatcherSectionData matchData = getOrCreateSection(chPos.getWorldPosition());
                 this.write(() -> matchData.removeSubscriber(pos));
                 markDirty(matchData);
             }
@@ -94,15 +94,15 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
     @Nonnull
     public Collection<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
-        MatcherSectionData data = getOrCreateSection(pos.asBlockPos());
+        MatcherSectionData data = getOrCreateSection(pos.getWorldPosition());
         return this.read(() -> new ArrayList<>(data.requestSubscribers.values()));
     }
 
     @Override
-    public void writeToNBT(CompoundNBT nbt) {}
+    public void writeToNBT(CompoundTag nbt) {}
 
     @Override
-    public void readFromNBT(CompoundNBT nbt) {}
+    public void readFromNBT(CompoundTag nbt) {}
 
     public static class MatcherSectionData extends WorldSection {
 
@@ -128,11 +128,11 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         }
 
         @Override
-        public void writeToNBT(CompoundNBT tag) {
-            ListNBT subscriberList = new ListNBT();
+        public void writeToNBT(CompoundTag tag) {
+            ListTag subscriberList = new ListTag();
 
             for (MatchChangeSubscriber<? extends ChangeObserver> sub : this.requestSubscribers.values()) {
-                CompoundNBT subscriber = new CompoundNBT();
+                CompoundTag subscriber = new CompoundTag();
                 NBTHelper.writeBlockPosToNBT(sub.getCenter(), subscriber);
                 subscriber.putString("identifier", sub.getObserver().getProviderRegistryName().toString());
 
@@ -145,12 +145,12 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         }
 
         @Override
-        public void readFromNBT(CompoundNBT tag) {
+        public void readFromNBT(CompoundTag tag) {
             this.requestSubscribers.clear();
 
-            ListNBT subscriberList = tag.getList("subscribers", Constants.NBT.TAG_COMPOUND);
+            ListTag subscriberList = tag.getList("subscribers", Tag.TAG_COMPOUND);
             for (int i = 0; i < subscriberList.size(); i++) {
-                CompoundNBT subscriberTag = subscriberList.getCompound(i);
+                CompoundTag subscriberTag = subscriberList.getCompound(i);
 
                 BlockPos requester = NBTHelper.readBlockPosFromNBT(subscriberTag);
                 ResourceLocation matchIdentifier = new ResourceLocation(subscriberTag.getString("identifier"));

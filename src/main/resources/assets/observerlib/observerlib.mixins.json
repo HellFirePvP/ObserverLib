@@ -1,0 +1,15 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "hellfirepvp.observerlib.mixin",
+    "compatibilityLevel": "JAVA_8",
+    "refmap": "observerlib.refmap.json",
+    "mixins": [
+        "MixinLevel"
+    ],
+    "client": [],
+    "server": [],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

@@ -1,11 +1,9 @@
 package hellfirepvp.observerlib.api.tile;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -19,18 +17,18 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 30.04.2019 / 22:44
  */
-public interface MatchableTile<T extends TileEntity> {
+public interface MatchableTile<T extends BlockEntity> {
 
     /**
      * Write tileentity data to set onto the tileentity for rendering
-     * via {@link TileEntity#read(BlockState, CompoundNBT)}
+     * via {@link BlockEntity#load(CompoundTag)}
      *
      * @param tile the created client tileentity
      * @param tick an ongoing client tick to cycle through things or related
      * @param tag the tag read onto the tileentity before rendering
      */
     @OnlyIn(Dist.CLIENT)
-    public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull CompoundNBT tag);
+    public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull CompoundTag tag);
 
     /**
      * Write data onto the tileentity after it was placed into the world.
@@ -39,7 +37,7 @@ public interface MatchableTile<T extends TileEntity> {
      * @param world the world it was placed in
      * @param pos the position it was placed at
      */
-    public void postPlacement(@Nonnull T tile, @Nonnull IBlockReader world, BlockPos pos);
+    public void postPlacement(@Nonnull T tile, @Nonnull BlockGetter world, BlockPos pos);
 
     /**
      * Tests if this matcher considers the passed tileentity valid for the world & blockpos combination
@@ -50,6 +48,6 @@ public interface MatchableTile<T extends TileEntity> {
      *
      * @return true, if the tileentity is valid, false otherwise
      */
-    public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull T tile);
+    public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull T tile);
 
 }

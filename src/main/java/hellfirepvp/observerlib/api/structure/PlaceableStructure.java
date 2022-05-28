@@ -2,18 +2,16 @@ package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.FlowingFluidBlock;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.TickPriority;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.ticks.ScheduledTick;
+import net.minecraft.world.ticks.TickPriority;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,11 +26,11 @@ import java.util.function.Predicate;
  */
 public interface PlaceableStructure extends Structure {
 
-    default public Map<BlockPos, BlockState> placeInWorld(IWorld world, BlockPos center, Predicate<BlockPos> posFilter) {
+    default public Map<BlockPos, BlockState> placeInWorld(LevelAccessor world, BlockPos center, Predicate<BlockPos> posFilter) {
         Map<BlockPos, BlockState> result = new HashMap<>();
         for (Map.Entry<BlockPos, ? extends MatchableState> entry : this.getContents().entrySet()) {
             MatchableState match = entry.getValue();
-            BlockPos at = center.add(entry.getKey());
+            BlockPos at = center.offset(entry.getKey());
             if (!posFilter.test(at)) {
                 continue;
             }
@@ -40,22 +38,22 @@ public interface PlaceableStructure extends Structure {
             BlockState state = match.getDescriptiveState(0);
             BlockState existing = world.getBlockState(at);
             if (!existing.getFluidState().isEmpty() &&
-                    existing.getFluidState().isTagged(FluidTags.WATER) &&
+                    existing.getFluidState().is(FluidTags.WATER) &&
                     state.hasProperty(BlockStateProperties.WATERLOGGED)) {
-                state = state.with(BlockStateProperties.WATERLOGGED, true);
+                state = state.setValue(BlockStateProperties.WATERLOGGED, true);
             }
 
-            if (!world.setBlockState(at, state, Constants.BlockFlags.DEFAULT)) {
+            if (!world.setBlock(at, state, Block.UPDATE_ALL)) {
                 continue;
             }
             result.put(at, state);
 
             if (!state.getFluidState().isEmpty()) {
-                Fluid f = state.getFluidState().getFluid();
-                world.getPendingFluidTicks().scheduleTick(at, f, f.getTickRate(world), TickPriority.HIGH);
+                Fluid f = state.getFluidState().getType();
+                world.scheduleTick(at, f, f.getTickDelay(world), TickPriority.HIGH);
             }
 
-            TileEntity placed = world.getTileEntity(at);
+            BlockEntity placed = world.getBlockEntity(at);
             if (placed != null && hasTileAt(entry.getKey())) {
                 MatchableTile matchTile = getTileEntityAt(entry.getKey());
                 if (matchTile != null) {
@@ -66,7 +64,7 @@ public interface PlaceableStructure extends Structure {
         return result;
     }
 
-    default public Map<BlockPos, BlockState> placeInWorld(IWorld world, BlockPos center, Predicate<BlockPos> posFilter, PastPlaceProcessor processor) {
+    default public Map<BlockPos, BlockState> placeInWorld(LevelAccessor world, BlockPos center, Predicate<BlockPos> posFilter, PastPlaceProcessor processor) {
         Map<BlockPos, BlockState> result = this.placeInWorld(world, center, posFilter);
         if(processor != null) {
             for (Map.Entry<BlockPos, BlockState> entry : result.entrySet()) {
@@ -80,7 +78,7 @@ public interface PlaceableStructure extends Structure {
 
     public static interface PastPlaceProcessor {
 
-        void process(IWorld world, BlockPos pos, BlockState currentState);
+        void process(LevelAccessor world, BlockPos pos, BlockState currentState);
 
     }
 

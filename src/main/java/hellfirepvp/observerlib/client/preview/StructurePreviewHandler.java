@@ -2,9 +2,9 @@ package hellfirepvp.observerlib.client.preview;
 
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -46,33 +46,33 @@ public class StructurePreviewHandler implements ITickHandler {
         registrar.accept(this);
     }
 
-    private void render(RenderWorldLastEvent event) {
-        World renderWorld = Minecraft.getInstance().world;
-        PlayerEntity player = Minecraft.getInstance().player;
+    private void render(RenderLevelLastEvent event) {
+        Level renderWorld = Minecraft.getInstance().level;
+        Player player = Minecraft.getInstance().player;
         if (renderWorld == null || player == null || this.currentPreview == null) {
             return;
         }
 
-        if (this.currentPreview.canRender(renderWorld, player.getPosition())) {
-            this.currentPreview.render(renderWorld, event.getMatrixStack(), player.getPositionVec());
+        if (this.currentPreview.canRender(renderWorld, player.blockPosition())) {
+            this.currentPreview.render(renderWorld, event.getPoseStack(), player.position());
         }
     }
 
     @Override
     public void tick(TickEvent.Type type, Object... context) {
-        World renderWorld = Minecraft.getInstance().world;
-        PlayerEntity player = Minecraft.getInstance().player;
+        Level renderWorld = Minecraft.getInstance().level;
+        Player player = Minecraft.getInstance().player;
         if (renderWorld == null || player == null) {
             this.currentPreview = null;
             return;
         }
 
         if (this.currentPreview != null) {
-            if (!this.currentPreview.canPersist(renderWorld, player.getPosition())) {
+            if (!this.currentPreview.canPersist(renderWorld, player.blockPosition())) {
                 this.currentPreview.onRemove();
                 this.currentPreview = null;
             } else {
-                this.currentPreview.tick(renderWorld, player.getPosition());
+                this.currentPreview.tick(renderWorld, player.blockPosition());
             }
         }
     }

@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.api.util;
 
 import hellfirepvp.observerlib.api.structure.PlaceableStructure;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * This class is part of the ObserverLib Mod

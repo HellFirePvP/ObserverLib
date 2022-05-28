@@ -1,9 +1,9 @@
 package hellfirepvp.observerlib.api.block;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -31,7 +31,7 @@ public class SimpleMatchableBlock implements MatchableState {
     public SimpleMatchableBlock(List<Block> matchingBlocks) {
         this.matchingBlocks = matchingBlocks;
         for (Block b : this.matchingBlocks) {
-            this.displayStates.addAll(b.getStateContainer().getValidStates());
+            this.displayStates.addAll(b.getStateDefinition().getPossibleStates());
         }
     }
 
@@ -44,7 +44,7 @@ public class SimpleMatchableBlock implements MatchableState {
     }
 
     @Override
-    public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
+    public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
         return this.matchingBlocks.contains(state.getBlock());
     }
 }

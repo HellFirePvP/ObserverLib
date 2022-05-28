@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.api.util;
 
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
 

@@ -2,10 +2,10 @@ package hellfirepvp.observerlib.api.util;
 
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.structure.Structure;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
@@ -33,12 +33,12 @@ public class StructureUtil {
      * @param offset the offset to test at
      * @return true if all chunks the structure's blocks are in from the given offset are currently loaded
      */
-    public static boolean isStructureLoaded(Structure structure, IWorld world, BlockPos offset) {
-        ChunkPos min = new ChunkPos(offset.add(structure.getMinimumOffset()));
-        ChunkPos max = new ChunkPos(offset.add(structure.getMaximumOffset()));
+    public static boolean isStructureLoaded(Structure structure, LevelAccessor world, BlockPos offset) {
+        ChunkPos min = new ChunkPos(offset.offset(structure.getMinimumOffset()));
+        ChunkPos max = new ChunkPos(offset.offset(structure.getMaximumOffset()));
         for (int xx = min.x; xx <= max.x; xx++) {
             for (int zz = min.z; zz <= max.z; zz++) {
-                if (!world.getChunkProvider().isChunkLoaded(new ChunkPos(xx, zz))) {
+                if (!world.getChunkSource().hasChunk(xx, zz)) {
                     return false;
                 }
             }
@@ -54,7 +54,7 @@ public class StructureUtil {
      * @param offset the offset to match at as center
      * @return the lowest offset-y level where there was a mismatch in the structure, or empty optional if the structure matches.
      */
-    public static Optional<Integer> getLowestMismatchingSlice(MatchableStructure structure, IBlockReader world, BlockPos offset) {
+    public static Optional<Integer> getLowestMismatchingSlice(MatchableStructure structure, BlockGetter world, BlockPos offset) {
         int minY = structure.getMinimumOffset().getY();
         int maxY = structure.getMaximumOffset().getY();
         for (int y = minY; y <= maxY; y++) {
@@ -75,7 +75,7 @@ public class StructureUtil {
      * @return a set of offsets from the passed offset that do not match
      */
     @Nonnull
-    public static Set<BlockPos> getMismatches(MatchableStructure structure, IBlockReader world, BlockPos offset) {
+    public static Set<BlockPos> getMismatches(MatchableStructure structure, BlockGetter world, BlockPos offset) {
         Set<BlockPos> result = new HashSet<>();
         structure.getContents().forEach((key, value) -> {
             if (!structure.matchesSingleBlock(world, offset, key)) {

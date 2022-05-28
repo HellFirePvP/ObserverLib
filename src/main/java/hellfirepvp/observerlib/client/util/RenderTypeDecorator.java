@@ -1,8 +1,8 @@
 package hellfirepvp.observerlib.client.util;
 
-import net.minecraft.client.renderer.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 import java.util.Optional;
 
@@ -20,7 +20,7 @@ public class RenderTypeDecorator extends RenderType {
     private final Runnable beforeClean;
 
     private RenderTypeDecorator(RenderType type, Runnable afterSetup, Runnable beforeClean) {
-        super(type.toString(), type.getVertexFormat(), type.getDrawMode(), type.getBufferSize(), type.isUseDelegate(), false, () -> {}, () -> {});
+        super(type.toString(), type.format(), type.mode(), type.bufferSize(), type.affectsCrumbling(), false, () -> {}, () -> {});
         this.decorated = type;
         this.afterSetup = afterSetup;
         this.beforeClean = beforeClean;
@@ -48,8 +48,8 @@ public class RenderTypeDecorator extends RenderType {
 
     //The ints are currently unused/always 0
     @Override
-    public void finish(BufferBuilder buf, int sortOffsetX, int sortOffsetY, int sortOffsetZ) {
-        super.finish(buf, sortOffsetX, sortOffsetY, sortOffsetZ);
+    public void end(BufferBuilder buf, int sortOffsetX, int sortOffsetY, int sortOffsetZ) {
+        super.end(buf, sortOffsetX, sortOffsetY, sortOffsetZ);
     }
 
     @Override
@@ -58,37 +58,39 @@ public class RenderTypeDecorator extends RenderType {
     }
 
     @Override
-    public int getBufferSize() {
-        return this.decorated.getBufferSize();
+    public int bufferSize() {
+        return this.decorated.bufferSize();
     }
 
     @Override
-    public VertexFormat getVertexFormat() {
-        return this.decorated.getVertexFormat();
+    public VertexFormat format() {
+        return this.decorated.format();
     }
 
     @Override
-    public int getDrawMode() {
-        return this.decorated.getDrawMode();
+    public VertexFormat.Mode mode() {
+        return this.decorated.mode();
     }
 
     @Override
-    public Optional<RenderType> getOutline() {
-        return this.decorated.getOutline();
+    public Optional<RenderType> outline() {
+        return this.decorated.outline();
     }
 
     @Override
-    public boolean isColoredOutlineBuffer() {
-        return this.decorated.isColoredOutlineBuffer();
+    public boolean isOutline() {
+        return this.decorated.isOutline();
     }
 
     @Override
-    public boolean isUseDelegate() {
-        return this.decorated.isUseDelegate();
+    public boolean affectsCrumbling() {
+        return this.decorated.affectsCrumbling();
     }
 
     @Override
-    public Optional<RenderType> getRenderType() {
+    public Optional<RenderType> asOptional() {
         return Optional.of(this);
     }
+
+
 }

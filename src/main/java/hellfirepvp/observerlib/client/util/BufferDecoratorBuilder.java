@@ -1,11 +1,11 @@
 package hellfirepvp.observerlib.client.util;
 
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import com.mojang.blaze3d.vertex.IVertexConsumer;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.BufferVertexConsumer;
 import com.mojang.datafixers.util.Pair;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.client.renderer.vertex.VertexFormatElement;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
@@ -84,11 +84,11 @@ public class BufferDecoratorBuilder {
         return this;
     }
 
-    public void decorate(IVertexBuilder builder, Consumer<IVertexBuilder> runDecorated) {
+    public void decorate(VertexConsumer builder, Consumer<VertexConsumer> runDecorated) {
         runDecorated.accept(new DecoratedBuilder(builder, this));
     }
 
-    public void decorate(IVertexConsumer consumer, Consumer<IVertexConsumer> runDecorated) {
+    public void decorate(BufferVertexConsumer consumer, Consumer<BufferVertexConsumer> runDecorated) {
         runDecorated.accept(new DecoratedConsumer(consumer, this));
     }
 
@@ -96,11 +96,11 @@ public class BufferDecoratorBuilder {
         runDecorated.accept(new DecoratedBufferBuilder(buf, this));
     }
 
-    public IVertexBuilder decorate(IVertexBuilder builder) {
+    public VertexConsumer decorate(VertexConsumer builder) {
         return new DecoratedBuilder(builder, this);
     }
 
-    public IVertexConsumer decorate(IVertexConsumer builder) {
+    public BufferVertexConsumer decorate(BufferVertexConsumer builder) {
         return new DecoratedConsumer(builder, this);
     }
 
@@ -108,12 +108,12 @@ public class BufferDecoratorBuilder {
         return new DecoratedBufferBuilder(builder, this);
     }
 
-    private static class DecoratedBuilder implements IVertexBuilder {
+    private static class DecoratedBuilder implements VertexConsumer {
 
-        final IVertexBuilder vertexBuilder;
+        final VertexConsumer vertexBuilder;
         final BufferDecoratorBuilder decorator;
 
-        private DecoratedBuilder(IVertexBuilder vertexBuilder, BufferDecoratorBuilder decorator) {
+        private DecoratedBuilder(VertexConsumer vertexBuilder, BufferDecoratorBuilder decorator) {
             this.vertexBuilder = vertexBuilder;
             this.decorator = decorator;
         }
@@ -123,18 +123,18 @@ public class BufferDecoratorBuilder {
         ///////////////////////////////////////////////////////////////////////////
 
         @Override
-        public IVertexBuilder pos(double x, double y, double z) {
+        public VertexConsumer vertex(double x, double y, double z) {
             if (this.decorator.positionDecorator != null) {
                 double[] newPosition = this.decorator.positionDecorator.decorate(x, y, z);
-                this.vertexBuilder.pos(newPosition[0], newPosition[1], newPosition[2]);
+                this.vertexBuilder.vertex(newPosition[0], newPosition[1], newPosition[2]);
                 return this;
             }
-            this.vertexBuilder.pos(x, y, z);
+            this.vertexBuilder.vertex(x, y, z);
             return this;
         }
 
         @Override
-        public IVertexBuilder color(int red, int green, int blue, int alpha) {
+        public VertexConsumer color(int red, int green, int blue, int alpha) {
             if (this.decorator.colorDecorator != null) {
                 int[] newColor = this.decorator.colorDecorator.decorate(red, green, blue, alpha);
                 this.vertexBuilder.color(newColor[0], newColor[1], newColor[2], newColor[3]);
@@ -145,40 +145,40 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public IVertexBuilder tex(float u, float v) {
+        public VertexConsumer uv(float u, float v) {
             if (this.decorator.uvDecorator != null) {
                 float[] newUV = this.decorator.uvDecorator.decorate(u, v);
-                this.vertexBuilder.tex(newUV[0], newUV[1]);
+                this.vertexBuilder.uv(newUV[0], newUV[1]);
                 return this;
             }
-            this.vertexBuilder.tex(u, v);
+            this.vertexBuilder.uv(u, v);
             return this;
         }
 
         @Override
-        public IVertexBuilder overlay(int u, int v) {
+        public VertexConsumer overlayCoords(int u, int v) {
             if (this.decorator.overlayDecorator != null) {
                 int[] newUV = this.decorator.overlayDecorator.decorate(u, v);
-                this.vertexBuilder.overlay(newUV[0], newUV[1]);
+                this.vertexBuilder.overlayCoords(newUV[0], newUV[1]);
                 return this;
             }
-            this.vertexBuilder.overlay(u, v);
+            this.vertexBuilder.overlayCoords(u, v);
             return this;
         }
 
         @Override
-        public IVertexBuilder lightmap(int u, int v) {
+        public VertexConsumer uv2(int u, int v) {
             if (this.decorator.lightmapDecorator != null) {
                 int[] newUV = this.decorator.lightmapDecorator.decorate(u, v);
-                this.vertexBuilder.lightmap(newUV[0], newUV[1]);
+                this.vertexBuilder.uv2(newUV[0], newUV[1]);
                 return this;
             }
-            this.vertexBuilder.lightmap(u, v);
+            this.vertexBuilder.uv2(u, v);
             return this;
         }
 
         @Override
-        public IVertexBuilder normal(float x, float y, float z) {
+        public VertexConsumer normal(float x, float y, float z) {
             if (this.decorator.normalDecorator != null) {
                 float[] newNormals = this.decorator.normalDecorator.decorate(x, y, z);
                 this.vertexBuilder.normal(newNormals[0], newNormals[1], newNormals[2]);
@@ -192,13 +192,23 @@ public class BufferDecoratorBuilder {
         public void endVertex() {
             this.vertexBuilder.endVertex();
         }
+
+        @Override
+        public void defaultColor(int r, int g, int b, int a) {
+            this.vertexBuilder.defaultColor(r, g, b, a);
+        }
+
+        @Override
+        public void unsetDefaultColor() {
+            this.vertexBuilder.unsetDefaultColor();
+        }
     }
 
-    private static class DecoratedConsumer extends DecoratedBuilder implements IVertexConsumer {
+    private static class DecoratedConsumer extends DecoratedBuilder implements BufferVertexConsumer {
 
-        final IVertexConsumer vertexConsumer;
+        final BufferVertexConsumer vertexConsumer;
 
-        private DecoratedConsumer(IVertexConsumer vertexConsumer, BufferDecoratorBuilder decorator) {
+        private DecoratedConsumer(BufferVertexConsumer vertexConsumer, BufferDecoratorBuilder decorator) {
             super(vertexConsumer, decorator);
             this.vertexConsumer = vertexConsumer;
         }
@@ -209,13 +219,13 @@ public class BufferDecoratorBuilder {
         ///////////////////////////////////////////////////////////////////////////
 
         @Override
-        public VertexFormatElement getCurrentElement() {
-            return this.vertexConsumer.getCurrentElement();
+        public VertexFormatElement currentElement() {
+            return this.vertexConsumer.currentElement();
         }
 
         @Override
-        public void nextVertexFormatIndex() {
-            this.vertexConsumer.nextVertexFormatIndex();
+        public void nextElement() {
+            this.vertexConsumer.nextElement();
         }
 
         @Override
@@ -250,38 +260,38 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void sortVertexData(float cameraX, float cameraY, float cameraZ) {
-            this.decorated.sortVertexData(cameraX, cameraY, cameraZ);
+        public void setQuadSortOrigin(float x, float y, float z) {
+            this.decorated.setQuadSortOrigin(x, y, z);
         }
 
         @Override
-        public State getVertexState() {
-            return this.decorated.getVertexState();
+        public SortState getSortState() {
+            return this.decorated.getSortState();
         }
 
         @Override
-        public void begin(int glMode, VertexFormat format) {
-            this.decorated.begin(glMode, format);
+        public void begin(VertexFormat.Mode mode, VertexFormat format) {
+            this.decorated.begin(mode, format);
         }
 
         @Override
-        public void finishDrawing() {
-            this.decorated.finishDrawing();
+        public void end() {
+            this.decorated.end();
         }
 
         @Override
-        public boolean isDrawing() {
-            return this.decorated.isDrawing();
+        public boolean building() {
+            return this.decorated.building();
         }
 
         @Override
-        public Pair<DrawState, ByteBuffer> getNextBuffer() {
-            return this.decorated.getNextBuffer();
+        public Pair<DrawState, ByteBuffer> popNextBuffer() {
+            return this.decorated.popNextBuffer();
         }
 
         @Override
-        public void reset() {
-            this.decorated.reset();
+        public void clear() {
+            this.decorated.clear();
         }
 
         @Override
@@ -290,8 +300,8 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void setVertexState(State state) {
-            this.decorated.setVertexState(state);
+        public void restoreSortState(SortState state) {
+            this.decorated.restoreSortState(state);
         }
 
         @Override
@@ -311,7 +321,7 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void addVertex(float x, float y, float z,
+        public void vertex(float x, float y, float z,
                               float red, float green, float blue, float alpha,
                               float texU, float texV,
                               int overlayUV, int lightmapUV,
@@ -348,17 +358,17 @@ public class BufferDecoratorBuilder {
                 normalY = newNormals[1];
                 normalZ = newNormals[2];
             }
-            super.addVertex(x, y, z, red, green, blue, alpha, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
+            super.vertex(x, y, z, red, green, blue, alpha, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
         }
 
         @Override
-        public VertexFormatElement getCurrentElement() {
-            return this.decoratedDelegate.getCurrentElement();
+        public VertexFormatElement currentElement() {
+            return this.decoratedDelegate.currentElement();
         }
 
         @Override
-        public void nextVertexFormatIndex() {
-            this.decoratedDelegate.nextVertexFormatIndex();
+        public void nextElement() {
+            this.decoratedDelegate.nextElement();
         }
 
         @Override
@@ -377,37 +387,37 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void setDefaultColor(int red, int green, int blue, int alpha) {
-            this.decorated.setDefaultColor(red, green, blue, alpha);
+        public void defaultColor(int red, int green, int blue, int alpha) {
+            this.decorated.defaultColor(red, green, blue, alpha);
         }
 
         @Override
-        public IVertexBuilder pos(double x, double y, double z) {
-            return this.decoratedDelegate.pos(x, y, z);
+        public VertexConsumer vertex(double x, double y, double z) {
+            return this.decoratedDelegate.vertex(x, y, z);
         }
 
         @Override
-        public IVertexBuilder color(int red, int green, int blue, int alpha) {
+        public VertexConsumer color(int red, int green, int blue, int alpha) {
             return this.decoratedDelegate.color(red, green, blue, alpha);
         }
 
         @Override
-        public IVertexBuilder tex(float u, float v) {
-            return this.decoratedDelegate.tex(u, v);
+        public VertexConsumer uv(float u, float v) {
+            return this.decoratedDelegate.uv(u, v);
         }
 
         @Override
-        public IVertexBuilder overlay(int u, int v) {
-            return this.decoratedDelegate.overlay(u, v);
+        public VertexConsumer overlayCoords(int u, int v) {
+            return this.decoratedDelegate.overlayCoords(u, v);
         }
 
         @Override
-        public IVertexBuilder lightmap(int u, int v) {
-            return this.decoratedDelegate.lightmap(u, v);
+        public VertexConsumer uv2(int u, int v) {
+            return this.decoratedDelegate.uv2(u, v);
         }
 
         @Override
-        public IVertexBuilder normal(float x, float y, float z) {
+        public VertexConsumer normal(float x, float y, float z) {
             return this.decoratedDelegate.normal(x, y, z);
         }
     }

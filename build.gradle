@@ -1,20 +1,33 @@
+//import net.minecraftforge.gradle.common.task.SignJar
+
 buildscript {
 
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        maven {
+            url = 'https://maven.minecraftforge.net'
+        }
+        maven {
+            url "https://repo.spongepowered.org/repository/maven-public/"
+            content { includeGroup "org.spongepowered" }
+        }
         mavenCentral()
     }
 
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'org.spongepowered.mixin'
 
-version = '1.16.5-1.5.3'
+mixin {
+    add sourceSets.main, "astralsorcery.refmap.json"
+}
+
+version = '1.18.2-1.6.0'
 group = 'hellfirepvp.observerlib'
 archivesBaseName = 'observerlib'
 String build_version = ""
@@ -25,26 +38,21 @@ if (System.getenv("BUILD_NUMBER") != null) {
     build_version = version + ".v" + System.getenv("BUILD_NUMBER")
 }
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
 minecraft {
 
-    mappings channel: 'snapshot', version: '20201028-1.16.3'
-
+    mappings channel: 'official', version: '1.18.2'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
             workingDirectory project.file('run')
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
 
             mods {
                 observerlib {
@@ -56,11 +64,9 @@ minecraft {
         server {
             workingDirectory project.file('run')
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
 
             mods {
                 observerlib {
@@ -69,14 +75,26 @@ minecraft {
             }
         }
 
+        gameTestServer {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
+
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
+            }
+        }
+
         data {
             workingDirectory project.file('run')
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-
-            // Recommended logging level for the console
             property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
 
             args '--mod', 'observerlib', '--all', '--output', file('src/generated/resources/')
 
@@ -91,18 +109,17 @@ minecraft {
 
 dependencies {
 
-    minecraft 'net.minecraftforge:forge:1.16.5-36.1.23'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.1.25'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
 }
 
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
-
 /*
-
 //Sign jar from flatfile if present
-task signMainJarFile(type: SignJar, dependsOn: reobfJar) {
+task signJar(type: SignJar, dependsOn: jar) {
     onlyIf {
         project.hasProperty('keyStore')
     }
@@ -113,67 +130,54 @@ task signMainJarFile(type: SignJar, dependsOn: reobfJar) {
         keyPass = project.keyPass
         inputFile = jar.archivePath
         outputFile = jar.archivePath
+    } else {
+        logger.warn("No key store found, not signing the output jar\n")
     }
 }
 
-build.dependsOn signMainJarFile
-
-*/
+build.dependsOn signJar*/
 
 jar {
     manifest {
         attributes([
                 "Specification-Title": "observerlib",
                 "Specification-Vendor": "hellfirepvp",
-                "Specification-Version": "${version}",
+                "Specification-Version": "1",
                 "Implementation-Title": project.name,
-                "Implementation-Version": "${version}",
+                "Implementation-Version": "${archiveVersion}",
                 "Implementation-Vendor" : "hellfirepvp",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "MixinConnector": "hellfirepvp.observerlib.MixinConnector"
         ])
     }
 }
 
-// Example configuration to allow publishing using the maven-publish task
-// we define a custom artifact that is sourced from the reobfJar output task
-// and then declare that to be published
-// Note you'll need to add a repository here
-def reobfFile = file("$buildDir/reobfJar/output.jar")
-
-def reobfArtifact = artifacts.add('default', reobfFile) {
-    type 'jar'
-    builtBy 'reobfJar'
+task sourcesJar(type: Jar) {
+    classifier = "sources"
+    from sourceSets.main.allJava
 }
 
 task deobfJar(type: Jar) {
-    from(sourceSets.main.output)
-    archiveName = "${baseName}-${version}-deobf.${extension}"
-}
-
-task srcJar(type: Jar) {
-    from(sourceSets.main.java)
-    classifier = 'sources'
-    archiveName = "${baseName}-${version}-sources.${extension}"
+    classifier = "deobf"
+    from sourceSets.main.output
 }
 
 artifacts {
-    archives deobfJar, srcJar
+    archives sourcesJar
+    archives deobfJar
 }
 
+publish.dependsOn(project.tasks.getByName("assemble"))
+publish.mustRunAfter(project.tasks.getByName("build"))
+
 publishing {
+    tasks.publish.dependsOn build
     publications {
         mavenJava(MavenPublication) {
             groupId project.group
             artifactId project.archivesBaseName
             version build_version
             from components.java
-
-            artifact deobfJar {
-                classifier 'deobf'
-            }
-            artifact srcJar {
-                classifier 'sources'
-            }
         }
     }
 
@@ -182,4 +186,8 @@ publishing {
             url "file://" + System.getenv("LOCAL_MAVEN")
         }
     }
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
 }

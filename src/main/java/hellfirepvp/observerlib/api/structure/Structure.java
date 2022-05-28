@@ -3,11 +3,11 @@ package hellfirepvp.observerlib.api.structure;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
 import hellfirepvp.observerlib.api.util.ContentSerializable;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import org.apache.commons.lang3.ObjectUtils;
 
 import javax.annotation.Nonnull;
@@ -39,22 +39,22 @@ public interface Structure extends ContentSerializable {
      * The tiles of the structure
      *
      * Will only be queried/accessed for positions where a MatchableState
-     * {@link MatchableState#createTileEntity(IBlockReader, long)} creates a tileentity
+     * {@link MatchableState#createTileEntity(BlockGetter, BlockPos, long)} creates a tileentity
      *
      * @return a map consisting of offset -> tileentity matching and data entries
      */
     @Nonnull
-    public Map<BlockPos, ? extends MatchableTile<? extends TileEntity>> getTileEntities();
+    public Map<BlockPos, ? extends MatchableTile<? extends BlockEntity>> getTileEntities();
 
     /**
      * @return the maximum offset any position can be in any x/y/z direction in {@link #getContents()}
      */
-    public Vector3i getMaximumOffset();
+    public Vec3i getMaximumOffset();
 
     /**
      * @return the minimum offset any position can be in any x/y/z direction in {@link #getContents()}
      */
-    public Vector3i getMinimumOffset();
+    public Vec3i getMinimumOffset();
 
     /**
      * Checks if there's a blockstate at the current offset.
@@ -102,7 +102,7 @@ public interface Structure extends ContentSerializable {
      * @return the matchable tileentity or null if not present
      */
     @Nullable
-    default public MatchableTile<? extends TileEntity> getTileEntityAt(BlockPos offset) {
+    default public MatchableTile<? extends BlockEntity> getTileEntityAt(BlockPos offset) {
         if (!hasTileAt(offset)) {
             return null;
         }

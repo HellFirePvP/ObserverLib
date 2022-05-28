@@ -1,6 +1,6 @@
 package hellfirepvp.observerlib.common.data.base;
 
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 import java.util.Objects;
 
@@ -28,9 +28,9 @@ public abstract class WorldSection {
         return sZ;
     }
 
-    public abstract void writeToNBT(CompoundNBT tag);
+    public abstract void writeToNBT(CompoundTag tag);
 
-    public abstract void readFromNBT(CompoundNBT tag);
+    public abstract void readFromNBT(CompoundTag tag);
 
     @Override
     public boolean equals(Object o) {

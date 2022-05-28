@@ -6,11 +6,11 @@ import hellfirepvp.observerlib.api.ChangeSubscriber;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -69,7 +69,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
     }
 
     @Override
-    public boolean isValid(World world) {
+    public boolean isValid(Level world) {
         if (this.isMatching != null && this.changeSet.isEmpty()) {
             return isMatching;
         }
@@ -81,7 +81,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         return this.isMatching;
     }
 
-    public void readFromNBT(CompoundNBT tag) {
+    public void readFromNBT(CompoundTag tag) {
         this.affectedChunkCache = null;
 
         this.matcher.readFromNBT(tag.getCompound("matchData"));
@@ -94,7 +94,7 @@ public class MatchChangeSubscriber<T extends ChangeObserver> implements ChangeSu
         }
     }
 
-    public void writeToNBT(CompoundNBT tag) {
+    public void writeToNBT(CompoundTag tag) {
         NBTHelper.setAsSubTag(tag, "matchData", this.matcher::writeToNBT);
         NBTHelper.setAsSubTag(tag, "changeData", this.changeSet::writeToNBT);
 

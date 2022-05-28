@@ -4,8 +4,8 @@ import com.google.common.io.Files;
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.CompoundTag;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,19 +55,19 @@ public abstract class GlobalWorldData extends CachedWorldData {
             saveFile.createNewFile();
         }
 
-        CompoundNBT data = new CompoundNBT();
+        CompoundTag data = new CompoundTag();
         this.readIO(() -> this.writeToNBT(data));
-        CompressedStreamTools.write(data, saveFile);
+        NbtIo.write(data, saveFile);
     }
 
     @Override
     public final void readData(File baseDirectory) throws IOException {
-        this.writeIO(() -> this.readFromNBT(CompressedStreamTools.read(this.getSaveFile(baseDirectory))));
+        this.writeIO(() -> this.readFromNBT(NbtIo.read(this.getSaveFile(baseDirectory))));
     }
 
-    public abstract void writeToNBT(CompoundNBT tag);
+    public abstract void writeToNBT(CompoundTag tag);
 
-    public abstract void readFromNBT(CompoundNBT tag);
+    public abstract void readFromNBT(CompoundTag tag);
 
     public final boolean needsSaving() {
         return this.dirty;

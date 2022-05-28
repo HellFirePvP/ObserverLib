@@ -2,11 +2,11 @@ package hellfirepvp.observerlib.api.structure;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.api.tile.MatchableTile;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nonnull;
@@ -31,7 +31,7 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
      *
      * @return true, if the entire change's contents match at the given central position, false otherwise
      */
-    default public boolean matches(@Nonnull IBlockReader reader, @Nonnull BlockPos center) {
+    default public boolean matches(@Nonnull BlockGetter reader, @Nonnull BlockPos center) {
         for (Map.Entry<BlockPos, ? extends MatchableState> entry : getContents().entrySet()) {
             if (!matchesSingleBlock(reader, center, entry.getKey())) {
                 return false;
@@ -49,7 +49,7 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
      *
      * @return true, if all blockstates on that y-offset do match, false otherwise
      */
-    default public boolean matchesSlice(@Nonnull IBlockReader reader, @Nonnull BlockPos center, int yOffset) {
+    default public boolean matchesSlice(@Nonnull BlockGetter reader, @Nonnull BlockPos center, int yOffset) {
         if (getMinimumOffset().getY() > yOffset || getMaximumOffset().getY() < yOffset) {
             return true;
         }
@@ -74,12 +74,12 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
      *
      * @return true, if the blockstate at the offset of the center does match the structure's expectations, false if not
      */
-    default public boolean matchesSingleBlock(@Nonnull IBlockReader reader,
+    default public boolean matchesSingleBlock(@Nonnull BlockGetter reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset) {
         return matchesSingleBlock(reader, center, centerOffset,
-                reader.getBlockState(center.add(centerOffset)),
-                reader.getTileEntity(center.add(centerOffset)));
+                reader.getBlockState(center.offset(centerOffset)),
+                reader.getBlockEntity(center.offset(centerOffset)));
     }
 
     /**
@@ -92,18 +92,18 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
      *
      * @return true, if the blockstate at the offset of the center does match the structure's expectations, false if not
      */
-    default public boolean matchesSingleBlock(@Nullable IBlockReader reader,
+    default public boolean matchesSingleBlock(@Nullable BlockGetter reader,
                                               @Nonnull BlockPos center,
                                               @Nonnull BlockPos centerOffset,
                                               @Nonnull BlockState comparing,
-                                              @Nullable TileEntity tileEntity) {
+                                              @Nullable BlockEntity tileEntity) {
         if (!hasBlockAt(centerOffset)) {
             return false;
         } else {
             MatchableState state = getBlockStateAt(centerOffset);
             MatchableTile tileMatch = getTileEntityAt(centerOffset);
-            return state.matches(reader, center.add(centerOffset), comparing) &&
-                    (tileEntity == null || (tileMatch == null || tileMatch.matches(reader, center.add(centerOffset), tileEntity)));
+            return state.matches(reader, center.offset(centerOffset), comparing) &&
+                    (tileEntity == null || (tileMatch == null || tileMatch.matches(reader, center.offset(centerOffset), tileEntity)));
         }
     }
 

@@ -12,12 +12,13 @@ import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.registry.RegistryStructures;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import hellfirepvp.observerlib.common.util.tick.TickManager;
-import net.minecraft.block.Block;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
+import net.minecraftforge.registries.NewRegistryEvent;
 
 import java.util.function.Consumer;
 
@@ -37,19 +38,23 @@ public class CommonProxy {
         this.attachTickListeners(this.tickManager::register);
 
         BlockChangeNotifier.addListener(new StructureIntegrityObserver());
-
-        RegistryProviders.initialize();
-        RegistryStructures.initialize();
     }
 
     public void attachLifecycle(IEventBus modEventBus) {
         modEventBus.addGenericListener(Block.class, this::registerBlock);
+
+        modEventBus.addListener(this::registerRegistries);
     }
 
     private void registerBlock(RegistryEvent.Register<Block> event) {
         ObserverHelper.blockAirRequirement = new BlockAirRequirement();
         ObserverHelper.blockAirRequirement.setRegistryName(new ResourceLocation(ObserverLib.MODID, "air_preview"));
         event.getRegistry().register(ObserverHelper.blockAirRequirement);
+    }
+
+    private void registerRegistries(NewRegistryEvent event) {
+        RegistryProviders.initialize(event);
+        RegistryStructures.initialize(event);
     }
 
     public void attachEventHandlers(IEventBus eventBus) {
@@ -64,11 +69,11 @@ public class CommonProxy {
         registrar.accept(WorldCacheManager.getInstance());
     }
 
-    private void onServerStarted(FMLServerStartedEvent event) {
+    private void onServerStarted(ServerStartedEvent event) {
         WorldCacheIOThread.onServerStart();
     }
 
-    private void onServerStopping(FMLServerStoppingEvent event) {
+    private void onServerStopping(ServerStoppingEvent event) {
         WorldCacheManager.scheduleSaveAll();
         WorldCacheIOThread.onServerStop();
         WorldCacheManager.cleanUp();

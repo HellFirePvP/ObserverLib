@@ -1,13 +1,13 @@
 package hellfirepvp.observerlib.api.client;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.lighting.IWorldLightListener;
-import net.minecraft.world.lighting.WorldLightManager;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.util.Mth;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.lighting.LayerLightEventListener;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 
 import javax.annotation.Nullable;
 
@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 05.06.2020 / 22:20
  */
-public class StructureRenderLightManager extends WorldLightManager {
+public class StructureRenderLightManager extends LevelLightEngine {
 
     private final int lightLevel;
 
@@ -39,7 +39,7 @@ public class StructureRenderLightManager extends WorldLightManager {
     }
 
     @Override
-    public int tick(int toUpdateCount, boolean updateSkyLight, boolean updateBlockLight) {
+    public int runUpdates(int toUpdateCount, boolean updateSkyLight, boolean updateBlockLight) {
         return 0;
     }
 
@@ -50,30 +50,30 @@ public class StructureRenderLightManager extends WorldLightManager {
     public void enableLightSources(ChunkPos chunkPos, boolean p_215571_2_) {}
 
     @Override
-    public IWorldLightListener getLightEngine(LightType type) {
+    public LayerLightEventListener getLayerListener(LightLayer type) {
         return new ConstantLightEngine(this.lightLevel);
     }
 
     @Override
-    public String getDebugInfo(LightType p_215572_1_, SectionPos p_215572_2_) {
+    public String getDebugData(LightLayer p_215572_1_, SectionPos p_215572_2_) {
         return "n/a";
     }
 
     @Override
-    public void func_215567_a(BlockPos p_215567_1_, boolean p_215567_2_) {}
+    public void updateSectionStatus(BlockPos p_215567_1_, boolean p_215567_2_) {}
 
     @Override
     public void retainData(ChunkPos pos, boolean retain) {}
 
     @Override
-    public int getLightSubtracted(BlockPos blockPosIn, int amount) {
-        return MathHelper.clamp(this.lightLevel - amount, 0, 15);
+    public int getRawBrightness(BlockPos blockPosIn, int amount) {
+        return Mth.clamp(this.lightLevel - amount, 0, 15);
     }
 
     @Override
-    public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean p_215574_4_) {}
+    public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean p_215574_4_) {}
 
-    private static class ConstantLightEngine implements IWorldLightListener {
+    private static class ConstantLightEngine implements LayerLightEventListener {
 
         private final int lightLevel;
 
@@ -83,16 +83,37 @@ public class StructureRenderLightManager extends WorldLightManager {
 
         @Nullable
         @Override
-        public NibbleArray getData(SectionPos p_215612_1_) {
+        public DataLayer getDataLayerData(SectionPos p_215612_1_) {
             return null;
         }
 
         @Override
-        public int getLightFor(BlockPos worldPos) {
+        public int getLightValue(BlockPos worldPos) {
             return lightLevel;
         }
 
         @Override
+        public void checkBlock(BlockPos at) {}
+
+        @Override
+        public void onBlockEmissionIncrease(BlockPos pos, int p_164456_) {}
+
+        @Override
+        public boolean hasLightWork() {
+            return false;
+        }
+
+        @Override
+        public int runUpdates(int p_164449_, boolean p_164450_, boolean p_164451_) {
+            return 0;
+        }
+
+        @Override
         public void updateSectionStatus(SectionPos pos, boolean isEmpty) {}
+
+        @Override
+        public void enableLightSources(ChunkPos p_164452_, boolean p_164453_) {
+
+        }
     }
 }

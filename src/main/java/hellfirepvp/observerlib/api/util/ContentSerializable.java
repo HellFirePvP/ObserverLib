@@ -2,16 +2,16 @@ package hellfirepvp.observerlib.api.util;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -38,7 +38,7 @@ public interface ContentSerializable {
      * @param player the player to view the structure as blocks
      * @return a list of non-null itemstacks potentially required for this structure.
      */
-    default List<ItemStack> getAsStacks(IBlockReader world, PlayerEntity player) {
+    default List<ItemStack> getAsStacks(BlockGetter world, Player player) {
         List<ItemStack> out = new LinkedList<>();
         if (!(this instanceof BlockArray)) {
             return out;
@@ -52,14 +52,14 @@ public interface ContentSerializable {
 
             ItemStack stack = ItemStack.EMPTY;
             if (!sample.getFluidState().isEmpty() && sample.getFluidState().isSource()) {
-                Fluid f = sample.getFluidState().getFluid();
+                Fluid f = sample.getFluidState().getType();
                 stack = FluidUtil.getFilledBucket(new FluidStack(f, FluidAttributes.BUCKET_VOLUME));
             }
 
             if (stack.isEmpty()) {
                 try {
-                    stack = sample.getBlock().getPickBlock(sample,
-                            new BlockRayTraceResult(Vector3d.ZERO, Direction.UP, pos, false), world, pos, player);
+                    stack = sample.getCloneItemStack(new BlockHitResult(Vec3.ZERO, Direction.UP, pos, false),
+                            world, pos, player);
                 } catch (Exception ignored) {}
             }
 

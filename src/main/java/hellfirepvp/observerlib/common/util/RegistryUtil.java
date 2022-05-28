@@ -2,14 +2,14 @@ package hellfirepvp.observerlib.common.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.DynamicRegistries;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.Registry;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,9 +26,9 @@ import java.util.stream.Collectors;
  */
 public class RegistryUtil {
 
-    private final DynamicRegistries registries;
+    private final RegistryAccess registries;
 
-    private RegistryUtil(DynamicRegistries registries) {
+    private RegistryUtil(RegistryAccess registries) {
         this.registries = registries;
     }
 
@@ -41,51 +41,55 @@ public class RegistryUtil {
     }
 
     public static RegistryUtil server() {
-        MinecraftServer server = LogicalSidedProvider.INSTANCE.get(LogicalSide.SERVER);
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            return new RegistryUtil(DynamicRegistries.func_239770_b_());
+            return new RegistryUtil(RegistryAccess.builtinCopy());
         }
-        return new RegistryUtil(server.func_244267_aX());
+        return new RegistryUtil(server.registryAccess());
     }
 
     @OnlyIn(Dist.CLIENT)
     public static RegistryUtil client() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) {
-            return new RegistryUtil(DynamicRegistries.func_239770_b_());
+            return new RegistryUtil(RegistryAccess.builtinCopy());
         }
-        return new RegistryUtil(mc.getConnection().func_239165_n_());
+        return new RegistryUtil(mc.getConnection().registryAccess());
     }
 
     @Nullable
-    public <V> RegistryKey<V> getRegistryKey(@Nonnull RegistryKey<Registry<V>> registry, V value) {
-        return this.registries.getRegistry(registry).getOptionalKey(value).orElse(null);
+    public <V> ResourceKey<V> getRegistryKey(@Nonnull ResourceKey<Registry<V>> registry, V value) {
+        return this.registries.registryOrThrow(registry).getResourceKey(value).orElse(null);
     }
 
     @Nullable
-    public <V> ResourceLocation getKey(@Nonnull RegistryKey<Registry<V>> registry, V value) {
-        return this.registries.getRegistry(registry).getKey(value);
+    public <V> ResourceLocation getKey(@Nonnull ResourceKey<Registry<V>> registry, V value) {
+        return this.registries.registryOrThrow(registry).getKey(value);
+    }
+
+    public <V> Registry<V> getRegistry(@Nonnull ResourceKey<Registry<V>> registry) {
+        return this.registries.ownedRegistryOrThrow(registry);
     }
 
     @Nullable
-    public <V> V getValue(@Nonnull RegistryKey<Registry<V>> registry, RegistryKey<V> key) {
-        return this.registries.getRegistry(registry).getValueForKey(key);
+    public <V> V getValue(@Nonnull ResourceKey<Registry<V>> registry, ResourceKey<V> key) {
+        return this.registries.registryOrThrow(registry).get(key);
     }
 
     @Nullable
-    public <V> V getValue(@Nonnull RegistryKey<Registry<V>> registry, ResourceLocation key) {
-        return this.registries.getRegistry(registry).getOrDefault(key);
+    public <V> V getValue(@Nonnull ResourceKey<Registry<V>> registry, ResourceLocation key) {
+        return this.registries.registryOrThrow(registry).get(key);
     }
 
-    public <V> Collection<Map.Entry<RegistryKey<V>, V>> getEntries(@Nonnull RegistryKey<Registry<V>> registry) {
-        return this.registries.getRegistry(registry).getEntries();
+    public <V> Collection<Map.Entry<ResourceKey<V>, V>> getEntries(@Nonnull ResourceKey<Registry<V>> registry) {
+        return this.registries.registryOrThrow(registry).entrySet();
     }
 
-    public <V> Collection<ResourceLocation> getKeys(@Nonnull RegistryKey<Registry<V>> registry) {
-        return this.registries.getRegistry(registry).keySet();
+    public <V> Collection<ResourceLocation> getKeys(@Nonnull ResourceKey<Registry<V>> registry) {
+        return this.registries.registryOrThrow(registry).keySet();
     }
 
-    public <V> Collection<V> getValues(@Nonnull RegistryKey<Registry<V>> registry) {
+    public <V> Collection<V> getValues(@Nonnull ResourceKey<Registry<V>> registry) {
         return this.getEntries(registry).stream()
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());

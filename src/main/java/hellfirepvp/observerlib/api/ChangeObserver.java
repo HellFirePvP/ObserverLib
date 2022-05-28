@@ -1,12 +1,12 @@
 package hellfirepvp.observerlib.api;
 
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 
@@ -45,19 +45,19 @@ public abstract class ChangeObserver {
      * Called once after the observer is newly set on a position to observe it.
      * Useful to gather initial data about the state and the observer's surroundings.
      *
-     * Called from {@link ObserverHelper#observeArea(World, BlockPos, ObserverProvider)}.
+     * Called from {@link ObserverHelper#observeArea(Level, BlockPos, ObserverProvider)}.
      *
      * @param world the world the observer will be observing changes in
      * @param center the current offset/center of where the observer is located at
      */
-    public abstract void initialize(IWorld world, BlockPos center);
+    public abstract void initialize(LevelAccessor world, BlockPos center);
 
     /**
      * The ObservableArea the observer is checking for changes in the world.
      *
      * This ObservableArea is not offset by the center, so its always centered at 0, 0, 0 so to speak.
      * It is to be shifted/queried at the accurate position on demand.
-     * See {@link ObservableArea#getAffectedChunks(Vector3i)}.
+     * See {@link ObservableArea#getAffectedChunks(Vec3i)}.
      *
      * @return the observable area
      */
@@ -76,14 +76,14 @@ public abstract class ChangeObserver {
      *
      * @return true, if this current state is now considered valid, false otherwise
      */
-    public abstract boolean notifyChange(World world, BlockPos center, BlockChangeSet changeSet);
+    public abstract boolean notifyChange(Level world, BlockPos center, BlockChangeSet changeSet);
 
     /**
      * Read persistent information back into this observer.
      *
      * @param tag the tag holding persistent information about this observer
      */
-    public abstract void readFromNBT(CompoundNBT tag);
+    public abstract void readFromNBT(CompoundTag tag);
 
     /**
      * Write information of this observer for persistence.
@@ -91,6 +91,6 @@ public abstract class ChangeObserver {
      *
      * @param tag an empty TagCompound to write information into
      */
-    public abstract void writeToNBT(CompoundNBT tag);
+    public abstract void writeToNBT(CompoundTag tag);
 
 }

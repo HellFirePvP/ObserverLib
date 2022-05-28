@@ -4,7 +4,7 @@ import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.ObserverProvider;
 import hellfirepvp.observerlib.common.registry.RegistryStructures;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nonnull;
 

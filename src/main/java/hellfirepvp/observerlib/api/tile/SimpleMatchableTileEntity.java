@@ -1,10 +1,10 @@
 package hellfirepvp.observerlib.api.tile;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,30 +21,30 @@ import java.util.function.Consumer;
  * Created by HellFirePvP
  * Date: 11.08.2019 / 09:39
  */
-public class SimpleMatchableTileEntity<T extends TileEntity> implements MatchableTile<T> {
+public class SimpleMatchableTileEntity<T extends BlockEntity> implements MatchableTile<T> {
 
-    private final TileEntityType<T> tileType;
-    private final BiConsumer<T, CompoundNBT> writeDisplayData;
+    private final BlockEntityType<T> tileType;
+    private final BiConsumer<T, CompoundTag> writeDisplayData;
     private final Consumer<T> writePlacement;
 
-    public SimpleMatchableTileEntity(TileEntityType<T> tileType, BiConsumer<T, CompoundNBT> writeDisplayData, Consumer<T> writePlacement) {
+    public SimpleMatchableTileEntity(BlockEntityType<T> tileType, BiConsumer<T, CompoundTag> writeDisplayData, Consumer<T> writePlacement) {
         this.tileType = tileType;
         this.writeDisplayData = writeDisplayData;
         this.writePlacement = writePlacement;
     }
 
     @Override
-    public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull CompoundNBT tag) {
+    public void writeDisplayData(@Nonnull T tile, long tick, @Nonnull CompoundTag tag) {
         this.writeDisplayData.accept(tile, tag);
     }
 
     @Override
-    public void postPlacement(@Nonnull T tile, @Nonnull IBlockReader world, BlockPos pos) {
+    public void postPlacement(@Nonnull T tile, @Nonnull BlockGetter world, BlockPos pos) {
         this.writePlacement.accept(tile);
     }
 
     @Override
-    public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull T tile) {
+    public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull T tile) {
         return tile.getType().equals(this.tileType);
     }
 }

@@ -1,37 +1,43 @@
 package hellfirepvp.observerlib.api.client;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import hellfirepvp.observerlib.api.structure.Structure;
+import hellfirepvp.observerlib.client.util.LightmapUtil;
+import hellfirepvp.observerlib.client.util.RenderSystemUtil;
 import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MainWindow;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.*;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.math.vector.Vector3i;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.Biomes;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import com.mojang.math.Vector3f;
+import net.minecraft.core.Vec3i;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraftforge.client.model.data.EmptyModelData;
 
 import java.util.Optional;
 import java.util.Random;
+
+import com.mojang.blaze3d.vertex.Tesselator;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -55,7 +61,7 @@ public class StructureRenderer {
 
     public StructureRenderer(Structure structure) {
         this.structure = structure;
-        Biome plainsBiome = RegistryUtil.client().getValue(Registry.BIOME_KEY, Biomes.PLAINS);
+        Holder<Biome> plainsBiome = RegistryUtil.client().getRegistry(Registry.BIOME_REGISTRY).getOrCreateHolder(Biomes.PLAINS);
         this.world = new StructureRenderWorld(this.structure, plainsBiome);
         this.resetRotation();
     }
@@ -85,7 +91,7 @@ public class StructureRenderer {
         this.rotate(0.5 * -mouseDZ, 0.5 * mouseDX, 0);
     }
 
-    public IWorldReader getRenderWorld() {
+    public LevelReader getRenderWorld() {
         return world;
     }
 
@@ -101,25 +107,25 @@ public class StructureRenderer {
         return y >= this.structure.getMinimumOffset().getY() && y <= this.structure.getMaximumOffset().getY();
     }
 
-    public void render3DGUI(MatrixStack renderStack, double x, double y, float pTicks) {
+    public void render3DGUI(PoseStack renderStack, double x, double y, float pTicks) {
         render3DSliceGUI(renderStack, x, y, pTicks, Optional.empty());
     }
 
-    public void render3DSliceGUI(MatrixStack renderStack, double x, double y, float pTicks, Optional<Integer> slice) {
-        Screen currentScreen = Minecraft.getInstance().currentScreen;
+    public void render3DSliceGUI(PoseStack renderStack, double x, double y, float pTicks, Optional<Integer> slice) {
+        Screen currentScreen = Minecraft.getInstance().screen;
         if (currentScreen == null) {
             return;
         }
 
-        MainWindow window = Minecraft.getInstance().getMainWindow();
-        double scale = window.getGuiScaleFactor();
+        Window window = Minecraft.getInstance().getWindow();
+        double scale = window.getGuiScale();
 
         float mul = 10.5F;
         float size = 2;
         float minSize = 0.5F;
 
-        Vector3i max = this.structure.getMaximumOffset();
-        Vector3i min = this.structure.getMinimumOffset();
+        Vec3i max = this.structure.getMaximumOffset();
+        Vec3i min = this.structure.getMinimumOffset();
 
         float maxLength = 0;
         float pointDst = max.getX() - min.getX();
@@ -142,17 +148,18 @@ public class StructureRenderer {
 
         float dr = -5.75F * size;
 
-        Minecraft.getInstance().getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
-        IRenderTypeBuffer.Impl buffers = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
+        Minecraft.getInstance().getTextureManager().bindForSetup(TextureAtlas.LOCATION_BLOCKS);
+        MultiBufferSource.BufferSource buffers = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        BlockEntityRenderDispatcher berd = Minecraft.getInstance().getBlockEntityRenderDispatcher();
 
         slice.ifPresent(ySlice -> this.world.pushContentFilter((pos) -> pos.getY() == ySlice));
 
-        renderStack.push();
+        renderStack.pushPose();
         renderStack.translate(x + 16D / scale, y + 16D / scale, 512);
         renderStack.translate(dr, dr, dr);
-        renderStack.rotate(Vector3f.XP.rotationDegrees((float) rotationX));
-        renderStack.rotate(Vector3f.YP.rotationDegrees((float) rotationY));
-        renderStack.rotate(Vector3f.ZP.rotationDegrees((float) rotationZ));
+        renderStack.mulPose(Vector3f.XP.rotationDegrees((float) rotationX));
+        renderStack.mulPose(Vector3f.YP.rotationDegrees((float) rotationY));
+        renderStack.mulPose(Vector3f.ZP.rotationDegrees((float) rotationZ));
         renderStack.translate(-dr, -dr, -dr);
         renderStack.scale(-size * mul, -size * mul, -size * mul);
         slice.ifPresent(ySlice -> renderStack.translate(0, -ySlice, 0));
@@ -163,13 +170,13 @@ public class StructureRenderer {
                 .forEach(pos -> {
                     BlockState view = this.world.getBlockState(pos);
                     if (!view.getBlock().equals(Blocks.AIR)) {
-                        renderStack.push();
+                        renderStack.pushPose();
                         renderStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
                         if (!view.getFluidState().isEmpty()) {
-                            this.renderFluid(pos, view.getFluidState(), buffers.getBuffer(wrapBlockRenderType(RenderType.getTranslucent())));
+                            this.renderFluid(pos, view, view.getFluidState(), buffers.getBuffer(wrapBlockRenderType(RenderType.translucent())));
                         }
-                        RenderType type = wrapBlockRenderType(RenderTypeLookup.func_239221_b_(view));
+                        RenderType type = wrapBlockRenderType(ItemBlockRenderTypes.getMovingBlockRenderType(view));
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
                             this.renderBlock(pos, view, buffers.getBuffer(type), renderStack);
@@ -177,60 +184,60 @@ public class StructureRenderer {
                         } else {
                             this.renderBlock(pos, view, buffers.getBuffer(type), renderStack);
                         }
-                        renderStack.pop();
+                        renderStack.popPose();
                     }
                 });
-        buffers.finish();
+        buffers.endBatch();
 
         this.structure.getContents().keySet()
                 .forEach(pos -> {
                     if (this.isolateIndividualBlockRender) {
                         this.world.pushContentFilter(wPos -> wPos.equals(pos));
                     }
-                    TileEntity tile = this.world.getTileEntity(pos);
+                    BlockEntity tile = this.world.getBlockEntity(pos);
                     if (tile != null) {
-                        TileEntityRenderer tesr = TileEntityRendererDispatcher.instance.getRenderer(tile);
+                        BlockEntityRenderer tesr = berd.getRenderer(tile);
                         if (tesr != null) {
-                            renderStack.push();
+                            renderStack.pushPose();
                             renderStack.translate(pos.getX(), pos.getY(), pos.getZ());
-                            tesr.render(tile, 0, renderStack, buffers, WorldRenderer.getCombinedLight(this.world, pos), OverlayTexture.NO_OVERLAY);
-                            renderStack.pop();
+                            tesr.render(tile, 0, renderStack, buffers, LevelRenderer.getLightColor(this.world, pos), OverlayTexture.NO_OVERLAY);
+                            renderStack.popPose();
                         }
                     }
                     if (this.isolateIndividualBlockRender) {
                         this.world.popContentFilter();
                     }
                 });
-        buffers.finish();
+        buffers.endBatch();
 
         if (this.displayWithRequiredAir) {
             BlockAirRequirement.displayRequiredAir = false;
         }
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
-        renderStack.pop();
+        renderStack.popPose();
     }
 
     private RenderType wrapBlockRenderType(RenderType type) {
-        return RenderTypeDecorator.wrapSetup(type, RenderSystem::disableLighting, () -> {});
+        return RenderTypeDecorator.wrapSetup(type, RenderSystemUtil::disableLighting, () -> {});
     }
 
-    private void renderFluid(BlockPos pos, FluidState fluidState, IVertexBuilder buf) {
-        BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
-        brd.renderFluid(pos, this.world, buf, fluidState);
+    private void renderFluid(BlockPos pos, BlockState state, FluidState fluidState, VertexConsumer buf) {
+        BlockRenderDispatcher brd = Minecraft.getInstance().getBlockRenderer();
+        brd.renderLiquid(pos, this.world, buf, state, fluidState);
     }
 
-    private void renderBlock(BlockPos offset, BlockState state, IVertexBuilder vb, MatrixStack renderStack) {
-        BlockRendererDispatcher brd = Minecraft.getInstance().getBlockRendererDispatcher();
+    private void renderBlock(BlockPos offset, BlockState state, VertexConsumer vb, PoseStack renderStack) {
+        BlockRenderDispatcher brd = Minecraft.getInstance().getBlockRenderer();
         try {
             //random is given position-based seed later on
-            brd.renderModel(state, offset, this.world, renderStack, vb, false, rand, EmptyModelData.INSTANCE);
+            brd.renderBatched(state, offset, this.world, renderStack, vb, false, rand, EmptyModelData.INSTANCE);
         } catch (Exception exc) {
-            BlockRenderType type = state.getRenderType();
-            if (type == BlockRenderType.MODEL) {
-                IBakedModel model = brd.getModelForState(state);
-                long posRandom = state.getPositionRandom(offset);
-                brd.getBlockModelRenderer().renderModel(this.world, model, state, offset, renderStack, vb, true, rand, posRandom, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
+            RenderShape type = state.getRenderShape();
+            if (type == RenderShape.MODEL) {
+                BakedModel model = brd.getBlockModel(state);
+                long posRandom = state.getSeed(offset);
+                brd.getModelRenderer().renderModel(renderStack.last(), vb, state, model, 1F, 1F, 1F, LightmapUtil.getPackedFullbrightCoords(), OverlayTexture.NO_OVERLAY);
             }
         }
     }

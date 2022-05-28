@@ -1,11 +1,11 @@
 package hellfirepvp.observerlib.common.data;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -61,8 +61,8 @@ public class WorldCacheDomain {
         return key;
     }
 
-    void tick(World world) {
-        ResourceLocation dimName = world.getDimensionKey().getLocation();
+    void tick(Level world) {
+        ResourceLocation dimName = world.dimension().location();
         if (!this.domainData.containsKey(dimName)) {
             return;
         }
@@ -81,8 +81,8 @@ public class WorldCacheDomain {
     }
 
     @Nullable
-    private <T extends CachedWorldData> T getFromCache(World world, SaveKey<T> key) {
-        return getCachedData(world.getDimensionKey().getLocation(), key);
+    private <T extends CachedWorldData> T getFromCache(Level world, SaveKey<T> key) {
+        return getCachedData(world.dimension().location(), key);
     }
 
     Collection<ResourceLocation> getUsedWorlds() {
@@ -90,23 +90,23 @@ public class WorldCacheDomain {
     }
 
     @Nonnull
-    public <T extends CachedWorldData> T getData(World world, SaveKey<T> key) {
+    public <T extends CachedWorldData> T getData(Level world, SaveKey<T> key) {
         T data = getFromCache(world, key);
         if (data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
 
-            this.domainData.computeIfAbsent(world.getDimensionKey().getLocation(), i -> new HashMap<>())
+            this.domainData.computeIfAbsent(world.dimension().location(), i -> new HashMap<>())
                     .put(key, data);
         }
         return data;
     }
 
     public File getSaveDirectory() {
-        MinecraftServer server = LogicalSidedProvider.INSTANCE.get(LogicalSide.SERVER);
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
             return null;
         }
-        File dataDir = server.func_240776_a_(new FolderName(key.getNamespace())).toFile();
+        File dataDir = server.getWorldPath(new LevelResource(key.getNamespace())).toFile();
         if (!dataDir.exists()) {
             dataDir.mkdirs();
         }

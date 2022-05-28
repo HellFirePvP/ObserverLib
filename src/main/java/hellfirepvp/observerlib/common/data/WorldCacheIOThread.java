@@ -3,10 +3,9 @@ package hellfirepvp.observerlib.common.data;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import hellfirepvp.observerlib.ObserverLib;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SharedConstants;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.SharedConstants;
+import net.minecraft.world.level.Level;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
@@ -26,8 +25,8 @@ public class WorldCacheIOThread extends TimerTask {
     private static WorldCacheIOThread saveTask;
     private static Timer ioThread;
 
-    private Map<WorldCacheDomain, Map<ResourceLocation, List<IWorldRelatedData>>> worldSaveQueue = Maps.newHashMap();
-    private Map<WorldCacheDomain, Map<ResourceLocation, List<IWorldRelatedData>>> awaitingSaveQueue = Maps.newHashMap();
+    private final Map<WorldCacheDomain, Map<ResourceLocation, List<IWorldRelatedData>>> worldSaveQueue = Maps.newHashMap();
+    private final Map<WorldCacheDomain, Map<ResourceLocation, List<IWorldRelatedData>>> awaitingSaveQueue = Maps.newHashMap();
     private boolean inSave = false, skipTick = false;
 
     private WorldCacheIOThread() {}
@@ -102,8 +101,8 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     @Nonnull
-    static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, World world, WorldCacheDomain.SaveKey<T> key) {
-        T loaded = loadDataFromFile(domain, world.getDimensionKey().getLocation(), key);
+    static <T extends CachedWorldData> T loadNow(WorldCacheDomain domain, Level world, WorldCacheDomain.SaveKey<T> key) {
+        T loaded = loadDataFromFile(domain, world.dimension().location(), key);
         loaded.onLoad(world);
         return loaded;
     }

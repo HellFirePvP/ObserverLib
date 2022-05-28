@@ -4,15 +4,12 @@ import hellfirepvp.observerlib.api.block.BlockStructureObserver;
 import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
 import hellfirepvp.observerlib.common.data.StructureMatchingBuffer;
 import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-
-import java.util.Collection;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.ChunkStatus;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -24,9 +21,9 @@ import java.util.Collection;
 public class StructureIntegrityObserver implements BlockChangeNotifier.Listener {
 
     @Override
-    public void onChange(World world, Chunk chunk, BlockPos pos, BlockState oldState, BlockState newState) {
-        if (world.isRemote() ||
-                !chunk.getStatus().isAtLeast(ChunkStatus.FULL)) {
+    public void onChange(Level world, LevelChunk chunk, BlockPos pos, BlockState oldState, BlockState newState) {
+        if (world.isClientSide() ||
+                !chunk.getStatus().isOrAfter(ChunkStatus.FULL)) {
             return;
         }
 

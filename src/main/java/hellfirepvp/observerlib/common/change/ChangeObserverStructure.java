@@ -6,12 +6,12 @@ import hellfirepvp.observerlib.api.ObservableAreaBoundingBox;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
@@ -38,7 +38,7 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public void initialize(IWorld world, BlockPos center) {
+    public void initialize(LevelAccessor world, BlockPos center) {
         for (BlockPos offset : this.structure.getContents().keySet()) {
             if (!this.structure.matchesSingleBlock(world, center, offset)) {
                 this.mismatches.add(offset);
@@ -53,11 +53,11 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public boolean notifyChange(World world, BlockPos center, BlockChangeSet changeSet) {
+    public boolean notifyChange(Level world, BlockPos center, BlockChangeSet changeSet) {
         for (BlockStateChangeSet.StateChange change : changeSet.getChanges()) {
             if (this.structure.hasBlockAt(change.getRelativePosition()) &&
                     !this.structure.matchesSingleBlock(world, center, change.getRelativePosition(), change.getNewState(),
-                            world.getTileEntity(center.add(change.getRelativePosition())))) {
+                            world.getBlockEntity(center.offset(change.getRelativePosition())))) {
 
                 this.mismatches.add(change.getRelativePosition());
             } else {
@@ -70,22 +70,22 @@ public class ChangeObserverStructure extends ChangeObserver {
     }
 
     @Override
-    public void readFromNBT(CompoundNBT tag) {
+    public void readFromNBT(CompoundTag tag) {
         this.mismatches.clear();
-        ListNBT tagMismatches = tag.getList("mismatchList", Constants.NBT.TAG_COMPOUND);
+        ListTag tagMismatches = tag.getList("mismatchList", Tag.TAG_COMPOUND);
 
         for (int i = 0; i < tagMismatches.size(); i++) {
-            CompoundNBT tagPos = tagMismatches.getCompound(i);
+            CompoundTag tagPos = tagMismatches.getCompound(i);
             this.mismatches.add(NBTHelper.readBlockPosFromNBT(tagPos));
         }
     }
 
     @Override
-    public void writeToNBT(CompoundNBT tag) {
-        ListNBT tagMismatches = new ListNBT();
+    public void writeToNBT(CompoundTag tag) {
+        ListTag tagMismatches = new ListTag();
 
         for (BlockPos pos : this.mismatches) {
-            CompoundNBT tagPos = new CompoundNBT();
+            CompoundTag tagPos = new CompoundTag();
             NBTHelper.writeBlockPosToNBT(pos, tagPos);
             tagMismatches.add(tagPos);
         }

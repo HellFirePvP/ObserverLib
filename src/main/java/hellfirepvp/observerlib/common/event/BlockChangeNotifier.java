@@ -1,9 +1,9 @@
 package hellfirepvp.observerlib.common.event;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public class BlockChangeNotifier {
         listeners.add(listener);
     }
 
-    public static void onBlockChange(World world, @Nullable Chunk chunk, BlockPos pos, BlockState oldS, BlockState newS) {
+    public static void onBlockChange(Level world, @Nullable LevelChunk chunk, BlockPos pos, BlockState oldS, BlockState newS) {
         if (chunk == null) {
             chunk = world.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
         }
@@ -36,7 +36,7 @@ public class BlockChangeNotifier {
 
     public static interface Listener {
 
-        void onChange(World world, Chunk chunk, BlockPos pos, BlockState oldState, BlockState newState);
+        void onChange(Level world, LevelChunk chunk, BlockPos pos, BlockState oldState, BlockState newState);
 
     }
 }

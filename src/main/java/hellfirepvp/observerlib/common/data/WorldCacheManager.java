@@ -1,9 +1,8 @@
 package hellfirepvp.observerlib.common.data;
 
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 
 import javax.annotation.Nonnull;
@@ -72,15 +71,15 @@ public class WorldCacheManager implements ITickHandler {
 
     @Override
     public void tick(TickEvent.Type type, Object... context) {
-        World world = (World) context[0];
-        if (world.isRemote) return;
+        Level world = (Level) context[0];
+        if (world.isClientSide) return;
         for (WorldCacheDomain domain : domains.values()) {
             domain.tick(world);
         }
     }
 
-    public void doSave(World world) {
-        ResourceLocation worldName = world.getDimensionKey().getLocation();
+    public void doSave(Level world) {
+        ResourceLocation worldName = world.dimension().location();
         for (WorldCacheDomain domain : domains.values()) {
             for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
                 CachedWorldData data = domain.getCachedData(worldName, key);

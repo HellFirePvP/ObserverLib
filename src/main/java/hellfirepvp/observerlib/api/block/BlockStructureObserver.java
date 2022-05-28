@@ -1,18 +1,16 @@
 package hellfirepvp.observerlib.api.block;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 /**
  * An interface for blocks to allow for easy removal of {@link hellfirepvp.observerlib.api.ChangeSubscriber}
- * instances when this {@link #removeWithNewState(World, BlockPos, BlockState, BlockState)} returns true.
+ * instances when this {@link #removeWithNewState(Level, BlockPos, BlockState, BlockState)} returns true.
  *
  * Warning! If this does not return true, it's up to "you" to determine when the ChangeSubscriber at this
  * position needs to be removed!
- * Calling {@link hellfirepvp.observerlib.api.ObserverHelper#removeObserver(World, BlockPos)} has the same effect
+ * Calling {@link hellfirepvp.observerlib.api.ObserverHelper#removeObserver(Level, BlockPos)} has the same effect
  * as returning true here, so calling this with the appropriate position will remove the subscriber.
  *
  * This class is part of the ObserverLib Mod
@@ -34,7 +32,7 @@ public interface BlockStructureObserver {
      *
      * @return true to remove the ChangeSubscriber at this position, if any, false to make it persist.
      */
-    default boolean removeWithNewState(World world, BlockPos pos, BlockState oldState, BlockState newState) {
+    default boolean removeWithNewState(Level world, BlockPos pos, BlockState oldState, BlockState newState) {
         return oldState != newState;
     }
 

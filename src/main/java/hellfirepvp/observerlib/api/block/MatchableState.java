@@ -4,12 +4,13 @@ import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.api.client.StructureRenderer;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.BlockState;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,11 +31,11 @@ public interface MatchableState {
         @Nonnull
         @Override
         public BlockState getDescriptiveState(long tick) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
 
         @Override
-        public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
+        public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
             return state.getMaterial() == Material.AIR;
         }
     };
@@ -49,22 +50,22 @@ public interface MatchableState {
         @Override
         public BlockState getDescriptiveState(long tick) {
             if (BlockAirRequirement.displayRequiredAir) {
-                return ObserverHelper.blockAirRequirement.getDefaultState();
+                return ObserverHelper.blockAirRequirement.defaultBlockState();
             }
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
 
         @Override
-        public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
-            return state.isAir(reader, absolutePosition);
+        public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
+            return state.isAir();
         }
     };
 
     /**
      * Get a descriptive blockstate for the current matcher for rendering or related.
-     * Return {@link net.minecraft.block.Blocks#AIR}'s default state if nothing should be displayed.
+     * Return {@link Blocks#AIR}'s default state if nothing should be displayed.
      *
-     * Generally a blockstate returned here should also be accepted by {@link #matches(IBlockReader, BlockPos, BlockState)}.
+     * Generally a blockstate returned here should also be accepted by {@link #matches(BlockGetter, BlockPos, BlockState)}.
      *
      * @param tick an ongoing client tick to cycle through blocks
      *
@@ -82,8 +83,12 @@ public interface MatchableState {
      * @return the created tileentity for the currently cycle'd blockstate
      */
     @Nullable
-    default public TileEntity createTileEntity(IBlockReader blockReader, long tick) {
-        return getDescriptiveState(tick).createTileEntity(blockReader);
+    default public BlockEntity createTileEntity(BlockGetter blockReader, BlockPos at, long tick) {
+        BlockState state = getDescriptiveState(tick);
+        if (state.getBlock() instanceof EntityBlock) {
+            return ((EntityBlock) state.getBlock()).newBlockEntity(at, state);
+        }
+        return null;
     }
 
     /**
@@ -96,6 +101,6 @@ public interface MatchableState {
      *
      * @return if the blockstate is valid
      */
-    public boolean matches(@Nullable IBlockReader reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state);
+    public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state);
 
 }

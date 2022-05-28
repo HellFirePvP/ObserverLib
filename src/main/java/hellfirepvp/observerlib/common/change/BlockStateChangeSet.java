@@ -3,12 +3,12 @@ package hellfirepvp.observerlib.common.change;
 import com.google.common.collect.Maps;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.core.BlockPos;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -55,27 +55,27 @@ public class BlockStateChangeSet implements BlockChangeSet {
         return Collections.unmodifiableCollection(this.changes.values());
     }
 
-    public void readFromNBT(CompoundNBT cmp) {
+    public void readFromNBT(CompoundTag cmp) {
         this.changes.clear();
 
-        ListNBT changeList = cmp.getList("changeList", Constants.NBT.TAG_COMPOUND);
+        ListTag changeList = cmp.getList("changeList", Tag.TAG_COMPOUND);
         for (int i = 0; i < changeList.size(); i++) {
-            CompoundNBT changeTag = changeList.getCompound(i);
+            CompoundTag changeTag = changeList.getCompound(i);
 
             BlockPos pos = NBTHelper.readBlockPosFromNBT(changeTag.getCompound("relPos"));
             BlockPos abs = NBTHelper.readBlockPosFromNBT(changeTag.getCompound("absPos"));
             BlockState oldState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("oldState"),
-                    Blocks.AIR.getDefaultState());
+                    Blocks.AIR.defaultBlockState());
             BlockState newState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("newState"),
-                    Blocks.AIR.getDefaultState());
+                    Blocks.AIR.defaultBlockState());
             this.changes.put(pos, new BlockStateChange(pos, abs, oldState, newState));
         }
     }
 
-    public void writeToNBT(CompoundNBT cmp) {
-        ListNBT changes = new ListNBT();
+    public void writeToNBT(CompoundTag cmp) {
+        ListTag changes = new ListTag();
         for (BlockStateChange change : this.changes.values()) {
-            CompoundNBT tag = new CompoundNBT();
+            CompoundTag tag = new CompoundTag();
             NBTHelper.setAsSubTag(tag, "relPos", (posTag) -> NBTHelper.writeBlockPosToNBT(change.getRelativePosition(), posTag));
             NBTHelper.setAsSubTag(tag, "absPos", (posTag) -> NBTHelper.writeBlockPosToNBT(change.getAbsolutePosition(), posTag));
             NBTHelper.writeBlockPosToNBT(change.pos, tag);

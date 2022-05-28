@@ -8,11 +8,8 @@ import hellfirepvp.observerlib.api.ObserverProvider;
 import hellfirepvp.observerlib.common.data.StructureMatchingBuffer;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,24 +27,24 @@ public class MatcherObserverHelper extends ObserverHelper {
     private static final WorldCacheDomain.SaveKey<StructureMatchingBuffer> STRUCTURE_BUFFER_KEY =
             WORLD_DOMAIN.createSaveKey("structure_buffer", StructureMatchingBuffer::new);
 
-    public static StructureMatchingBuffer getBuffer(World world) {
+    public static StructureMatchingBuffer getBuffer(Level world) {
         return WORLD_DOMAIN.getData(world, STRUCTURE_BUFFER_KEY);
     }
 
     @Nonnull
     @Override
-    public <T extends ChangeObserver> ChangeSubscriber<T> observeArea(World world, BlockPos center, ObserverProvider provider) {
+    public <T extends ChangeObserver> ChangeSubscriber<T> observeArea(Level world, BlockPos center, ObserverProvider provider) {
         return getBuffer(world).observeArea(world, center, provider);
     }
 
     @Override
-    public boolean removeObserver(World world, BlockPos pos) {
+    public boolean removeObserver(Level world, BlockPos pos) {
         return getBuffer(world).removeSubscriber(pos);
     }
 
     @Nullable
     @Override
-    public ChangeSubscriber<? extends ChangeObserver> getSubscriber(World world, BlockPos pos) {
+    public ChangeSubscriber<? extends ChangeObserver> getSubscriber(Level world, BlockPos pos) {
         return getBuffer(world).getSubscriber(pos);
     }
 

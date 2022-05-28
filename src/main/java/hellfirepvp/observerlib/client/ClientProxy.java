@@ -6,7 +6,7 @@ import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.RenderTypeLookup;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
@@ -45,6 +45,6 @@ public class ClientProxy extends CommonProxy {
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
-        RenderTypeLookup.setRenderLayer(ObserverHelper.blockAirRequirement, RenderType.getTranslucent());
+        ItemBlockRenderTypes.setRenderLayer(ObserverHelper.blockAirRequirement, RenderType.translucent());
     }
 }
