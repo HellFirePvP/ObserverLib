@@ -28,9 +28,6 @@ find . ! -name \'*.jar\' -delete'''
       }
     }
     stage('Notify') {
-      when{
-        branch 'master'
-      }
       steps {
         discordSendHellFire link: env.BUILD_URL, result: currentBuild.currentResult, webhookURL: "${WEBHOOKURL}"
       }
