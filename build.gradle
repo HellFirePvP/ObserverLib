@@ -24,7 +24,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
 mixin {
-    add sourceSets.main, "astralsorcery.refmap.json"
+    add sourceSets.main, "observerlib.refmap.json"
 }
 
 version = '1.18.2-1.6.0'
@@ -50,9 +50,10 @@ minecraft {
         client {
             workingDirectory project.file('run')
 
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
 
             mods {
                 observerlib {
@@ -64,9 +65,10 @@ minecraft {
         server {
             workingDirectory project.file('run')
 
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
 
             mods {
                 observerlib {
@@ -78,9 +80,10 @@ minecraft {
         gameTestServer {
             workingDirectory project.file('run')
 
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
 
             mods {
                 examplemod {
@@ -92,9 +95,10 @@ minecraft {
         data {
             workingDirectory project.file('run')
 
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'astralsorcery'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
 
             args '--mod', 'observerlib', '--all', '--output', file('src/generated/resources/')
 

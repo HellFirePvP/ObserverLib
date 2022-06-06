@@ -5,7 +5,7 @@
     "compatibilityLevel": "JAVA_8",
     "refmap": "observerlib.refmap.json",
     "mixins": [
-        "MixinLevel"
+        "MixinLevelChunk"
     ],
     "client": [],
     "server": [],
