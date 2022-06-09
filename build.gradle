@@ -148,7 +148,7 @@ jar {
                 "Specification-Vendor": "hellfirepvp",
                 "Specification-Version": "1",
                 "Implementation-Title": project.name,
-                "Implementation-Version": "${archiveVersion}",
+                "Implementation-Version": "${version}",
                 "Implementation-Vendor" : "hellfirepvp",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "MixinConnector": "hellfirepvp.observerlib.MixinConnector"
