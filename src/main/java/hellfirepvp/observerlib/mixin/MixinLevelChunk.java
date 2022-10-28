@@ -42,9 +42,6 @@ public abstract class MixinLevelChunk {
         if (this.prevState == null || this.level.isClientSide() || this.prevState == newState) {
             return;
         }
-        if (this.level.captureBlockSnapshots) {
-            return;
-        }
         LevelChunk thisLevelChunk = (LevelChunk)(Object) this;
         BlockChangeNotifier.onBlockChange(this.level, thisLevelChunk, pos, this.prevState, newState);
         this.prevState = null;
