@@ -128,7 +128,6 @@ public class StructurePreview {
                 .setColorDecorator(colorDecorator);
 
         Runnable transparentSetup = () -> {
-            RenderSystemUtil.disableAlphaTest();
             RenderSystem.disableDepthTest();
             RenderSystem.enableBlend();
             RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.SRC_ALPHA,
@@ -138,7 +137,6 @@ public class StructurePreview {
             RenderSystem.defaultBlendFunc();
             RenderSystem.disableBlend();
             RenderSystem.enableDepthTest();
-            RenderSystemUtil.enableAlphaTest();
         };
 
         Vec3 vec = new Vec3(0, 0, 0);

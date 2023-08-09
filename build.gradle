@@ -25,9 +25,10 @@ apply plugin: 'org.spongepowered.mixin'
 
 mixin {
     add sourceSets.main, "observerlib.refmap.json"
+    config 'assets/observerlib/observerlib.mixins.json'
 }
 
-version = '1.18.2-1.6.0'
+version = '1.18.2-1.7.0'
 group = 'hellfirepvp.observerlib'
 archivesBaseName = 'observerlib'
 String build_version = ""
@@ -100,6 +101,7 @@ minecraft {
             property 'forge.enabledGameTestNamespaces', 'observerlib'
             property 'Dmixin.debug.export', 'true'
 
+            args "-mixin.config=assets/observerlib/observerlib.mixins.json"
             args '--mod', 'observerlib', '--all', '--output', file('src/generated/resources/')
 
             mods {
@@ -113,7 +115,7 @@ minecraft {
 
 dependencies {
 
-    minecraft 'net.minecraftforge:forge:1.18.2-40.1.25'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
 }
@@ -151,24 +153,8 @@ jar {
                 "Implementation-Version": "${version}",
                 "Implementation-Vendor" : "hellfirepvp",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                "MixinConnector": "hellfirepvp.observerlib.MixinConnector"
         ])
     }
-}
-
-task sourcesJar(type: Jar) {
-    classifier = "sources"
-    from sourceSets.main.allJava
-}
-
-task deobfJar(type: Jar) {
-    classifier = "deobf"
-    from sourceSets.main.output
-}
-
-artifacts {
-    archives sourcesJar
-    archives deobfJar
 }
 
 publish.dependsOn(project.tasks.getByName("assemble"))

@@ -1,12 +1,9 @@
 package hellfirepvp.observerlib.api.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.client.util.LightmapUtil;
-import hellfirepvp.observerlib.client.util.RenderSystemUtil;
-import hellfirepvp.observerlib.client.util.RenderTypeDecorator;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
 import net.minecraft.core.Holder;
@@ -174,9 +171,9 @@ public class StructureRenderer {
                         renderStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
                         if (!view.getFluidState().isEmpty()) {
-                            this.renderFluid(pos, view, view.getFluidState(), buffers.getBuffer(wrapBlockRenderType(RenderType.translucent())));
+                            this.renderFluid(pos, view, view.getFluidState(), buffers.getBuffer(RenderType.translucent()));
                         }
-                        RenderType type = wrapBlockRenderType(ItemBlockRenderTypes.getMovingBlockRenderType(view));
+                        RenderType type = ItemBlockRenderTypes.getMovingBlockRenderType(view);
                         if (this.isolateIndividualBlockRender) {
                             this.world.pushContentFilter(wPos -> wPos.equals(pos));
                             this.renderBlock(pos, view, buffers.getBuffer(type), renderStack);
@@ -216,10 +213,6 @@ public class StructureRenderer {
 
         slice.ifPresent(ySlice -> this.world.popContentFilter());
         renderStack.popPose();
-    }
-
-    private RenderType wrapBlockRenderType(RenderType type) {
-        return RenderTypeDecorator.wrapSetup(type, RenderSystemUtil::disableLighting, () -> {});
     }
 
     private void renderFluid(BlockPos pos, BlockState state, FluidState fluidState, VertexConsumer buf) {
