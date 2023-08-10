@@ -1,6 +1,5 @@
 package hellfirepvp.observerlib.mixin;
 
-import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -37,7 +36,7 @@ public abstract class MixinLevelChunk {
             locals = LocalCapture.CAPTURE_FAILHARD
     )
     public void onBlockStateUpdate(BlockPos p_62865_, BlockState p_62866_, boolean p_62867_, CallbackInfoReturnable<BlockState> cir, int i, LevelChunkSection levelchunksection, boolean flag, int j, int k, int l, BlockState blockstate) {
-        if (this.level.isClientSide() || this.level.captureBlockSnapshots) {
+        if (this.level.isClientSide()) {
             return;
         }
         LevelChunk thisLevelChunk = (LevelChunk)(Object) this;
