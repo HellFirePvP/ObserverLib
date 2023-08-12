@@ -28,7 +28,7 @@ mixin {
     config 'assets/observerlib/observerlib.mixins.json'
 }
 
-version = '1.18.2-1.7.0'
+version = '1.18.2-1.7.1'
 group = 'hellfirepvp.observerlib'
 archivesBaseName = 'observerlib'
 String build_version = ""
