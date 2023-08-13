@@ -166,6 +166,14 @@ publishing {
             artifactId project.archivesBaseName
             version build_version
             from components.java
+
+            pom.withXml {
+                asNode().dependencies.dependency.each { dep ->
+                    if (dep.version.last().value().last().contains("mapped")) {
+                        assert dep.parent().remove(dep)
+                    }
+                }
+            }
         }
     }
 
