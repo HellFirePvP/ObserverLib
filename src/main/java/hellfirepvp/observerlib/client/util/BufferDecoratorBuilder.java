@@ -1,14 +1,15 @@
 package hellfirepvp.observerlib.client.util;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.BufferVertexConsumer;
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.datafixers.util.Pair;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
 
 import java.nio.ByteBuffer;
 import java.util.function.Consumer;
+
+import com.mojang.blaze3d.vertex.BufferBuilder.DrawState;
+import com.mojang.blaze3d.vertex.BufferBuilder.SortState;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -202,6 +203,8 @@ public class BufferDecoratorBuilder {
         public void unsetDefaultColor() {
             this.vertexBuilder.unsetDefaultColor();
         }
+
+
     }
 
     private static class DecoratedConsumer extends DecoratedBuilder implements BufferVertexConsumer {
@@ -270,23 +273,34 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
+        public void restoreSortState(SortState state) {
+            this.decorated.restoreSortState(state);
+        }
+
+        @Override
         public void begin(VertexFormat.Mode mode, VertexFormat format) {
             this.decorated.begin(mode, format);
         }
 
         @Override
-        public void end() {
-            this.decorated.end();
+        public boolean isCurrentBatchEmpty() {
+            return this.decorated.isCurrentBatchEmpty();
+        }
+
+        @Nullable
+        @Override
+        public RenderedBuffer endOrDiscardIfEmpty() {
+            return this.decorated.endOrDiscardIfEmpty();
+        }
+
+        @Override
+        public BufferBuilder.RenderedBuffer end() {
+            return this.decorated.end();
         }
 
         @Override
         public boolean building() {
             return this.decorated.building();
-        }
-
-        @Override
-        public Pair<DrawState, ByteBuffer> popNextBuffer() {
-            return this.decorated.popNextBuffer();
         }
 
         @Override
@@ -297,11 +311,6 @@ public class BufferDecoratorBuilder {
         @Override
         public void discard() {
             this.decorated.discard();
-        }
-
-        @Override
-        public void restoreSortState(SortState state) {
-            this.decorated.restoreSortState(state);
         }
 
         @Override
@@ -316,47 +325,44 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public VertexFormat getVertexFormat() {
-            return super.getVertexFormat();
-        }
-
-        @Override
         public void vertex(float x, float y, float z,
                               float red, float green, float blue, float alpha,
                               float texU, float texV,
                               int overlayUV, int lightmapUV,
                               float normalX, float normalY, float normalZ) {
-            if (this.decorator.positionDecorator != null) {
-                double[] newPosition = this.decorator.positionDecorator.decorate(x, y, z);
-                x = (float) newPosition[0];
-                y = (float) newPosition[1];
-                z = (float) newPosition[2];
-            }
-            if (this.decorator.colorDecorator != null) {
-                int[] newColors = this.decorator.colorDecorator.decorate((int) red * 255, (int) green * 255, (int) blue * 255, (int) alpha * 255);
-                red   = newColors[0] / 255F;
-                green = newColors[1] / 255F;
-                blue  = newColors[2] / 255F;
-                alpha = newColors[3] / 255F;
-            }
-            if (this.decorator.uvDecorator != null) {
-                float[] newUV = this.decorator.uvDecorator.decorate(texU, texV);
-                texU = newUV[0];
-                texV = newUV[1];
-            }
-            if (this.decorator.overlayDecorator != null) {
-                int[] newOverlayCoords = this.decorator.overlayDecorator.decorate(overlayUV & 0xFFFF, (overlayUV >> 16) & 0xFFFF);
-                overlayUV = newOverlayCoords[0] | (newOverlayCoords[1] << 16);
-            }
-            if (this.decorator.lightmapDecorator != null) {
-                int[] newLightMapCoords = this.decorator.lightmapDecorator.decorate(lightmapUV & 0xFFFF, (lightmapUV >> 16) & 0xFFFF);
-                lightmapUV = newLightMapCoords[0] | (newLightMapCoords[1] << 16);
-            }
-            if (this.decorator.normalDecorator != null) {
-                float[] newNormals = this.decorator.normalDecorator.decorate(normalX, normalY, normalZ);
-                normalX = newNormals[0];
-                normalY = newNormals[1];
-                normalZ = newNormals[2];
+            if (this.fastFormat) { //In normal format, the vertices get modified in their individual vertex element calls
+                if (this.decorator.positionDecorator != null) {
+                    double[] newPosition = this.decorator.positionDecorator.decorate(x, y, z);
+                    x = (float) newPosition[0];
+                    y = (float) newPosition[1];
+                    z = (float) newPosition[2];
+                }
+                if (this.decorator.colorDecorator != null) {
+                    int[] newColors = this.decorator.colorDecorator.decorate((int) red * 255, (int) green * 255, (int) blue * 255, (int) alpha * 255);
+                    red   = newColors[0] / 255F;
+                    green = newColors[1] / 255F;
+                    blue  = newColors[2] / 255F;
+                    alpha = newColors[3] / 255F;
+                }
+                if (this.decorator.uvDecorator != null) {
+                    float[] newUV = this.decorator.uvDecorator.decorate(texU, texV);
+                    texU = newUV[0];
+                    texV = newUV[1];
+                }
+                if (this.decorator.overlayDecorator != null) {
+                    int[] newOverlayCoords = this.decorator.overlayDecorator.decorate(overlayUV & 0xFFFF, (overlayUV >> 16) & 0xFFFF);
+                    overlayUV = newOverlayCoords[0] | (newOverlayCoords[1] << 16);
+                }
+                if (this.decorator.lightmapDecorator != null) {
+                    int[] newLightMapCoords = this.decorator.lightmapDecorator.decorate(lightmapUV & 0xFFFF, (lightmapUV >> 16) & 0xFFFF);
+                    lightmapUV = newLightMapCoords[0] | (newLightMapCoords[1] << 16);
+                }
+                if (this.decorator.normalDecorator != null) {
+                    float[] newNormals = this.decorator.normalDecorator.decorate(normalX, normalY, normalZ);
+                    normalX = newNormals[0];
+                    normalY = newNormals[1];
+                    normalZ = newNormals[2];
+                }
             }
             super.vertex(x, y, z, red, green, blue, alpha, texU, texV, overlayUV, lightmapUV, normalX, normalY, normalZ);
         }

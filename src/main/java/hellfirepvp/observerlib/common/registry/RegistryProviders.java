@@ -23,13 +23,12 @@ import java.util.function.Supplier;
  */
 public class RegistryProviders {
 
-    public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(ObserverLib.MODID, "observer_providers");
+    public static final ResourceLocation REGISTRY_NAME = ObserverLib.key("observer_providers");
     private static Supplier<IForgeRegistry<ObserverProvider>> REGISTRY;
 
     public static void initialize(NewRegistryEvent event) {
         REGISTRY = event.create(new RegistryBuilder<ObserverProvider>()
-                .setName(REGISTRY_NAME)
-                .setType(ObserverProvider.class));
+                .setName(REGISTRY_NAME));
     }
 
     @Nullable

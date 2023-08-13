@@ -13,12 +13,13 @@ import hellfirepvp.observerlib.common.registry.RegistryStructures;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import hellfirepvp.observerlib.common.util.tick.TickManager;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.NewRegistryEvent;
+import net.minecraftforge.registries.RegisterEvent;
 
 import java.util.function.Consumer;
 
@@ -31,6 +32,8 @@ import java.util.function.Consumer;
  */
 public class CommonProxy {
 
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, ObserverLib.MODID);
+
     private TickManager tickManager;
 
     public void initialize() {
@@ -41,15 +44,13 @@ public class CommonProxy {
     }
 
     public void attachLifecycle(IEventBus modEventBus) {
-        modEventBus.addGenericListener(Block.class, this::registerBlock);
-
+        this.registerBlocks(modEventBus);
         modEventBus.addListener(this::registerRegistries);
     }
 
-    private void registerBlock(RegistryEvent.Register<Block> event) {
-        ObserverHelper.blockAirRequirement = new BlockAirRequirement();
-        ObserverHelper.blockAirRequirement.setRegistryName(new ResourceLocation(ObserverLib.MODID, "air_preview"));
-        event.getRegistry().register(ObserverHelper.blockAirRequirement);
+    private void registerBlocks(IEventBus modEventBus) {
+        ObserverHelper.blockAirRequirement = BLOCKS.register("air_preview", BlockAirRequirement::new);
+        BLOCKS.register(modEventBus);
     }
 
     private void registerRegistries(NewRegistryEvent event) {

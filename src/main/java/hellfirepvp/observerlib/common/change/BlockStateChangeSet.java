@@ -15,6 +15,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
+import hellfirepvp.observerlib.api.block.BlockChangeSet.StateChange;
+
 /**
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.

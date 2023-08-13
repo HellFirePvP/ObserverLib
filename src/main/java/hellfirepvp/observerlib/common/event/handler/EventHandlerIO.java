@@ -2,7 +2,7 @@ package hellfirepvp.observerlib.common.event.handler;
 
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 /**
@@ -18,11 +18,11 @@ public class EventHandlerIO {
         eventBus.addListener(EventHandlerIO::onSave);
     }
 
-    private static void onSave(WorldEvent.Save event) {
-        if (event.getWorld().isClientSide() || !(event.getWorld() instanceof Level)) {
+    private static void onSave(LevelEvent.Save event) {
+        if (event.getLevel().isClientSide() || !(event.getLevel() instanceof Level)) {
             return;
         }
-        WorldCacheManager.getInstance().doSave((Level) event.getWorld());
+        WorldCacheManager.getInstance().doSave((Level) event.getLevel());
     }
 
 }

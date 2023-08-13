@@ -7,7 +7,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
  * Created by HellFirePvP
  * Date: 25.04.2019 / 19:22
  */
-public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructure>, Structure {
+public interface MatchableStructure extends Structure {
 
     /**
      * Test if the change matches at the given central position
@@ -107,20 +106,5 @@ public interface MatchableStructure extends IForgeRegistryEntry<MatchableStructu
         }
     }
 
-    /**
-     * Default implementation to not allow overriding a potential matchable structure's registry name
-     */
-    @Override
-    default MatchableStructure setRegistryName(ResourceLocation name) {
-        return this;
-    }
-
-    /**
-     * Default implementation to declare all matchable structures that type for forge registries too.
-     */
-    @Override
-    default Class<MatchableStructure> getRegistryType() {
-        return MatchableStructure.class;
-    }
-
+    public ResourceLocation getRegistryName();
 }

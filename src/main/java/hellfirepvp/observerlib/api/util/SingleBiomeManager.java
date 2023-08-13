@@ -4,6 +4,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 
+import net.minecraft.world.level.biome.BiomeManager.NoiseBiomeSource;
+
 /**
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.

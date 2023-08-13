@@ -1,6 +1,7 @@
 package hellfirepvp.observerlib.common.util;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -43,7 +44,7 @@ public class RegistryUtil {
     public static RegistryUtil server() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            return new RegistryUtil(RegistryAccess.builtinCopy());
+            return new RegistryUtil(builtInAccess());
         }
         return new RegistryUtil(server.registryAccess());
     }
@@ -52,9 +53,13 @@ public class RegistryUtil {
     public static RegistryUtil client() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) {
-            return new RegistryUtil(RegistryAccess.builtinCopy());
+            return new RegistryUtil(builtInAccess());
         }
         return new RegistryUtil(mc.getConnection().registryAccess());
+    }
+
+    private static RegistryAccess builtInAccess() {
+        return RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
     }
 
     @Nullable
@@ -68,7 +73,7 @@ public class RegistryUtil {
     }
 
     public <V> Registry<V> getRegistry(@Nonnull ResourceKey<Registry<V>> registry) {
-        return this.registries.ownedRegistryOrThrow(registry);
+        return this.registries.registryOrThrow(registry);
     }
 
     @Nullable
@@ -93,5 +98,9 @@ public class RegistryUtil {
         return this.getEntries(registry).stream()
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
+    }
+
+    public RegistryAccess getRegistryAccess() {
+        return registries;
     }
 }

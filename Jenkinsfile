@@ -6,7 +6,7 @@ pipeline {
   stages {
     stage('Prepare Build') {
       steps {
-        sh '''cp -a /var/lib/jenkins/buildMetadata/ObserverLib-1.18/. .
+        sh '''cp -a /var/lib/jenkins/buildMetadata/ObserverLib-1.19/. .
 rm -rf README.md'''
       }
     }

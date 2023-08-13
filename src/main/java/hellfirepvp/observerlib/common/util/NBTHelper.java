@@ -29,11 +29,12 @@ public class NBTHelper {
 
     @Nonnull
     public static CompoundTag getBlockStateNBTTag(BlockState state) {
-        if (state.getBlock().getRegistryName() == null) {
-            state = Blocks.AIR.defaultBlockState();
+        ResourceLocation key = ForgeRegistries.BLOCKS.getKey(state.getBlock());
+        if (key == null) {
+            throw new IllegalArgumentException("Cannot serialize BlockState with null registry name!");
         }
         CompoundTag tag = new CompoundTag();
-        tag.putString("registryName", state.getBlock().getRegistryName().toString());
+        tag.putString("registryName", key.toString());
         ListTag properties = new ListTag();
         for (Property property : state.getProperties()) {
             CompoundTag propTag = new CompoundTag();

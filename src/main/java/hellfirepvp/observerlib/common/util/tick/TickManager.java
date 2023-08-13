@@ -57,10 +57,10 @@ public class TickManager {
         return removed;
     }
 
-    private void worldTick(TickEvent.WorldTickEvent event) {
+    private void worldTick(TickEvent.LevelTickEvent event) {
         TickEvent.Phase ph = event.phase;
-        for (ITickHandler handler : registeredTickHandlers.get(TickEvent.Type.WORLD)) {
-            if(handler.canFire(ph)) handler.tick(TickEvent.Type.WORLD, event.world);
+        for (ITickHandler handler : registeredTickHandlers.get(TickEvent.Type.LEVEL)) {
+            if(handler.canFire(ph)) handler.tick(TickEvent.Type.LEVEL, event.level);
         }
     }
 

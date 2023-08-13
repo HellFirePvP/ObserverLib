@@ -21,13 +21,12 @@ import java.util.function.Supplier;
  */
 public class RegistryStructures {
 
-    public static final ResourceLocation REGISTRY_NAME = new ResourceLocation(ObserverLib.MODID, "matchable_structures");
+    public static final ResourceLocation REGISTRY_NAME = ObserverLib.key("matchable_structures");
     private static Supplier<IForgeRegistry<MatchableStructure>> REGISTRY;
 
     public static void initialize(NewRegistryEvent event) {
         REGISTRY = event.create(new RegistryBuilder<MatchableStructure>()
-                .setName(REGISTRY_NAME)
-                .setType(MatchableStructure.class));
+                .setName(REGISTRY_NAME));
     }
 
     @Nullable

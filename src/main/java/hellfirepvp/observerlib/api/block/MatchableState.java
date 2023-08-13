@@ -50,7 +50,7 @@ public interface MatchableState {
         @Override
         public BlockState getDescriptiveState(long tick) {
             if (BlockAirRequirement.displayRequiredAir) {
-                return ObserverHelper.blockAirRequirement.defaultBlockState();
+                return ObserverHelper.blockAirRequirement.get().defaultBlockState();
             }
             return Blocks.AIR.defaultBlockState();
         }

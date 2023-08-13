@@ -2,11 +2,13 @@ package hellfirepvp.observerlib.api.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import hellfirepvp.observerlib.api.structure.Structure;
 import hellfirepvp.observerlib.client.util.LightmapUtil;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
 import net.minecraft.core.Holder;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -22,19 +24,19 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
-import com.mojang.math.Vector3f;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.Registry;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraftforge.client.model.data.EmptyModelData;
 
 import java.util.Optional;
 import java.util.Random;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraftforge.client.model.data.ModelData;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -58,7 +60,7 @@ public class StructureRenderer {
 
     public StructureRenderer(Structure structure) {
         this.structure = structure;
-        Holder<Biome> plainsBiome = RegistryUtil.client().getRegistry(Registry.BIOME_REGISTRY).getOrCreateHolder(Biomes.PLAINS);
+        Holder<Biome> plainsBiome = RegistryUtil.client().getRegistry(ForgeRegistries.Keys.BIOMES).getHolderOrThrow(Biomes.PLAINS);
         this.world = new StructureRenderWorld(this.structure, plainsBiome);
         this.resetRotation();
     }
@@ -154,9 +156,9 @@ public class StructureRenderer {
         renderStack.pushPose();
         renderStack.translate(x + 16D / scale, y + 16D / scale, 512);
         renderStack.translate(dr, dr, dr);
-        renderStack.mulPose(Vector3f.XP.rotationDegrees((float) rotationX));
-        renderStack.mulPose(Vector3f.YP.rotationDegrees((float) rotationY));
-        renderStack.mulPose(Vector3f.ZP.rotationDegrees((float) rotationZ));
+        renderStack.mulPose(Axis.XP.rotationDegrees((float) rotationX));
+        renderStack.mulPose(Axis.YP.rotationDegrees((float) rotationY));
+        renderStack.mulPose(Axis.ZP.rotationDegrees((float) rotationZ));
         renderStack.translate(-dr, -dr, -dr);
         renderStack.scale(-size * mul, -size * mul, -size * mul);
         slice.ifPresent(ySlice -> renderStack.translate(0, -ySlice, 0));
@@ -222,16 +224,14 @@ public class StructureRenderer {
 
     private void renderBlock(BlockPos offset, BlockState state, VertexConsumer vb, PoseStack renderStack) {
         BlockRenderDispatcher brd = Minecraft.getInstance().getBlockRenderer();
-        try {
-            //random is given position-based seed later on
-            brd.renderBatched(state, offset, this.world, renderStack, vb, false, rand, EmptyModelData.INSTANCE);
-        } catch (Exception exc) {
-            RenderShape type = state.getRenderShape();
-            if (type == RenderShape.MODEL) {
-                BakedModel model = brd.getBlockModel(state);
-                long posRandom = state.getSeed(offset);
-                brd.getModelRenderer().renderModel(renderStack.last(), vb, state, model, 1F, 1F, 1F, LightmapUtil.getPackedFullbrightCoords(), OverlayTexture.NO_OVERLAY);
-            }
+        if (state.getRenderShape() == RenderShape.INVISIBLE) {
+            return;
+        }
+        BakedModel model = brd.getBlockModel(state);
+        ModelData modelData = model.getModelData(this.world, offset, state, ModelData.EMPTY);
+        RandomSource randSrc = RandomSource.create(state.getSeed(offset));
+        for (RenderType renderType : model.getRenderTypes(state, randSrc, modelData)) {
+            brd.renderBatched(state, offset, this.world, renderStack, vb, false, randSrc, modelData, renderType, false);
         }
     }
 }

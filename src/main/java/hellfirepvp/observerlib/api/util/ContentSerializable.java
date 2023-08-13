@@ -2,6 +2,7 @@ package hellfirepvp.observerlib.api.util;
 
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.material.Fluid;
@@ -12,8 +13,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fluids.FluidUtil;
 
 import java.util.LinkedList;
@@ -40,11 +41,10 @@ public interface ContentSerializable {
      */
     default List<ItemStack> getAsStacks(BlockGetter world, Player player) {
         List<ItemStack> out = new LinkedList<>();
-        if (!(this instanceof BlockArray)) {
+        if (!(this instanceof BlockArray thisArray)) {
             return out;
         }
 
-        BlockArray thisArray = (BlockArray) this;
         long tick = ClientTickHelper.getClientTick();
         for (Map.Entry<BlockPos, MatchableState> structureEntry : thisArray.getContents().entrySet()) {
             BlockPos pos = structureEntry.getKey();
@@ -53,7 +53,7 @@ public interface ContentSerializable {
             ItemStack stack = ItemStack.EMPTY;
             if (!sample.getFluidState().isEmpty() && sample.getFluidState().isSource()) {
                 Fluid f = sample.getFluidState().getType();
-                stack = FluidUtil.getFilledBucket(new FluidStack(f, FluidAttributes.BUCKET_VOLUME));
+                stack = FluidUtil.getFilledBucket(new FluidStack(f, FluidType.BUCKET_VOLUME));
             }
 
             if (stack.isEmpty()) {
@@ -64,10 +64,11 @@ public interface ContentSerializable {
             }
 
             if (!stack.isEmpty()) {
-                ResourceLocation needle = stack.getItem().getRegistryName();
+                Item needle = stack.getItem();
+
                 ItemStack existing = ItemStack.EMPTY;
                 for (ItemStack i : out) {
-                    if (i.getItem().getRegistryName().equals(needle)) {
+                    if (i.getItem().equals(needle)) {
                         existing = i;
                         break;
                     }

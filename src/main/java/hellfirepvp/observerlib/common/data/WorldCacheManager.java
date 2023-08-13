@@ -92,7 +92,7 @@ public class WorldCacheManager implements ITickHandler {
 
     @Override
     public EnumSet<TickEvent.Type> getHandledTypes() {
-        return EnumSet.of(TickEvent.Type.WORLD);
+        return EnumSet.of(TickEvent.Type.LEVEL);
     }
 
     @Override

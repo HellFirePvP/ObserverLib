@@ -8,19 +8,20 @@ import hellfirepvp.observerlib.api.tile.MatchableTile;
 import hellfirepvp.observerlib.api.util.SingleBiomeManager;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
-import net.minecraft.core.Holder;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.core.Registry;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.LightLayer;
@@ -33,6 +34,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -67,9 +69,9 @@ public class StructureRenderWorld implements LevelReader {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
-        DimensionType dimType = RegistryUtil.client().getValue(Registry.DIMENSION_TYPE_REGISTRY, DimensionType.OVERWORLD_LOCATION);
+        DimensionType dimType = RegistryUtil.client().getValue(Registries.DIMENSION_TYPE, BuiltinDimensionTypes.OVERWORLD);
         if (dimType == null) {
-            dimType = Iterables.getFirst(RegistryUtil.client().getValues(Registry.DIMENSION_TYPE_REGISTRY), null);
+            dimType = Iterables.getFirst(RegistryUtil.client().getValues(Registries.DIMENSION_TYPE), null);
         }
         this.thisDimType = dimType;
 
@@ -186,6 +188,16 @@ public class StructureRenderWorld implements LevelReader {
     @Override
     public BlockPos getHeightmapPos(Heightmap.Types heightmapType, BlockPos pos) {
         return null;
+    }
+
+    @Override
+    public RegistryAccess registryAccess() {
+        return RegistryUtil.client().getRegistryAccess();
+    }
+
+    @Override
+    public FeatureFlagSet enabledFeatures() {
+        return FeatureFlags.DEFAULT_FLAGS;
     }
 
     @Override

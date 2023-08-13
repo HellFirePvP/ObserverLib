@@ -24,12 +24,6 @@ import java.util.function.Consumer;
 public class ClientProxy extends CommonProxy {
 
     @Override
-    public void attachLifecycle(IEventBus modEventBus) {
-        super.attachLifecycle(modEventBus);
-        modEventBus.addListener(this::onClientSetup);
-    }
-
-    @Override
     public void attachEventHandlers(IEventBus eventBus) {
         super.attachEventHandlers(eventBus);
 
@@ -42,9 +36,5 @@ public class ClientProxy extends CommonProxy {
         super.attachTickListeners(registrar);
 
         StructurePreviewHandler.getInstance().attachTickHandlers(registrar);
-    }
-
-    private void onClientSetup(FMLClientSetupEvent event) {
-        ItemBlockRenderTypes.setRenderLayer(ObserverHelper.blockAirRequirement, RenderType.translucent());
     }
 }

@@ -1,6 +1,7 @@
 package hellfirepvp.observerlib.api;
 
 import com.google.common.collect.Lists;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.core.Vec3i;
@@ -42,9 +43,10 @@ public interface ObservableArea {
      * Helper-method to resolve the chunks an observer-box is in.
      */
     default Collection<ChunkPos> calculateAffectedChunks(AABB box, Vec3i offset) {
+        AABB moved = box.move(offset.getX(), offset.getY(), offset.getZ());
         return calculateAffectedChunks(
-                new Vec3i(Math.round(box.minX + offset.getX()), Math.round(box.minY + offset.getY()), Math.round(box.minZ + offset.getZ())),
-                new Vec3i(Math.round(box.maxX + offset.getX()), Math.round(box.maxY + offset.getY()), Math.round(box.maxZ + offset.getZ())));
+                new Vec3i(Mth.floor(moved.minX), Mth.floor(moved.minY), Mth.floor(moved.minZ)),
+                new Vec3i(Mth.ceil(moved.maxX), Mth.ceil(moved.maxY), Mth.ceil(moved.maxZ)));
     }
 
     /**

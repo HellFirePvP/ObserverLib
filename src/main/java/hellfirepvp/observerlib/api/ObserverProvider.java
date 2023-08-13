@@ -1,10 +1,8 @@
 package hellfirepvp.observerlib.api;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -13,7 +11,7 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 24.04.2019 / 17:47
  */
-public abstract class ObserverProvider implements IForgeRegistryEntry<ObserverProvider> {
+public abstract class ObserverProvider {
 
     private final ResourceLocation registryName;
 
@@ -32,20 +30,7 @@ public abstract class ObserverProvider implements IForgeRegistryEntry<ObserverPr
     @Nonnull
     public abstract ChangeObserver provideObserver();
 
-    @Override
-    public final ObserverProvider setRegistryName(ResourceLocation name) {
-        return this;
-    }
-
-    @Nullable
-    @Override
     public final ResourceLocation getRegistryName() {
         return this.registryName;
     }
-
-    @Override
-    public final Class<ObserverProvider> getRegistryType() {
-        return ObserverProvider.class;
-    }
-
 }

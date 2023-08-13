@@ -4,6 +4,7 @@ import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.client.ClientProxy;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
@@ -56,4 +57,7 @@ public class ObserverLib {
         return instance;
     }
 
+    public static ResourceLocation key(String path) {
+        return new ResourceLocation(ObserverLib.MODID, path);
+    }
 }

@@ -9,6 +9,7 @@ import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.util.StructureUtil;
 import hellfirepvp.observerlib.client.util.*;
 import net.minecraft.core.Holder;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.client.Minecraft;
@@ -21,14 +22,13 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Tuple;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraftforge.client.model.data.EmptyModelData;
-import net.minecraftforge.client.model.data.IModelData;
+import net.minecraftforge.client.model.data.ModelData;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -42,7 +42,7 @@ import java.util.function.BiPredicate;
  */
 public class StructurePreview {
 
-    private static final Random rand = new Random();
+    private static final RandomSource rand = RandomSource.create();
 
     private final ResourceKey<Level> dimension;
     private final BlockPos origin;
@@ -114,7 +114,7 @@ public class StructurePreview {
             return; //Nothing to render
         }
 
-        Holder<Biome> plainsBiome = renderWorld.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getOrCreateHolder(Biomes.PLAINS);
+        Holder<Biome> plainsBiome = renderWorld.registryAccess().registryOrThrow(ForgeRegistries.Keys.BIOMES).getHolderOrThrow(Biomes.PLAINS);
         StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), plainsBiome);
         drawWorld.pushContentFilter(pos -> pos.getY() == displaySlice.get());
 
@@ -139,13 +139,10 @@ public class StructurePreview {
             RenderSystem.enableDepthTest();
         };
 
-        Vec3 vec = new Vec3(0, 0, 0);
-        if (Minecraft.getInstance().gameRenderer != null) {
-            vec = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
-        }
+        Vec3 camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
 
         renderStack.pushPose();
-        renderStack.translate(-vec.x(), -vec.y(), -vec.z());
+        renderStack.translate(-camera.x(), -camera.y(), -camera.z());
 
         List<Tuple<BlockPos, ? extends MatchableState>> structureSlice = this.snapshot.getStructure().getStructureSlice(displaySlice.get());
         structureSlice.sort(Comparator.comparingDouble(tpl -> tpl.getA().distToLowCornerSqr(playerPos.x, playerPos.y, playerPos.z)));
@@ -165,7 +162,7 @@ public class StructurePreview {
                 renderState = expectedBlock.getB().getDescriptiveState(this.snapshot.getSnapshotTick());
             }
 
-            IModelData data = renderTile != null ? renderTile.getModelData() : EmptyModelData.INSTANCE;
+            ModelData data = renderTile != null ? renderTile.getModelData() : ModelData.EMPTY;
 
             renderStack.pushPose();
             renderStack.translate(at.getX() + 0.2F, at.getY() + 0.2F, at.getZ() + 0.2F);
@@ -184,7 +181,7 @@ public class StructurePreview {
 
             RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(ItemBlockRenderTypes.getMovingBlockRenderType(renderState), transparentSetup, transparentClean);
             decorator.decorate(buffers.getBuffer(decorated), buf -> {
-                brd.renderBatched(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data);
+                brd.renderBatched(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data, decorated, false);
             });
             buffers.endBatch();
 
