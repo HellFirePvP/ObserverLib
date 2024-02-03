@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.mixin;
 
+import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
