@@ -222,7 +222,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
             this.writeIO(() -> {
                 T section = createNewSection(sX, sZ);
-                section.readFromNBT(NbtIo.read(subFile));
+                section.readFromNBT(NbtIo.read(subFile.toPath()));
                 this.sections.put(new SectionKey(sX, sZ), section);
             });
         }
