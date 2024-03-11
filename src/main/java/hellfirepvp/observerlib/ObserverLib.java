@@ -4,12 +4,12 @@ import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.client.ClientProxy;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
+import hellfirepvp.observerlib.common.util.DistUtil;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.fml.DistExecutor;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.neoforged.neoforge.common.NeoForge;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,13 +33,13 @@ public class ObserverLib {
     private final ModContainer modContainer;
     private final CommonProxy proxy;
 
-    public ObserverLib() {
+    public ObserverLib(IEventBus modLoadingBus) {
         instance = this;
         this.modContainer = ModList.get().getModContainerById(MODID).get();
 
-        this.proxy = DistExecutor.unsafeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
+        this.proxy = DistUtil.unsafeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
         this.proxy.initialize();
-        this.proxy.attachLifecycle(FMLJavaModLoadingContext.get().getModEventBus());
+        this.proxy.attachLifecycle(modLoadingBus);
         this.proxy.attachEventHandlers(NeoForge.EVENT_BUS);
 
         ObserverHelper.setHelper(new MatcherObserverHelper());
