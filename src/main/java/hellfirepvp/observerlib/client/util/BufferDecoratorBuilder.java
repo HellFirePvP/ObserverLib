@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder.DrawState;
 import com.mojang.blaze3d.vertex.BufferBuilder.SortState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -263,8 +264,8 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void setQuadSortOrigin(float x, float y, float z) {
-            this.decorated.setQuadSortOrigin(x, y, z);
+        public void setQuadSorting(VertexSorting pQuadSorting) {
+            this.decorated.setQuadSorting(pQuadSorting);
         }
 
         @Override
@@ -314,6 +315,11 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
+        public void release() {
+            this.decorated.release();
+        }
+
+        @Override
         public void endVertex() {
             this.decorated.endVertex();
         }
@@ -322,6 +328,11 @@ public class BufferDecoratorBuilder {
         @Override
         public void putBulkData(ByteBuffer buffer) {
             this.decorated.putBulkData(buffer);
+        }
+
+        @Override
+        public VertexConsumer uvShort(short pU, short pV, int pIndex) {
+            return this.decorated.uvShort(pU, pV, pIndex);
         }
 
         @Override

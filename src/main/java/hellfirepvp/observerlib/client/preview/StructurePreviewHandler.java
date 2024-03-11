@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.TickEvent;
 
 import java.util.EnumSet;
@@ -45,7 +46,8 @@ public class StructurePreviewHandler implements ITickHandler {
         registrar.accept(this);
     }
 
-    private void render(RenderLevelLastEvent event) {
+    private void render(RenderLevelStageEvent event) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         Level renderWorld = Minecraft.getInstance().level;
         Player player = Minecraft.getInstance().player;
         if (renderWorld == null || player == null || this.currentPreview == null) {

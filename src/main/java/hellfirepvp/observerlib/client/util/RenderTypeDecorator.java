@@ -1,6 +1,7 @@
 package hellfirepvp.observerlib.client.util;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexSorting;
 import net.minecraft.client.renderer.RenderType;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
@@ -46,10 +47,14 @@ public class RenderTypeDecorator extends RenderType {
         this.decorated.clearRenderState();
     }
 
-    //The ints are currently unused/always 0
     @Override
-    public void end(BufferBuilder buf, int sortOffsetX, int sortOffsetY, int sortOffsetZ) {
-        super.end(buf, sortOffsetX, sortOffsetY, sortOffsetZ);
+    public void end(BufferBuilder buf, VertexSorting sort) {
+        super.end(buf, sort);
+    }
+
+    @Override
+    public boolean canConsolidateConsecutiveGeometry() {
+        return this.decorated.canConsolidateConsecutiveGeometry();
     }
 
     @Override

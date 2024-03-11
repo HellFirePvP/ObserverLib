@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.common.util;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -9,7 +10,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,10 +29,7 @@ public class NBTHelper {
 
     @Nonnull
     public static CompoundTag getBlockStateNBTTag(BlockState state) {
-        ResourceLocation key = ForgeRegistries.BLOCKS.getKey(state.getBlock());
-        if (key == null) {
-            throw new IllegalArgumentException("Cannot serialize BlockState with null registry name!");
-        }
+        ResourceLocation key = BuiltInRegistries.BLOCK.getKey(state.getBlock());
         CompoundTag tag = new CompoundTag();
         tag.putString("registryName", key.toString());
         ListTag properties = new ListTag();
@@ -53,8 +50,8 @@ public class NBTHelper {
     @Nullable
     public static <T extends Comparable<T>> BlockState getBlockStateFromTag(CompoundTag cmp, BlockState _default) {
         ResourceLocation key = new ResourceLocation(cmp.getString("registryName"));
-        Block block = ForgeRegistries.BLOCKS.getValue(key);
-        if(block == null || block == Blocks.AIR) return _default;
+        Block block = BuiltInRegistries.BLOCK.get(key);
+        if (block == Blocks.AIR) return _default;
         BlockState state = block.defaultBlockState();
         Collection<Property<?>> properties = state.getProperties();
         ListTag list = cmp.getList("properties", Tag.TAG_COMPOUND);

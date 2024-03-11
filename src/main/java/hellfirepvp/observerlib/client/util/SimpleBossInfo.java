@@ -45,7 +45,7 @@ public class SimpleBossInfo extends LerpingBossEvent {
         if (Minecraft.getInstance().level == null) {
             return false;
         }
-        BossHealthOverlay gui = Minecraft.getInstance().gui.bossOverlay;
+        BossHealthOverlay gui = Minecraft.getInstance().gui.getBossOverlay();
         if (!gui.events.containsKey(this.getId())) {
             return gui.events.put(this.getId(), this) == null;
         }
@@ -53,6 +53,6 @@ public class SimpleBossInfo extends LerpingBossEvent {
     }
 
     public boolean removeInfo() {
-        return Minecraft.getInstance().gui.bossOverlay.events.remove(this.getId()) != null;
+        return Minecraft.getInstance().gui.getBossOverlay().events.remove(this.getId()) != null;
     }
 }
