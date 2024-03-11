@@ -2,15 +2,14 @@ package hellfirepvp.observerlib.common.registry;
 
 import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.NewRegistryEvent;
-import net.minecraftforge.registries.RegistryBuilder;
+import net.neoforged.neoforge.registries.NewRegistryEvent;
+import net.neoforged.neoforge.registries.RegistryBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.function.Supplier;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -21,22 +20,21 @@ import java.util.function.Supplier;
  */
 public class RegistryStructures {
 
-    public static final ResourceLocation REGISTRY_NAME = ObserverLib.key("matchable_structures");
-    private static Supplier<IForgeRegistry<MatchableStructure>> REGISTRY;
+    public static final ResourceKey<Registry<MatchableStructure>> REGISTRY_KEY = ResourceKey.createRegistryKey(ObserverLib.key("matchable_structures"));
+    private static Registry<MatchableStructure> REGISTRY;
 
     public static void initialize(NewRegistryEvent event) {
-        REGISTRY = event.create(new RegistryBuilder<MatchableStructure>()
-                .setName(REGISTRY_NAME));
+        REGISTRY = event.create(new RegistryBuilder<>(REGISTRY_KEY));
     }
 
     @Nullable
     public static MatchableStructure getStructure(ResourceLocation key) {
-        return REGISTRY.get().getValue(key);
+        return REGISTRY.get(key);
     }
 
     @Nonnull
-    public static Collection<MatchableStructure> getAll() {
-        return REGISTRY.get().getValues();
+    public static Registry<MatchableStructure> getAll() {
+        return REGISTRY;
     }
 
 }

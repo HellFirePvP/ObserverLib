@@ -2,8 +2,8 @@ package hellfirepvp.observerlib.common.event.handler;
 
 import hellfirepvp.observerlib.common.data.WorldCacheManager;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.event.level.LevelEvent;
 
 /**
  * This class is part of the ObserverLib Mod

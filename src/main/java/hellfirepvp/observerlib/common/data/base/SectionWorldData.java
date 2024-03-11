@@ -160,7 +160,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
         CompoundTag generalData = new CompoundTag();
         this.readIO(() -> this.writeToNBT(generalData));
-        NbtIo.write(generalData, generalSaveFile);
+        NbtIo.write(generalData, generalSaveFile.toPath());
 
         Set<SectionKey> sections = new HashSet<>();
         this.dirtySections.forEach(key -> {
@@ -185,7 +185,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
                 CompoundTag data = new CompoundTag();
                 this.readIO(() -> section.writeToNBT(data));
-                NbtIo.write(data, saveFile);
+                NbtIo.write(data, saveFile.toPath());
             }
         }
     }
@@ -196,7 +196,7 @@ public abstract class SectionWorldData<T extends WorldSection> extends CachedWor
 
         File generalSaveFile = new File(baseDirectory, "general.dat");
         if (generalSaveFile.exists()) {
-            CompoundTag tag = NbtIo.read(generalSaveFile);
+            CompoundTag tag = NbtIo.read(generalSaveFile.toPath());
             this.writeIO(() -> this.readFromNBT(tag));
         } else {
             this.writeIO(() -> this.readFromNBT(new CompoundTag()));

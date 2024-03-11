@@ -2,11 +2,9 @@ package hellfirepvp.observerlib.api.block;
 
 import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.api.client.StructureRenderer;
-import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
@@ -36,7 +34,7 @@ public interface MatchableState {
 
         @Override
         public boolean matches(@Nullable BlockGetter reader, @Nonnull BlockPos absolutePosition, @Nonnull BlockState state) {
-            return state.getMaterial() == Material.AIR;
+            return state.isAir();
         }
     };
 

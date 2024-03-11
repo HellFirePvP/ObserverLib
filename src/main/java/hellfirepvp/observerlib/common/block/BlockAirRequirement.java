@@ -5,19 +5,12 @@ import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
-import java.util.Random;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -31,10 +24,7 @@ public class BlockAirRequirement extends AirBlock {
     public static boolean displayRequiredAir = false;
 
     public BlockAirRequirement() {
-        super(Properties.of(Material.AIR)
-                .noCollission()
-                .noLootTable()
-                .randomTicks());
+        super(Properties.ofFullCopy(Blocks.AIR));
     }
 
     @Override

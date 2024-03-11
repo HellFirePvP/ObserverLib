@@ -9,6 +9,7 @@ import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.util.StructureUtil;
 import hellfirepvp.observerlib.client.util.*;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -27,8 +28,7 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.client.model.data.ModelData;
 
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -114,7 +114,7 @@ public class StructurePreview {
             return; //Nothing to render
         }
 
-        Holder<Biome> plainsBiome = renderWorld.registryAccess().registryOrThrow(ForgeRegistries.Keys.BIOMES).getHolderOrThrow(Biomes.PLAINS);
+        Holder<Biome> plainsBiome = renderWorld.registryAccess().registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
         StructureRenderWorld drawWorld = new StructureRenderWorld(this.snapshot.getStructure(), plainsBiome);
         drawWorld.pushContentFilter(pos -> pos.getY() == displaySlice.get());
 
@@ -181,7 +181,7 @@ public class StructurePreview {
 
             RenderTypeDecorator decorated = RenderTypeDecorator.wrapSetup(ItemBlockRenderTypes.getMovingBlockRenderType(renderState), transparentSetup, transparentClean);
             decorator.decorate(buffers.getBuffer(decorated), buf -> {
-                brd.renderBatched(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data, decorated, false);
+                brd.renderBatched(renderState, BlockPos.ZERO, drawWorld, renderStack, buf, true, rand, data, decorated);
             });
             buffers.endBatch();
 

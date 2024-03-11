@@ -1,17 +1,11 @@
 package hellfirepvp.observerlib.client;
 
-import hellfirepvp.observerlib.api.ObserverHelper;
 import hellfirepvp.observerlib.client.preview.StructurePreviewHandler;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.bus.api.IEventBus;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**

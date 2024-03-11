@@ -4,10 +4,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import hellfirepvp.observerlib.api.structure.Structure;
-import hellfirepvp.observerlib.client.util.LightmapUtil;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import hellfirepvp.observerlib.common.util.RegistryUtil;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,8 +35,7 @@ import java.util.Random;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraftforge.client.model.data.ModelData;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.client.model.data.ModelData;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -60,7 +59,7 @@ public class StructureRenderer {
 
     public StructureRenderer(Structure structure) {
         this.structure = structure;
-        Holder<Biome> plainsBiome = RegistryUtil.client().getRegistry(ForgeRegistries.Keys.BIOMES).getHolderOrThrow(Biomes.PLAINS);
+        Holder<Biome> plainsBiome = RegistryUtil.client().getRegistry(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
         this.world = new StructureRenderWorld(this.structure, plainsBiome);
         this.resetRotation();
     }
@@ -231,7 +230,7 @@ public class StructureRenderer {
         ModelData modelData = model.getModelData(this.world, offset, state, ModelData.EMPTY);
         RandomSource randSrc = RandomSource.create(state.getSeed(offset));
         for (RenderType renderType : model.getRenderTypes(state, randSrc, modelData)) {
-            brd.renderBatched(state, offset, this.world, renderStack, vb, false, randSrc, modelData, renderType, false);
+            brd.renderBatched(state, offset, this.world, renderStack, vb, false, randSrc, modelData, renderType);
         }
     }
 }

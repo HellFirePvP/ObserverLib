@@ -3,19 +3,18 @@ package hellfirepvp.observerlib.api.util;
 import hellfirepvp.observerlib.api.block.MatchableState;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidType;
-import net.minecraftforge.fluids.FluidUtil;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.FluidUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +38,7 @@ public interface ContentSerializable {
      * @param player the player to view the structure as blocks
      * @return a list of non-null itemstacks potentially required for this structure.
      */
-    default List<ItemStack> getAsStacks(BlockGetter world, Player player) {
+    default List<ItemStack> getAsStacks(LevelReader world, Player player) {
         List<ItemStack> out = new LinkedList<>();
         if (!(this instanceof BlockArray thisArray)) {
             return out;
