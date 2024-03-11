@@ -1,179 +1,79 @@
-buildscript {
-    repositories {
-        maven {
-            url = 'https://maven.minecraftforge.net'
-        }
-        maven {
-            url "https://repo.spongepowered.org/repository/maven-public/"
-            content { includeGroup "org.spongepowered" }
-        }
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
-    }
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version '7.0.80'
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
-apply plugin: 'org.spongepowered.mixin'
+version = mod_version
+group = mod_group_id
 
-mixin {
-    add sourceSets.main, "observerlib.refmap.json"
-    config 'assets/observerlib/observerlib.mixins.json'
+repositories {
+    mavenLocal()
 }
 
-version = '1.19.4-1.7.1'
-group = 'hellfirepvp.observerlib'
-archivesBaseName = 'observerlib'
-String build_version = ""
-
-// Most likely inside Jenkins. Or homebrew environment.
-// I hope you know what you do if it's the latter.
-if (System.getenv("BUILD_NUMBER") != null) {
-    build_version = version + "." + System.getenv("BUILD_NUMBER")
+base {
+    archivesName = mod_id
 }
 
+// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
-minecraft {
+minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
 
-    mappings channel: 'official', version: '1.19.4'
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'info'
 
-    runs {
-        client {
-            workingDirectory project.file('run')
+        modSource project.sourceSets.main
+    }
 
-            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'observerlib'
-            property 'Dmixin.debug.export', 'true'
+    client {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
 
-            mods {
-                observerlib {
-                    source sourceSets.main
-                }
-            }
-        }
+    server {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        programArgument '--nogui'
+    }
 
-        server {
-            workingDirectory project.file('run')
+    gameTestServer {
+        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+    }
 
-            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'observerlib'
-            property 'Dmixin.debug.export', 'true'
-
-            mods {
-                observerlib {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        gameTestServer {
-            workingDirectory project.file('run')
-
-            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'observerlib'
-            property 'Dmixin.debug.export', 'true'
-
-            mods {
-                examplemod {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-
-            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'observerlib'
-            property 'Dmixin.debug.export', 'true'
-
-            args "-mixin.config=assets/observerlib/observerlib.mixins.json"
-            args '--mod', 'observerlib', '--all', '--output', file('src/generated/resources/')
-
-            mods {
-                observerlib {
-                    source sourceSets.main
-                }
-            }
-        }
+    data {
+        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-
-    minecraft 'net.minecraftforge:forge:1.19.4-45.1.16'
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
+    implementation "net.neoforged:neoforge:${neo_version}"
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-/*
-//Sign jar from flatfile if present
-task signJar(type: SignJar, dependsOn: jar) {
-    onlyIf {
-        project.hasProperty('keyStore')
-    }
-    if (project.hasProperty('keyStore')) {
-        keyStore = project.keyStore
-        alias = project.alias
-        storePass = project.storePass
-        keyPass = project.keyPass
-        inputFile = jar.archivePath
-        outputFile = jar.archivePath
-    } else {
-        logger.warn("No key store found, not signing the output jar\n")
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
+            neo_version         : neo_version, neo_version_range: neo_version_range,
+            loader_version_range: loader_version_range,
+            mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_authors         : mod_authors, mod_description: mod_description,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/mods.toml']) {
+        expand replaceProperties + [project: project]
     }
 }
-
-build.dependsOn signJar*/
-
-jar {
-    manifest {
-        attributes([
-                "Specification-Title": "observerlib",
-                "Specification-Vendor": "hellfirepvp",
-                "Specification-Version": "1",
-                "Implementation-Title": project.name,
-                "Implementation-Version": "${version}",
-                "Implementation-Vendor" : "hellfirepvp",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-        ])
-    }
-}
-
-publish.dependsOn(project.tasks.getByName("assemble"))
-publish.mustRunAfter(project.tasks.getByName("build"))
 
 publishing {
-    tasks.publish.dependsOn build
     publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version build_version
+        register('mavenJava', MavenPublication) {
             from components.java
-
-            pom.withXml {
-                asNode().dependencies.dependency.each { dep ->
-                    if (dep.version.last().value().last().contains("mapped")) {
-                        assert dep.parent().remove(dep)
-                    }
-                }
-            }
         }
     }
 
@@ -189,6 +89,6 @@ publishing {
     }
 }
 
-tasks.withType(GenerateModuleMetadata) {
-    enabled = false
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }
