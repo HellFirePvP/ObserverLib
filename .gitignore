@@ -35,6 +35,9 @@ hs_err_pid*
 /dist
 /manifest.mf
 /run
+/runs
+/run-data
+/repo
 /libs
 /eclipse
 /classes

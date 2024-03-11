@@ -79,7 +79,6 @@ publishing {
 
     repositories {
         maven {
-            name "hellfire maven"
             url System.getenv("MVN_URL")
             credentials {
                 username = System.getenv("MVN_USER")
