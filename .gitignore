@@ -20,9 +20,6 @@ hs_err_pid*
 /nbproject
 
 #gradle stuff
-/gradlew
-/gradlew.bat
-/gradle
 /.gradle
 
 # maven

@@ -179,7 +179,12 @@ publishing {
 
     repositories {
         maven {
-            url "file://" + System.getenv("LOCAL_MAVEN")
+            name "hellfire maven"
+            url System.getenv("MVN_URL")
+            credentials {
+                username = System.getenv("MVN_USER")
+                password = System.getenv("MVN_PASS")
+            }
         }
     }
 }
