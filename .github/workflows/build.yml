@@ -41,18 +41,25 @@ jobs:
             const gh = ${{ toJSON(github) }};
 
             core.setOutput('EMBED_TITLE', "[" + gh.event.repository.name + " / " + gh.ref_name +"] ${{steps.version.outputs.VERSION_NAME}}");
-            core.setOutput('EMBED_URL', "https://maven.hellfiredev.net/hellfirepvp/observerlib/ObserverLib/${{steps.version.outputs.VERSION_NAME}}/ObserverLib-${{steps.version.outputs.VERSION_NAME}}.jar");
             core.setOutput('EMBED_AUTHOR_NAME', gh.event.sender.login);
             core.setOutput('EMBED_AUTHOR_ICON_URL', gh.event.sender.avatar_url);
 
             const commits = ${{ toJSON(github.event.commits) }};
             let description = "";
-            description += "**Changes:**\n";
+            description += "**Changes:**";
             for (const commit of commits) {
               if (description.length !== 0) {
                 description += "\n";
               }
-              description += "- [" + commit.id.slice(0,7) + "](<" + commit.url + ">) " + commit.message;
+              let message = commit.message;
+              if (message.indexOf("\n\nSigned-off-by:") !== -1) {
+                message = message.substring(0, message.indexOf("\n\nSigned-off-by:"));
+              }
+              if (message.length > 100) {
+                message = message.substring(0, 100) + "...";
+              }
+            
+              description += "- [" + commit.id.slice(0,7) + "](<" + commit.url + ">) *" + message + " - " + commit.author.username + "*";
             }
             
             description += "\n\n";
@@ -72,7 +79,6 @@ jobs:
           content: null
           embed-title: "${{steps.embed.outputs.EMBED_TITLE}}"
           embed-url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          #embed-url: "${{steps.embed.outputs.EMBED_URL}}"
           embed-description: "${{steps.embed.outputs.EMBED_DESCRIPTION}}"
           embed-author-name: "${{steps.embed.outputs.EMBED_AUTHOR_NAME}}"
           embed-author-icon-url: "${{steps.embed.outputs.EMBED_AUTHOR_ICON_URL}}"
