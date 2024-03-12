@@ -5,6 +5,7 @@ on:
     branches:
       - '1.20.4'
 
+#echo "$(${{github.workspace}}/gradlew printVersion -q | awk -F "version:" '{printf $2}')"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,3 +29,50 @@ jobs:
           MVN_USER: ${{ secrets.MVN_USER }}
           MVN_PASS: ${{ secrets.MVN_PASS }}
         run: ./gradlew build publish
+
+      - name: Get Version
+        run: |
+          echo "VERSION_NAME=$(${{github.workspace}}/gradlew -q printVersion | awk -F "version:" '{printf $2}')" >> $GITHUB_OUTPUT
+        id: version
+      - name: Compile version message
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const gh = ${{ toJSON(github) }};
+
+            core.setOutput('EMBED_TITLE', "[" + gh.event.repository.name + " / " + gh.ref_name +"] ${{steps.version.outputs.VERSION_NAME}}");
+            core.setOutput('EMBED_URL', "https://maven.hellfiredev.net/hellfirepvp/observerlib/ObserverLib/${{steps.version.outputs.VERSION_NAME}}");
+            core.setOutput('EMBED_AUTHOR_NAME', gh.event.sender.login);
+            core.setOutput('EMBED_AUTHOR_ICON_URL', gh.event.sender.avatar_url);
+
+            const commits = ${{ toJSON(github.event.commits) }};
+            let description = "";
+            description += "**Changes:**\n";
+            for (const commit of commits) {
+              if (description.length !== 0) {
+                description += "\n";
+              }
+              description += "- [" + commit.id.slice(0,7) + "](<" + commit.url + ">) " + commit.message;
+            }
+            description += "\n\n";
+            description += "**Build Artifact:**\n";
+            description += "https://maven.hellfiredev.net/hellfirepvp/observerlib/ObserverLib/${{steps.version.outputs.VERSION_NAME}}"
+            description += "\n\n";
+            description += "**Disclaimer:**\n";
+            description += "Builds linked here are **NOT** release-builds! Do **NOT** use them in your packs!\n";
+            description += "Expect bugs, crashes or similar! These builds are meant for **testing**, not **playing**!";
+            core.setOutput('EMBED_DESCRIPTION', description);
+        id: embed
+      - name: Send Discord Notification
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          embeds: ${{steps.embed.outputs.EMBEDS}}
+          content: null
+          embed-title: "${{steps.embed.outputs.EMBED_TITLE}}"
+          embed-url: "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"
+          #embed-url: "${{steps.embed.outputs.EMBED_URL}}"
+          embed-description: "${{steps.embed.outputs.EMBED_DESCRIPTION}}"
+          embed-author-name: "${{steps.embed.outputs.EMBED_AUTHOR_NAME}}"
+          embed-author-icon-url: "${{steps.embed.outputs.EMBED_AUTHOR_ICON_URL}}"
+          embed-color: 38153

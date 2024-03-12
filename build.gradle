@@ -98,3 +98,9 @@ static def getGHActionVersionSuffix() {
     }
     return ".local"
 }
+
+tasks.register('printVersion') {
+    doLast {
+        println("version:" + project.version)
+    }
+}
