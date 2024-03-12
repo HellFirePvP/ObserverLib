@@ -40,12 +40,13 @@ jobs:
           script: |
             const gh = ${{ toJSON(github) }};
 
-            core.setOutput('EMBED_TITLE', "[" + gh.event.repository.name + " / " + gh.ref_name +"] ${{steps.version.outputs.VERSION_NAME}}");
+            core.setOutput('EMBED_TITLE', gh.event.repository.name + " / " + gh.ref_name);
             core.setOutput('EMBED_AUTHOR_NAME', gh.event.sender.login);
             core.setOutput('EMBED_AUTHOR_ICON_URL', gh.event.sender.avatar_url);
 
             const commits = ${{ toJSON(github.event.commits) }};
             let description = "";
+            description += "**Version:** ${{steps.version.outputs.VERSION_NAME}}\n";
             description += "**Changes:**";
             for (const commit of commits) {
               if (description.length !== 0) {
