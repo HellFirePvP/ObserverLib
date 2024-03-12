@@ -6,7 +6,7 @@ plugins {
     id 'net.neoforged.gradle.userdev' version '7.0.80'
 }
 
-version = mod_version
+version = mod_version + getGHActionVersionSuffix()
 group = mod_group_id
 
 repositories {
@@ -79,7 +79,7 @@ publishing {
 
     repositories {
         maven {
-            url System.getenv("MVN_URL")
+            url = System.getenv("MVN_URL")
             credentials {
                 username = System.getenv("MVN_USER")
                 password = System.getenv("MVN_PASS")
@@ -90,4 +90,11 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+static def getGHActionVersionSuffix() {
+    if (System.getenv("GITHUB_RUN_NUMBER") != null) {
+        return "." + System.getenv("GITHUB_RUN_NUMBER")
+    }
+    return ".local"
 }

@@ -23,11 +23,8 @@ jobs:
           cache: 'gradle'
 
       - name: Build with Gradle
-        #uses: gradle/gradle-build-action@v2
         env:
           MVN_URL: ${{ secrets.MVN_URL }}
           MVN_USER: ${{ secrets.MVN_USER }}
           MVN_PASS: ${{ secrets.MVN_PASS }}
         run: ./gradlew build publish
-        #with:
-        #  arguments: build publish
