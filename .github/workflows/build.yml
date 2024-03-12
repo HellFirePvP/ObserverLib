@@ -71,7 +71,7 @@ jobs:
           embeds: ${{steps.embed.outputs.EMBEDS}}
           content: null
           embed-title: "${{steps.embed.outputs.EMBED_TITLE}}"
-          embed-url: "${{context.serverUrl}}/${{context.repo.owner}}/${{context.repo.repo}}/actions/runs/${{context.runId}}"
+          embed-url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           #embed-url: "${{steps.embed.outputs.EMBED_URL}}"
           embed-description: "${{steps.embed.outputs.EMBED_DESCRIPTION}}"
           embed-author-name: "${{steps.embed.outputs.EMBED_AUTHOR_NAME}}"
