@@ -57,7 +57,7 @@ jobs:
             
             description += "\n\n";
             description += "**Build Artifact:**\n";
-            description += "https://maven.hellfiredev.net/hellfirepvp/observerlib/ObserverLib/${{steps.version.outputs.VERSION_NAME}}/ObserverLib-${{steps.version.outputs.VERSION_NAME}}.jar"
+            description += "https://maven.hellfiredev.net/hellfirepvp/observerlib/ObserverLib/${{steps.version.outputs.VERSION_NAME}}/ObserverLib-${{steps.version.outputs.VERSION_NAME}}.jar";
             description += "\n\n";
             description += "**Disclaimer:**\n";
             description += "Builds linked here are **NOT** release-builds! Do **NOT** use them in your packs!\n";
@@ -68,10 +68,10 @@ jobs:
         uses: tsickert/discord-webhook@v5.3.0
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
-          #embeds: ${{steps.embed.outputs.EMBEDS}}
+          embeds: ${{steps.embed.outputs.EMBEDS}}
           content: null
           embed-title: "${{steps.embed.outputs.EMBED_TITLE}}"
-          embed-url: "${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}"
+          embed-url: "${{context.serverUrl}}/${{context.repo.owner}}/${{context.repo.repo}}/actions/runs/${{context.runId}}"
           #embed-url: "${{steps.embed.outputs.EMBED_URL}}"
           embed-description: "${{steps.embed.outputs.EMBED_DESCRIPTION}}"
           embed-author-name: "${{steps.embed.outputs.EMBED_AUTHOR_NAME}}"
