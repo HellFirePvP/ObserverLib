@@ -1,7 +1,7 @@
 package hellfirepvp.observerlib.common.util.tick;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.event.TickEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 
 import java.util.*;
 

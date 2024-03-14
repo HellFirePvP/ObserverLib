@@ -1,11 +1,10 @@
 plugins {
-    id 'java-library'
-    id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.80'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.spongepowered.mixin'
+    id 'com.matthewprenger.cursegradle' version '1.4.0'
 }
-
 version = mod_version + getGHActionVersionSuffix()
 group = mod_group_id
 
@@ -21,53 +20,146 @@ base {
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
-minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
+minecraft {
 
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'info'
+    mappings channel: 'official', version: '1.20.1'
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
-        modSource project.sourceSets.main
-    }
+    runs {
+        client {
+            workingDirectory project.file('run')
 
-    client {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
+            arg "--mixin.config=observerlib.mixins.json"
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 
-    server {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-        programArgument '--nogui'
-    }
+            mods {
+                observerlib {
+                    source sourceSets.main
+                }
+            }
+        }
 
-    gameTestServer {
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
+        server {
+            workingDirectory project.file('run')
+            arg "--mixin.config=observerlib.mixins.json"
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
 
-    data {
-        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            mods {
+                observerlib {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        gameTestServer {
+            workingDirectory project.file('run')
+
+            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
+
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            arg "--mixin.config=observerlib.mixins.json"
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'observerlib'
+            property 'Dmixin.debug.export', 'true'
+
+            args "-mixin.config=assets/observerlib/observerlib.mixins.json"
+            args '--mod', 'observerlib', '--all', '--output', file('src/generated/resources/')
+
+            mods {
+                observerlib {
+                    source sourceSets.main
+                }
+            }
+        }
     }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+repositories {
+    maven {
+        url = "https://maven.blamejared.com"
+    }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+}
+
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
+
+    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
+
 }
 
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
             minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
-            neo_version         : neo_version, neo_version_range: neo_version_range,
-            loader_version_range: loader_version_range,
+            forge_version         : forge_version, forge_version_range: forge_version_range,
             mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors         : mod_authors, mod_description: mod_description,
+            loaderVersion : loader_version_range,
     ]
     inputs.properties replaceProperties
 
     filesMatching(['META-INF/mods.toml']) {
         expand replaceProperties + [project: project]
     }
+}
+
+jar {
+    manifest {
+        attributes([
+                "Specification-Title": "observerlib",
+                "Specification-Vendor": "hellfirepvp",
+                "Specification-Version": "1",
+                "Implementation-Title": project.name,
+                "Implementation-Version": "${version}",
+                "Implementation-Vendor" : "hellfirepvp",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+        ])
+    }
+}
+
+def reobfFile = file("$buildDir/reobfJar/output.jar")
+def reobfArtifact = artifacts.add('default', reobfFile) {
+    type 'jar'
+    builtBy 'reobfJar'
 }
 
 publishing {
@@ -102,5 +194,13 @@ static def getGHActionVersionSuffix() {
 tasks.register('printVersion') {
     doLast {
         println("version:" + project.version)
+    }
+}
+
+if (System.getProperty("idea.sync.active") == "true") {
+    afterEvaluate {
+        tasks.withType(JavaCompile).all {
+            it.options.annotationProcessorPath = files()
+        }
     }
 }

@@ -35,7 +35,7 @@ import java.util.Random;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.minecraftforge.client.model.data.ModelData;
 
 /**
  * This class is part of the ObserverLib Mod

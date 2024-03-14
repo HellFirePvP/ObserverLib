@@ -3,7 +3,7 @@ package hellfirepvp.observerlib.common.data;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.event.TickEvent;
+import net.minecraftforge.event.TickEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

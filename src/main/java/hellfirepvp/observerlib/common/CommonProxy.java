@@ -14,11 +14,12 @@ import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import hellfirepvp.observerlib.common.util.tick.TickManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NewRegistryEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.NewRegistryEvent;
 
 import java.util.function.Consumer;
 
@@ -31,7 +32,7 @@ import java.util.function.Consumer;
  */
 public class CommonProxy {
 
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(BuiltInRegistries.BLOCK, ObserverLib.MODID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, ObserverLib.MODID);
 
     private TickManager tickManager;
 

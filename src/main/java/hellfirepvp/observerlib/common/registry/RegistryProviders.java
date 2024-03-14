@@ -5,11 +5,14 @@ import hellfirepvp.observerlib.api.ObserverProvider;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.registries.NewRegistryEvent;
-import net.neoforged.neoforge.registries.RegistryBuilder;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.NewRegistryEvent;
+import net.minecraftforge.registries.RegistryBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.function.Supplier;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -20,20 +23,22 @@ import javax.annotation.Nullable;
  */
 public class RegistryProviders {
 
-    public static final ResourceKey<Registry<ObserverProvider>> REGISTRY_KEY = ResourceKey.createRegistryKey(ObserverLib.key("observer_providers"));
-    private static Registry<ObserverProvider> REGISTRY;
+    public static final ResourceLocation REGISTRY_NAME = ObserverLib.key("observer_providers");
+    private static Supplier<IForgeRegistry<ObserverProvider>> REGISTRY;
 
     public static void initialize(NewRegistryEvent event) {
-        REGISTRY = event.create(new RegistryBuilder<>(REGISTRY_KEY));
+        REGISTRY = event.create(new RegistryBuilder<ObserverProvider>()
+                .setName(REGISTRY_NAME));
     }
 
     @Nullable
     public static ObserverProvider getProvider(ResourceLocation key) {
-        return REGISTRY.get(key);
+        return REGISTRY.get().getValue(key);
     }
 
     @Nonnull
-    public static Registry<ObserverProvider> getRegistry() {
-        return REGISTRY;
+    public static Collection<ObserverProvider> getAll() {
+        return REGISTRY.get().getValues();
     }
+
 }

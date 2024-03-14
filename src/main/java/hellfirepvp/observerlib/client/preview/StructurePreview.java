@@ -28,7 +28,7 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.minecraftforge.client.model.data.ModelData;
 
 import java.util.*;
 import java.util.function.BiPredicate;

@@ -1,6 +1,7 @@
 package hellfirepvp.observerlib.common.util.tick;
 
-import net.neoforged.neoforge.event.TickEvent;
+
+import net.minecraftforge.event.TickEvent;
 
 import java.util.EnumSet;
 

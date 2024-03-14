@@ -12,9 +12,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidType;
+import net.minecraftforge.fluids.FluidUtil;
+
 
 import java.util.LinkedList;
 import java.util.List;

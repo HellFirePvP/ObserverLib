@@ -4,7 +4,7 @@ import hellfirepvp.observerlib.client.preview.StructurePreviewHandler;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.util.tick.ITickHandler;
-import net.neoforged.bus.api.IEventBus;
+import net.minecraftforge.eventbus.api.IEventBus;
 
 import java.util.function.Consumer;
 

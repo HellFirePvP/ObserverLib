@@ -57,12 +57,12 @@ public abstract class GlobalWorldData extends CachedWorldData {
 
         CompoundTag data = new CompoundTag();
         this.readIO(() -> this.writeToNBT(data));
-        NbtIo.write(data, saveFile.toPath());
+        NbtIo.write(data, saveFile);
     }
 
     @Override
     public final void readData(File baseDirectory) throws IOException {
-        this.writeIO(() -> this.readFromNBT(NbtIo.read(this.getSaveFile(baseDirectory).toPath())));
+        this.writeIO(() -> this.readFromNBT(NbtIo.read(this.getSaveFile(baseDirectory))));
     }
 
     public abstract void writeToNBT(CompoundTag tag);

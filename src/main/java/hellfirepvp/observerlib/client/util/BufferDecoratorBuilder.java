@@ -1,5 +1,4 @@
 package hellfirepvp.observerlib.client.util;
-
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.datafixers.util.Pair;
 
@@ -10,7 +9,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder.DrawState;
 import com.mojang.blaze3d.vertex.BufferBuilder.SortState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -264,11 +262,6 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void setQuadSorting(VertexSorting pQuadSorting) {
-            this.decorated.setQuadSorting(pQuadSorting);
-        }
-
-        @Override
         public SortState getSortState() {
             return this.decorated.getSortState();
         }
@@ -315,11 +308,6 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public void release() {
-            this.decorated.release();
-        }
-
-        @Override
         public void endVertex() {
             this.decorated.endVertex();
         }
@@ -331,16 +319,11 @@ public class BufferDecoratorBuilder {
         }
 
         @Override
-        public VertexConsumer uvShort(short pU, short pV, int pIndex) {
-            return this.decorated.uvShort(pU, pV, pIndex);
-        }
-
-        @Override
         public void vertex(float x, float y, float z,
-                              float red, float green, float blue, float alpha,
-                              float texU, float texV,
-                              int overlayUV, int lightmapUV,
-                              float normalX, float normalY, float normalZ) {
+                           float red, float green, float blue, float alpha,
+                           float texU, float texV,
+                           int overlayUV, int lightmapUV,
+                           float normalX, float normalY, float normalZ) {
             if (this.fastFormat) { //In normal format, the vertices get modified in their individual vertex element calls
                 if (this.decorator.positionDecorator != null) {
                     double[] newPosition = this.decorator.positionDecorator.decorate(x, y, z);

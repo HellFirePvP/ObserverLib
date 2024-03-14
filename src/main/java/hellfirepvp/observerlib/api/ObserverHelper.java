@@ -3,7 +3,7 @@ package hellfirepvp.observerlib.api;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,7 +26,7 @@ public abstract class ObserverHelper {
      *
      * Does not have a corresponding BlockItem and tries to remove itself when placed in world.
      */
-    public static DeferredHolder<Block, Block> blockAirRequirement;
+    public static RegistryObject<Block> blockAirRequirement;
 
     /**
      * Retrieve the current API instance using this getter.
