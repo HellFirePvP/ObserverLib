@@ -3,6 +3,7 @@
     "minVersion": "0.8",
     "package": "hellfirepvp.observerlib.mixin",
     "compatibilityLevel": "JAVA_17",
+    "refmap": "observerlib.refmap.json",
     "mixins": [
         "MixinLevelChunk"
     ],
