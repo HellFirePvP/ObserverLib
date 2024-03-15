@@ -23,6 +23,7 @@ println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getPro
 minecraft {
 
     mappings channel: "${mapping_channel}", version: "${mapping_version}"
+    copyIdeResources = true
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
@@ -30,7 +31,7 @@ minecraft {
             workingDirectory project.file('run')
 
             //property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
+            property 'forge.logging.console.level', 'info'
             property 'forge.enabledGameTestNamespaces', 'observerlib'
             property 'Dmixin.debug.export', 'true'
 
@@ -55,28 +56,12 @@ minecraft {
             }
         }
 
-        gameTestServer {
-            workingDirectory project.file('run')
-
-            //property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'info'
-            property 'forge.enabledGameTestNamespaces', 'observerlib'
-            property 'Dmixin.debug.export', 'true'
-
-            mods {
-                examplemod {
-                    source sourceSets.main
-                }
-            }
-        }
-
         data {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'info'
             property 'forge.enabledGameTestNamespaces', 'observerlib'
             property 'Dmixin.debug.export', 'true'
-
-            args "-mixin.config=assets/observerlib/observerlib.mixins.json"
+            args "-mixin.config=observerlib.mixins.json"
             args '--mod', 'observerlib', '--all', '--output', file('src/generated/resources/')
 
             mods {
@@ -91,8 +76,8 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 mixin {
-    add sourceSets.main, "${mod_id}.refmap.json"
-    config "${mod_id}.mixins.json"
+    add sourceSets.main, "observerlib.refmap.json"
+    config 'observerlib.mixins.json'
 }
 
 repositories {
@@ -110,12 +95,6 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:${jei_version}")
-    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}")
-
-    runtimeOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge:${jei_version}")
-
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -124,7 +103,7 @@ tasks.withType(ProcessResources).configureEach {
             forge_version         : forge_version, forge_version_range: forge_version_range,
             mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors         : mod_authors, mod_description: mod_description,
-            loaderVersion : loader_version_range,
+            loader_version_range : loader_version_range,
     ]
     inputs.properties replaceProperties
 

@@ -6,7 +6,6 @@ import hellfirepvp.observerlib.common.CommonProxy;
 import hellfirepvp.observerlib.common.api.MatcherObserverHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
@@ -34,7 +33,8 @@ public class ObserverLib {
     private final ModContainer modContainer;
     private final CommonProxy proxy;
 
-    public ObserverLib(IEventBus modLoadingBus) {
+
+    public ObserverLib() {
         instance = this;
         this.modContainer = ModList.get().getModContainerById(MODID).get();
 

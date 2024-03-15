@@ -1,6 +1,7 @@
 modLoader="javafml"
-loaderVersion="${loader_version_range}"
-license="${mod_license}"
+loaderVersion="[47,)"
+license="GNU Lesser General Public License v3.0"
+issueTrackerURL="https://github.com/HellFirePvP/ObserverLib/issues"
 [[accessTransformers]]
 file="META-INF/accesstransformer.cfg"
 [[mixins]]
@@ -8,11 +9,12 @@ config="observerlib.mixins.json"
 [[mods]]
 modId="observerlib"
 version="${mod_version}"
-displayName="${mod_name}"
+displayName="ObserverLib"
 displayURL="https://minecraft.curseforge.com/projects/observerlib"
-authors="${mod_authors}"
+logoFile="logo.png"
+authors="HellFirePvP"
 displayTest="MATCH_VERSION"
-description='''${mod_description}'''
+description='''Cached world structure and change monitoring library.'''
 [[dependencies.observerlib]] #optional
     modId="forge"
     mandatory=true
