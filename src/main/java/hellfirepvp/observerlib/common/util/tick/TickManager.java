@@ -3,7 +3,10 @@ package hellfirepvp.observerlib.common.util.tick;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.TickEvent;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -14,11 +17,11 @@ import java.util.*;
  */
 public class TickManager {
 
-    private final Map<TickEvent.Type, List<ITickHandler>> registeredTickHandlers = new HashMap<>();
+    private final Map<TickEvent.Type, Collection<ITickHandler>> registeredTickHandlers = new HashMap<>();
 
     public TickManager() {
         for (TickEvent.Type type : TickEvent.Type.values()) {
-            registeredTickHandlers.put(type, new ArrayList<>());
+            registeredTickHandlers.put(type, new ConcurrentLinkedQueue<>());
         }
     }
 
