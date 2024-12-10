@@ -10,17 +10,11 @@ import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import hellfirepvp.observerlib.common.event.handler.EventHandlerIO;
 import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import hellfirepvp.observerlib.common.registry.RegistryStructures;
-import hellfirepvp.observerlib.common.util.tick.ITickHandler;
-import hellfirepvp.observerlib.common.util.tick.TickManager;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
-
-import java.util.function.Consumer;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -31,14 +25,9 @@ import java.util.function.Consumer;
  */
 public class CommonProxy {
 
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(BuiltInRegistries.BLOCK, ObserverLib.MODID);
-
-    private TickManager tickManager;
+    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(ObserverLib.MODID);
 
     public void initialize() {
-        this.tickManager = new TickManager();
-        this.attachTickListeners(this.tickManager::register);
-
         BlockChangeNotifier.addListener(new StructureIntegrityObserver());
     }
 
@@ -62,11 +51,6 @@ public class CommonProxy {
         eventBus.addListener(this::onServerStopping);
 
         EventHandlerIO.init(eventBus);
-        this.tickManager.attachListeners(eventBus);
-    }
-
-    public void attachTickListeners(Consumer<ITickHandler> registrar) {
-        registrar.accept(WorldCacheManager.getInstance());
     }
 
     private void onServerStarted(ServerStartedEvent event) {

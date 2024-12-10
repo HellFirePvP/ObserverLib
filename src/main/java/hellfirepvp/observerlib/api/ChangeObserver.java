@@ -1,9 +1,11 @@
 package hellfirepvp.observerlib.api;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
+import hellfirepvp.observerlib.common.registry.RegistryProviders;
 import net.minecraft.core.Vec3i;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
@@ -22,24 +24,18 @@ import javax.annotation.Nonnull;
  * Created by HellFirePvP
  * Date: 23.04.2019 / 22:15
  */
-public abstract class ChangeObserver {
+public abstract class ChangeObserver<T extends ChangeObserver<T>> {
 
-    private final ResourceLocation providerRegistryName;
-
-    public ChangeObserver(ResourceLocation providerRegistryName) {
-        this.providerRegistryName = providerRegistryName;
-    }
+    public static final Codec<ChangeObserver<?>> CODEC = RegistryProviders.getRegistry().byNameCodec()
+            .flatXmap(provider -> DataResult.<ChangeObserver<?>>success(provider.newObserver()),
+                    observer -> DataResult.success(observer.getProvider()));
 
     /**
-     * Returns the registry name of the owning {@link ObserverProvider}.
-     * Used for serialization/deserialization so the observer can be saved persistently.
+     * Get the provider for this change observer
      *
-     * @return the changeprovider's registry name
+     * @return the provider
      */
-    @Nonnull
-    public final ResourceLocation getProviderRegistryName() {
-        return providerRegistryName;
-    }
+    public abstract ObserverProvider<T> getProvider();
 
     /**
      * Called once after the observer is newly set on a position to observe it.
@@ -77,20 +73,5 @@ public abstract class ChangeObserver {
      * @return true, if this current state is now considered valid, false otherwise
      */
     public abstract boolean notifyChange(Level world, BlockPos center, BlockChangeSet changeSet);
-
-    /**
-     * Read persistent information back into this observer.
-     *
-     * @param tag the tag holding persistent information about this observer
-     */
-    public abstract void readFromNBT(CompoundTag tag);
-
-    /**
-     * Write information of this observer for persistence.
-     * The tag passed here is empty and will not be further modified after this method before being saved.
-     *
-     * @param tag an empty TagCompound to write information into
-     */
-    public abstract void writeToNBT(CompoundTag tag);
 
 }

@@ -1,5 +1,6 @@
 package hellfirepvp.observerlib.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import hellfirepvp.observerlib.common.event.BlockChangeNotifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -24,22 +25,19 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(LevelChunk.class)
 public abstract class MixinLevelChunk {
 
-    @Shadow @Final Level level;
-
     @Inject(
             method = "setBlockState",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/block/state/BlockState;getBlock()Lnet/minecraft/world/level/block/Block;",
-                    ordinal = 0
-            ),
-            locals = LocalCapture.CAPTURE_FAILHARD
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;getBlock()Lnet/minecraft/world/level/block/Block;"
+            )
     )
-    public void onBlockStateUpdate(BlockPos p_62865_, BlockState p_62866_, boolean p_62867_, CallbackInfoReturnable<BlockState> cir, int i, LevelChunkSection levelchunksection, boolean flag, int j, int k, int l, BlockState blockstate) {
-        if (this.level.isClientSide()) {
+    public void onBlockStateUpdate(BlockPos pos, BlockState newState, boolean isMoving, CallbackInfoReturnable<BlockState> cir, @Local(ordinal = 1) BlockState oldState) {
+        LevelChunk thisLevelChunk = (LevelChunk)(Object) this;
+        Level level = thisLevelChunk.getLevel();
+        if (level.isClientSide()) {
             return;
         }
-        LevelChunk thisLevelChunk = (LevelChunk)(Object) this;
-        BlockChangeNotifier.onBlockChange(this.level, thisLevelChunk, p_62865_, blockstate, p_62866_);
+        BlockChangeNotifier.onBlockChange(level, thisLevelChunk, pos, oldState, newState);
     }
 }

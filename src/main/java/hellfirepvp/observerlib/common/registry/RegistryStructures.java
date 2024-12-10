@@ -33,8 +33,7 @@ public class RegistryStructures {
     }
 
     @Nonnull
-    public static Registry<MatchableStructure> getAll() {
+    public static Registry<MatchableStructure> getRegistry() {
         return REGISTRY;
     }
-
 }

@@ -1,6 +1,6 @@
 package hellfirepvp.observerlib.api;
 
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.serialization.MapCodec;
 
 import javax.annotation.Nonnull;
 
@@ -11,26 +11,20 @@ import javax.annotation.Nonnull;
  * Created by HellFirePvP
  * Date: 24.04.2019 / 17:47
  */
-public abstract class ObserverProvider {
+public abstract class ObserverProvider<T extends ChangeObserver<T>> {
 
-    private final ResourceLocation registryName;
-
-    public ObserverProvider(ResourceLocation registryName) {
-        this.registryName = registryName;
-    }
+    /**
+     * Get the coded for the provided observers.
+     *
+     * @return the codec
+     */
+    public abstract MapCodec<T> codec();
 
     /**
      * Provides a new observer of the current provider.
      *
-     * The observer MUST return the same registry name in {@link ChangeObserver#getProviderRegistryName()}
-     * as this provider's {@link ObserverProvider#getRegistryName()} for deserialization purposes.
-     *
      * @return a new observer
      */
     @Nonnull
-    public abstract ChangeObserver provideObserver();
-
-    public final ResourceLocation getRegistryName() {
-        return this.registryName;
-    }
+    public abstract T newObserver();
 }

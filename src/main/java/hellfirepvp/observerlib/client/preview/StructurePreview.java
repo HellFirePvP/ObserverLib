@@ -1,36 +1,15 @@
 package hellfirepvp.observerlib.client.preview;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import hellfirepvp.observerlib.api.block.MatchableState;
-import hellfirepvp.observerlib.api.client.StructureRenderWorld;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
 import hellfirepvp.observerlib.api.util.StructureUtil;
 import hellfirepvp.observerlib.client.util.*;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.Tuple;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
-import net.neoforged.neoforge.client.model.data.ModelData;
 
-import java.util.*;
 import java.util.function.BiPredicate;
 
 /**
@@ -108,7 +87,7 @@ public class StructurePreview {
         }
     }
 
-    void render(Level renderWorld, PoseStack renderStack, Vec3 playerPos) {
+    /*void render(Level renderWorld, PoseStack renderStack, Vec3 playerPos) {
         Optional<Integer> displaySlice = StructureUtil.getLowestMismatchingSlice(this.snapshot.getStructure(), renderWorld, this.origin);
         if (!displaySlice.isPresent()) {
             return; //Nothing to render
@@ -194,7 +173,7 @@ public class StructurePreview {
         drawWorld.popContentFilter();
 
         renderStack.popPose();
-    }
+    }*/
 
     public static class Builder {
 
@@ -240,7 +219,7 @@ public class StructurePreview {
         }
     }
 
-    private static class BlockMismatchColorDecorator implements BufferDecoratorBuilder.ColorDecorator {
+    /*private static class BlockMismatchColorDecorator implements BufferDecoratorBuilder.ColorDecorator {
 
         private static final int[] errorColor = new int[] { 255, 0, 0, 128 };
 
@@ -254,7 +233,7 @@ public class StructurePreview {
                 return new int[] { r, g, b, 128 };
             }
         }
-    }
+    }*/
 }
 
 

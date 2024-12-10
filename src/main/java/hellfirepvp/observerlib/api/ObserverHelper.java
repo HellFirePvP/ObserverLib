@@ -3,6 +3,7 @@ package hellfirepvp.observerlib.api;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
 import javax.annotation.Nonnull;
@@ -26,7 +27,7 @@ public abstract class ObserverHelper {
      *
      * Does not have a corresponding BlockItem and tries to remove itself when placed in world.
      */
-    public static DeferredHolder<Block, Block> blockAirRequirement;
+    public static DeferredBlock<Block> blockAirRequirement;
 
     /**
      * Retrieve the current API instance using this getter.
@@ -58,7 +59,7 @@ public abstract class ObserverHelper {
      *      offset already exists in that world at that position
      */
     @Nonnull
-    public abstract <T extends ChangeObserver> ChangeSubscriber<T> observeArea(Level world, BlockPos center, ObserverProvider provider);
+    public abstract <T extends ChangeObserver<T>> ChangeSubscriber<T> observeArea(Level world, BlockPos center, ObserverProvider<T> provider);
 
     /**
      * Removes an observer at the given world + position combination.
@@ -79,6 +80,6 @@ public abstract class ObserverHelper {
      * @return the observation subscriber at that position or null if none is found there
      */
     @Nullable
-    public abstract ChangeSubscriber<? extends ChangeObserver> getSubscriber(Level world, BlockPos pos);
+    public abstract ChangeSubscriber<? extends ChangeObserver<?>> getSubscriber(Level world, BlockPos pos);
 
 }

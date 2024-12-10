@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '1.20.4'
+      - '1.21.3'
 
 #echo "$(${{github.workspace}}/gradlew printVersion -q | awk -F "version:" '{printf $2}')"
 jobs:

@@ -24,12 +24,27 @@ public class SingleBiomeManager extends BiomeManager {
     }
 
     @Override
-    public BiomeManager withDifferentSource(NoiseBiomeSource p_186688_) {
+    public BiomeManager withDifferentSource(NoiseBiomeSource src) {
         return this;
     }
 
     @Override
-    public Holder<Biome> getBiome(BlockPos pPos) {
+    public Holder<Biome> getBiome(BlockPos pos) {
+        return this.globalBiome;
+    }
+
+    @Override
+    public Holder<Biome> getNoiseBiomeAtPosition(double pX, double pY, double pZ) {
+        return this.globalBiome;
+    }
+
+    @Override
+    public Holder<Biome> getNoiseBiomeAtPosition(BlockPos pos) {
+        return this.globalBiome;
+    }
+
+    @Override
+    public Holder<Biome> getNoiseBiomeAtQuart(int pX, int pY, int pZ) {
         return this.globalBiome;
     }
 }

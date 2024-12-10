@@ -1,13 +1,10 @@
 package hellfirepvp.observerlib.common.data;
 
-import hellfirepvp.observerlib.common.util.tick.ITickHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.event.TickEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +15,7 @@ import java.util.Map;
  * Created by HellFirePvP
  * Date: 02.08.2016 / 23:15
  */
-public class WorldCacheManager implements ITickHandler {
+public class WorldCacheManager {
 
     private static final String DEFAULT_DOMAIN_NAME = "worlddata";
 
@@ -35,7 +32,7 @@ public class WorldCacheManager implements ITickHandler {
         for (WorldCacheDomain domain : domains.values()) {
             for (ResourceLocation dimTypeName : domain.getUsedWorlds()) {
                 for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
-                    CachedWorldData data = domain.getCachedData(dimTypeName, key);
+                    CachedWorldData<?> data = domain.getCachedData(dimTypeName, key);
                     if (data != null && data.needsSaving()) {
                         WorldCacheIOThread.scheduleSave(domain, dimTypeName, data);
                     }
@@ -52,7 +49,7 @@ public class WorldCacheManager implements ITickHandler {
 
     @Nonnull
     public static WorldCacheDomain createDomain(String modid) {
-        ResourceLocation domainKey = new ResourceLocation(modid, DEFAULT_DOMAIN_NAME);
+        ResourceLocation domainKey = ResourceLocation.fromNamespaceAndPath(modid, DEFAULT_DOMAIN_NAME);
         WorldCacheDomain domain = new WorldCacheDomain(domainKey);
         domains.put(domainKey, domain);
         return domain;
@@ -60,7 +57,11 @@ public class WorldCacheManager implements ITickHandler {
 
     @Nullable
     public static WorldCacheDomain findDomain(String modid) {
-        ResourceLocation domainKey = new ResourceLocation(modid, DEFAULT_DOMAIN_NAME);
+        return findDomain(ResourceLocation.fromNamespaceAndPath(modid, DEFAULT_DOMAIN_NAME));
+    }
+
+    @Nullable
+    public static WorldCacheDomain findDomain(ResourceLocation domainKey) {
         for (ResourceLocation key : domains.keySet()) {
             if (key.equals(domainKey)) {
                 return domains.get(key);
@@ -69,40 +70,15 @@ public class WorldCacheManager implements ITickHandler {
         return null;
     }
 
-    @Override
-    public void tick(TickEvent.Type type, Object... context) {
-        Level world = (Level) context[0];
-        if (world.isClientSide) return;
-        for (WorldCacheDomain domain : domains.values()) {
-            domain.tick(world);
-        }
-    }
-
     public void doSave(Level world) {
         ResourceLocation worldName = world.dimension().location();
         for (WorldCacheDomain domain : domains.values()) {
             for (WorldCacheDomain.SaveKey<?> key : domain.getKnownSaveKeys()) {
-                CachedWorldData data = domain.getCachedData(worldName, key);
+                CachedWorldData<?> data = domain.getCachedData(worldName, key);
                 if (data != null && data.needsSaving()) {
                     WorldCacheIOThread.scheduleSave(domain, worldName, data);
                 }
             }
         }
     }
-
-    @Override
-    public EnumSet<TickEvent.Type> getHandledTypes() {
-        return EnumSet.of(TickEvent.Type.LEVEL);
-    }
-
-    @Override
-    public boolean canFire(TickEvent.Phase phase) {
-        return phase == TickEvent.Phase.END;
-    }
-
-    @Override
-    public String getName() {
-        return "WorldCacheManager";
-    }
-
 }

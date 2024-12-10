@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
  * Created by HellFirePvP
  * Date: 26.04.2019 / 22:31
  */
-public interface ChangeSubscriber<T extends ChangeObserver> {
+public interface ChangeSubscriber<T extends ChangeObserver<T>> {
 
     /**
      * The current observer this subscriber is forwarding relevant changes to.

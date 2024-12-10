@@ -55,7 +55,7 @@ public interface MatchableStructure extends Structure {
 
         for (BlockPos pos : getContents().keySet().stream()
                 .filter(pos -> pos.getY() == yOffset)
-                .collect(Collectors.toList())) {
+                .toList()) {
 
             if (!matchesSingleBlock(reader, center, pos)) {
                 return false;

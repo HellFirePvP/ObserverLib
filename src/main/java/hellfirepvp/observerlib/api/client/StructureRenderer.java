@@ -1,42 +1,5 @@
 package hellfirepvp.observerlib.api.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
-import hellfirepvp.observerlib.api.structure.Structure;
-import hellfirepvp.observerlib.common.block.BlockAirRequirement;
-import hellfirepvp.observerlib.common.util.RegistryUtil;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.RenderShape;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import com.mojang.blaze3d.platform.Window;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.*;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
-import net.minecraft.core.Registry;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
-
-import java.util.Optional;
-import java.util.Random;
-
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.neoforged.neoforge.client.model.data.ModelData;
-
 /**
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
@@ -46,7 +9,7 @@ import net.neoforged.neoforge.client.model.data.ModelData;
  */
 public class StructureRenderer {
 
-    private static final Random rand = new Random();
+    /*private static final Random rand = new Random();
 
     private final StructureRenderWorld world;
     private final Structure structure;
@@ -59,7 +22,7 @@ public class StructureRenderer {
 
     public StructureRenderer(Structure structure) {
         this.structure = structure;
-        Holder<Biome> plainsBiome = RegistryUtil.client().getRegistry(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+        Holder<Biome> plainsBiome = RegistryLookup.client().getRegistry(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
         this.world = new StructureRenderWorld(this.structure, plainsBiome);
         this.resetRotation();
     }
@@ -232,5 +195,5 @@ public class StructureRenderer {
         for (RenderType renderType : model.getRenderTypes(state, randSrc, modelData)) {
             brd.renderBatched(state, offset, this.world, renderStack, vb, false, randSrc, modelData, renderType);
         }
-    }
+    }*/
 }

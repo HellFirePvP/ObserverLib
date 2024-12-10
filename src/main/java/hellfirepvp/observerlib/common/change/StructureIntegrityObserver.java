@@ -9,7 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -22,8 +22,7 @@ public class StructureIntegrityObserver implements BlockChangeNotifier.Listener 
 
     @Override
     public void onChange(Level world, LevelChunk chunk, BlockPos pos, BlockState oldState, BlockState newState) {
-        if (world.isClientSide() ||
-                !chunk.getStatus().isOrAfter(ChunkStatus.FULL)) {
+        if (world.isClientSide() || !chunk.getHighestGeneratedStatus().isOrAfter(ChunkStatus.FULL)) {
             return;
         }
 

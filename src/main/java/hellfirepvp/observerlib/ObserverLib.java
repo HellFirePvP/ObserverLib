@@ -58,6 +58,6 @@ public class ObserverLib {
     }
 
     public static ResourceLocation key(String path) {
-        return new ResourceLocation(ObserverLib.MODID, path);
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 }

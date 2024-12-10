@@ -17,27 +17,23 @@ import java.util.function.Supplier;
  * Created by HellFirePvP
  * Date: 02.08.2016 / 23:21
  */
-public abstract class CachedWorldData implements IWorldRelatedData {
+public abstract class CachedWorldData<T extends CachedWorldData<T>> implements IWorldRelatedData<T> {
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     protected final Random rand = new Random();
-    private final WorldCacheDomain.SaveKey<?> key;
+    private final WorldCacheDomain.SaveKey<T> key;
 
-    protected CachedWorldData(WorldCacheDomain.SaveKey<?> key) {
+    protected CachedWorldData(WorldCacheDomain.SaveKey<T> key) {
         this.key = key;
     }
 
     public abstract boolean needsSaving();
 
-    public abstract void updateTick(Level world);
-
-    public final WorldCacheDomain.SaveKey<?> getSaveKey() {
+    public final WorldCacheDomain.SaveKey<T> getSaveKey() {
         return key;
     }
 
-    public void onLoad(Level world) {}
-
-    public <T> T write(Supplier<T> fn) {
+    public <V> V write(Supplier<V> fn) {
         return this.lock(this.rwLock::writeLock, fn);
     }
 
@@ -57,7 +53,7 @@ public abstract class CachedWorldData implements IWorldRelatedData {
         }
     }
 
-    public <T> T read(Supplier<T> fn) {
+    public <V> V read(Supplier<V> fn) {
         return this.lock(this.rwLock::readLock, fn);
     }
 
@@ -77,7 +73,7 @@ public abstract class CachedWorldData implements IWorldRelatedData {
         }
     }
 
-    private <T> T lock(Supplier<Lock> lock, Supplier<T> fn) {
+    private <V> V lock(Supplier<Lock> lock, Supplier<V> fn) {
         lock.get().lock();
         try {
             return fn.get();

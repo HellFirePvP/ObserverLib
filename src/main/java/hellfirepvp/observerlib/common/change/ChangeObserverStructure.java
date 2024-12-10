@@ -3,9 +3,9 @@ package hellfirepvp.observerlib.common.change;
 import hellfirepvp.observerlib.api.ChangeObserver;
 import hellfirepvp.observerlib.api.ObservableArea;
 import hellfirepvp.observerlib.api.ObservableAreaBoundingBox;
+import hellfirepvp.observerlib.api.ObserverProvider;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
 import hellfirepvp.observerlib.api.structure.MatchableStructure;
-import hellfirepvp.observerlib.common.util.NBTHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;
@@ -14,8 +14,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -24,17 +23,32 @@ import java.util.Set;
  * Created by HellFirePvP
  * Date: 26.04.2019 / 21:33
  */
-public class ChangeObserverStructure extends ChangeObserver {
+public class ChangeObserverStructure extends ChangeObserver<ChangeObserverStructure> {
 
+    private final ObserverProviderStructure provider;
     private final MatchableStructure structure;
     private final ObservableArea observedArea;
 
-    private Set<BlockPos> mismatches = new HashSet<>();
+    private final Set<BlockPos> mismatches = new HashSet<>();
 
-    public ChangeObserverStructure(MatchableStructure structure) {
-        super(structure.getRegistryName());
+    public ChangeObserverStructure(ObserverProviderStructure provider, MatchableStructure structure) {
+        this.provider = provider;
         this.structure = structure;
         this.observedArea = new ObservableAreaBoundingBox(structure.getMinimumOffset(), structure.getMaximumOffset());
+    }
+
+    ChangeObserverStructure addMismatches(List<BlockPos> mismatches) {
+        this.mismatches.addAll(mismatches);
+        return this;
+    }
+
+    List<BlockPos> getMismatches() {
+        return new ArrayList<>(this.mismatches);
+    }
+
+    @Override
+    public ObserverProviderStructure getProvider() {
+        return this.provider;
     }
 
     @Override
@@ -66,31 +80,6 @@ public class ChangeObserverStructure extends ChangeObserver {
         }
 
         this.mismatches.removeIf(mismatchPos -> !this.structure.hasBlockAt(mismatchPos));
-        return this.mismatches.size() <= 0;
+        return this.mismatches.isEmpty();
     }
-
-    @Override
-    public void readFromNBT(CompoundTag tag) {
-        this.mismatches.clear();
-        ListTag tagMismatches = tag.getList("mismatchList", Tag.TAG_COMPOUND);
-
-        for (int i = 0; i < tagMismatches.size(); i++) {
-            CompoundTag tagPos = tagMismatches.getCompound(i);
-            this.mismatches.add(NBTHelper.readBlockPosFromNBT(tagPos));
-        }
-    }
-
-    @Override
-    public void writeToNBT(CompoundTag tag) {
-        ListTag tagMismatches = new ListTag();
-
-        for (BlockPos pos : this.mismatches) {
-            CompoundTag tagPos = new CompoundTag();
-            NBTHelper.writeBlockPosToNBT(pos, tagPos);
-            tagMismatches.add(tagPos);
-        }
-
-        tag.put("mismatchList", tagMismatches);
-    }
-
 }

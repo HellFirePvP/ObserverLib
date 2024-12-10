@@ -1,21 +1,14 @@
 package hellfirepvp.observerlib.common.change;
 
 import com.google.common.collect.Maps;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import hellfirepvp.observerlib.api.block.BlockChangeSet;
-import hellfirepvp.observerlib.common.util.NBTHelper;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.core.BlockPos;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-
-import hellfirepvp.observerlib.api.block.BlockChangeSet.StateChange;
+import java.util.*;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -26,7 +19,16 @@ import hellfirepvp.observerlib.api.block.BlockChangeSet.StateChange;
  */
 public class BlockStateChangeSet implements BlockChangeSet {
 
+    public static final Codec<BlockStateChangeSet> CODEC = BlockStateChange.CODEC.listOf()
+            .xmap(BlockStateChangeSet::new, changeSet -> new ArrayList<>(changeSet.changes.values()));
+
     private final Map<BlockPos, BlockStateChange> changes = Maps.newHashMap();
+
+    public BlockStateChangeSet() {}
+
+    private BlockStateChangeSet(List<BlockStateChange> changes) {
+        changes.forEach(change -> this.changes.put(change.getRelativePosition(), change));
+    }
 
     public void addChange(BlockPos pos, BlockPos absolute, BlockState oldState, BlockState newState) {
         BlockStateChange oldChangeSet = this.changes.get(pos);
@@ -57,39 +59,14 @@ public class BlockStateChangeSet implements BlockChangeSet {
         return Collections.unmodifiableCollection(this.changes.values());
     }
 
-    public void readFromNBT(CompoundTag cmp) {
-        this.changes.clear();
-
-        ListTag changeList = cmp.getList("changeList", Tag.TAG_COMPOUND);
-        for (int i = 0; i < changeList.size(); i++) {
-            CompoundTag changeTag = changeList.getCompound(i);
-
-            BlockPos pos = NBTHelper.readBlockPosFromNBT(changeTag.getCompound("relPos"));
-            BlockPos abs = NBTHelper.readBlockPosFromNBT(changeTag.getCompound("absPos"));
-            BlockState oldState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("oldState"),
-                    Blocks.AIR.defaultBlockState());
-            BlockState newState = NBTHelper.getBlockStateFromTag(changeTag.getCompound("newState"),
-                    Blocks.AIR.defaultBlockState());
-            this.changes.put(pos, new BlockStateChange(pos, abs, oldState, newState));
-        }
-    }
-
-    public void writeToNBT(CompoundTag cmp) {
-        ListTag changes = new ListTag();
-        for (BlockStateChange change : this.changes.values()) {
-            CompoundTag tag = new CompoundTag();
-            NBTHelper.setAsSubTag(tag, "relPos", (posTag) -> NBTHelper.writeBlockPosToNBT(change.getRelativePosition(), posTag));
-            NBTHelper.setAsSubTag(tag, "absPos", (posTag) -> NBTHelper.writeBlockPosToNBT(change.getAbsolutePosition(), posTag));
-            NBTHelper.writeBlockPosToNBT(change.pos, tag);
-            tag.put("oldState", NBTHelper.getBlockStateNBTTag(change.oldState));
-            tag.put("newState", NBTHelper.getBlockStateNBTTag(change.newState));
-            changes.add(tag);
-        }
-
-        cmp.put("changeList", changes);
-    }
-
     public static final class BlockStateChange implements StateChange {
+
+        public static final Codec<BlockStateChange> CODEC = RecordCodecBuilder.create(builder -> builder.group(
+                BlockPos.CODEC.fieldOf("pos").forGetter(BlockStateChange::getRelativePosition),
+                BlockPos.CODEC.fieldOf("abs").forGetter(BlockStateChange::getAbsolutePosition),
+                BlockState.CODEC.fieldOf("oldState").forGetter(BlockStateChange::getOldState),
+                BlockState.CODEC.fieldOf("newState").forGetter(BlockStateChange::getNewState)
+        ).apply(builder, BlockStateChange::new));
 
         private final BlockPos pos, abs;
         private final BlockState oldState, newState;

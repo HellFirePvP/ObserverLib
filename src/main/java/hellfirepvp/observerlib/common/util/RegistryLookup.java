@@ -21,19 +21,19 @@ import java.util.stream.Collectors;
 /**
  * This class is part of the ObserverLib Mod
  * The complete source code for this mod can be found on github.
- * Class: RegistryUtil
+ * Class: RegistryLookup
  * Created by HellFirePvP
  * Date: 26.08.2020 / 11:36
  */
-public class RegistryUtil {
+public class RegistryLookup {
 
     private final RegistryAccess registries;
 
-    private RegistryUtil(RegistryAccess registries) {
+    private RegistryLookup(RegistryAccess registries) {
         this.registries = registries;
     }
 
-    public static RegistryUtil side(@Nonnull LogicalSide side) {
+    public static RegistryLookup side(@Nonnull LogicalSide side) {
         if (side.isServer()) {
             return server();
         } else {
@@ -41,21 +41,21 @@ public class RegistryUtil {
         }
     }
 
-    public static RegistryUtil server() {
+    public static RegistryLookup server() {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
-            return new RegistryUtil(builtInAccess());
+            return new RegistryLookup(builtInAccess());
         }
-        return new RegistryUtil(server.registryAccess());
+        return new RegistryLookup(server.registryAccess());
     }
 
     @OnlyIn(Dist.CLIENT)
-    public static RegistryUtil client() {
+    public static RegistryLookup client() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) {
-            return new RegistryUtil(builtInAccess());
+            return new RegistryLookup(builtInAccess());
         }
-        return new RegistryUtil(mc.getConnection().registryAccess());
+        return new RegistryLookup(mc.getConnection().registryAccess());
     }
 
     private static RegistryAccess builtInAccess() {

@@ -1,5 +1,11 @@
 package hellfirepvp.observerlib.common.data;
 
+import com.google.common.io.Files;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import hellfirepvp.observerlib.ObserverLib;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -9,6 +15,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -22,27 +29,27 @@ import java.util.function.Function;
 public class WorldCacheDomain {
 
     private final ResourceLocation key;
-    private final Set<SaveKey<? extends CachedWorldData>> knownSaveKeys = new HashSet<>();
-    private final Map<ResourceLocation, Map<SaveKey<?>, CachedWorldData>> domainData = new HashMap<>();
+    private final Set<SaveKey<? extends CachedWorldData<?>>> knownSaveKeys = new HashSet<>();
+    private final Map<ResourceLocation, Map<SaveKey<?>, CachedWorldData<?>>> domainData = new HashMap<>();
 
     WorldCacheDomain(ResourceLocation key) {
         this.key = key;
     }
 
-    public <T extends CachedWorldData> SaveKey<T> createSaveKey(String name, Function<SaveKey<T>, T> dataProvider) {
+    public <T extends CachedWorldData<T>> SaveKey<T> createSaveKey(String name, Codec<T> dataCodec, Function<SaveKey<T>, T> dataProvider) {
         for (SaveKey<?> key : knownSaveKeys) {
             if (key.identifier.equalsIgnoreCase(name)) {
                 return (SaveKey<T>) key;
             }
         }
 
-        SaveKey<T> key = new SaveKey<>(name, dataProvider);
+        SaveKey<T> key = new SaveKey<>(this.getName(), name, dataCodec, dataProvider);
         this.knownSaveKeys.add(key);
         return key;
     }
 
     @Nullable
-    public <T extends CachedWorldData> SaveKey<T> getKey(String identifier) {
+    public <T extends CachedWorldData<T>> SaveKey<T> getKey(String identifier) {
         for (SaveKey<?> key : knownSaveKeys) {
             if (key.identifier.equalsIgnoreCase(identifier)) {
                 return (SaveKey<T>) key;
@@ -52,7 +59,7 @@ public class WorldCacheDomain {
     }
 
     @Nonnull
-    public Set<SaveKey<? extends CachedWorldData>> getKnownSaveKeys() {
+    public Set<SaveKey<? extends CachedWorldData<?>>> getKnownSaveKeys() {
         return Collections.unmodifiableSet(knownSaveKeys);
     }
 
@@ -60,27 +67,13 @@ public class WorldCacheDomain {
         return key;
     }
 
-    void tick(Level world) {
-        ResourceLocation dimName = world.dimension().location();
-        if (!this.domainData.containsKey(dimName)) {
-            return;
-        }
-
-        Map<SaveKey<?>, ? extends CachedWorldData> dataMap = this.domainData.get(dimName);
-        for (WorldCacheDomain.SaveKey<?> key : this.getKnownSaveKeys()) {
-            if (dataMap.containsKey(key)) {
-                dataMap.get(key).updateTick(world);
-            }
-        }
-    }
-
     @Nullable
-    <T extends CachedWorldData> T getCachedData(ResourceLocation dimTypeName, SaveKey<T> key) {
+    <T extends CachedWorldData<T>> T getCachedData(ResourceLocation dimTypeName, SaveKey<?> key) {
         return (T) domainData.getOrDefault(dimTypeName, Collections.emptyMap()).get(key);
     }
 
     @Nullable
-    private <T extends CachedWorldData> T getFromCache(Level world, SaveKey<T> key) {
+    private <T extends CachedWorldData<T>> T getFromCache(Level world, SaveKey<T> key) {
         return getCachedData(world.dimension().location(), key);
     }
 
@@ -89,7 +82,7 @@ public class WorldCacheDomain {
     }
 
     @Nonnull
-    public <T extends CachedWorldData> T getData(Level world, SaveKey<T> key) {
+    public <T extends CachedWorldData<T>> T getData(Level world, SaveKey<T> key) {
         T data = getFromCache(world, key);
         if (data == null) {
             data = WorldCacheIOThread.loadNow(this, world, key);
@@ -116,24 +109,65 @@ public class WorldCacheDomain {
         this.domainData.clear();
     }
 
-    public static class SaveKey<T extends CachedWorldData> {
+    public static class SaveKey<T extends IWorldRelatedData<T>> {
 
+        public static final Codec<SaveKey<?>> CODEC = Codec.pair(ResourceLocation.CODEC, Codec.STRING).flatXmap(pair -> {
+                WorldCacheDomain domain = WorldCacheManager.findDomain(pair.getFirst());
+                if (domain == null) return DataResult.error(() -> "Unknown domain: " + pair.getFirst());
+                SaveKey<?> key = domain.getKey(pair.getSecond());
+                if (key == null) return DataResult.error(() -> "Unknown saveKey: " + pair.getSecond());
+                return DataResult.success(key);
+            }, key -> DataResult.success(new Pair<>(key.getDomainName(), key.getIdentifier())));
+
+        private final ResourceLocation domainName;
         private final String identifier;
+        private final Codec<T> instanceCodec;
         private final Function<SaveKey<T>, T> instanceProvider;
 
-        private SaveKey(String identifier, Function<SaveKey<T>, T> provider) {
+        private SaveKey(ResourceLocation domainName, String identifier, Codec<T> instanceCodec, Function<SaveKey<T>, T> provider) {
+            this.domainName = domainName;
             this.identifier = identifier;
+            this.instanceCodec = instanceCodec;
             this.instanceProvider = provider;
         }
 
-        public T getNewInstance(SaveKey<T> key) {
-            return instanceProvider.apply(key);
+        public ResourceLocation getDomainName() {
+            return domainName;
         }
 
         public String getIdentifier() {
             return identifier;
         }
 
-    }
+        public Codec<T> getInstanceCodec() {
+            return instanceCodec;
+        }
 
+        public T getNewInstance(SaveKey<T> key) {
+            return instanceProvider.apply(key);
+        }
+
+        public File getSaveFile(File directory) {
+            return directory.toPath().resolve(this.getIdentifier() + ".dat").toFile();
+        }
+
+        public File createAndBackupSaveFile(File saveDir, File backupDir) throws IOException {
+            return this.createAndBackupSaveFile(saveDir, backupDir, this::getSaveFile);
+        }
+
+        public File createAndBackupSaveFile(File saveDir, File backupDir, Function<File, File> fileResolver) throws IOException {
+            File saveFile = this.getSaveFile(saveDir);
+            if (saveFile.exists()) {
+                try {
+                    Files.copy(saveFile, this.getSaveFile(backupDir));
+                } catch (Exception exc) {
+                    ObserverLib.log.info("Copying '{}' 's actual file to its backup file failed!", this.getIdentifier());
+                    exc.printStackTrace();
+                }
+            } else {
+                saveFile.createNewFile();
+            }
+            return saveFile;
+        }
+    }
 }

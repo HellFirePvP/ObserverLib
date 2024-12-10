@@ -25,7 +25,7 @@ public class MatcherObserverHelper extends ObserverHelper {
 
     private static final WorldCacheDomain WORLD_DOMAIN = WorldCacheManager.createDomain(ObserverLib.MODID);
     private static final WorldCacheDomain.SaveKey<StructureMatchingBuffer> STRUCTURE_BUFFER_KEY =
-            WORLD_DOMAIN.createSaveKey("structure_buffer", StructureMatchingBuffer::new);
+            WORLD_DOMAIN.createSaveKey("structure_buffer", StructureMatchingBuffer.CODEC, StructureMatchingBuffer::new);
 
     public static StructureMatchingBuffer getBuffer(Level world) {
         return WORLD_DOMAIN.getData(world, STRUCTURE_BUFFER_KEY);
@@ -33,7 +33,7 @@ public class MatcherObserverHelper extends ObserverHelper {
 
     @Nonnull
     @Override
-    public <T extends ChangeObserver> ChangeSubscriber<T> observeArea(Level world, BlockPos center, ObserverProvider provider) {
+    public <T extends ChangeObserver<T>> ChangeSubscriber<T> observeArea(Level world, BlockPos center, ObserverProvider<T> provider) {
         return getBuffer(world).observeArea(world, center, provider);
     }
 
@@ -44,7 +44,7 @@ public class MatcherObserverHelper extends ObserverHelper {
 
     @Nullable
     @Override
-    public ChangeSubscriber<? extends ChangeObserver> getSubscriber(Level world, BlockPos pos) {
+    public ChangeSubscriber<? extends ChangeObserver<?>> getSubscriber(Level world, BlockPos pos) {
         return getBuffer(world).getSubscriber(pos);
     }
 

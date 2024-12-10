@@ -1,46 +1,7 @@
 package hellfirepvp.observerlib.api.client;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import hellfirepvp.observerlib.api.block.MatchableState;
-import hellfirepvp.observerlib.api.structure.Structure;
-import hellfirepvp.observerlib.api.tile.MatchableTile;
-import hellfirepvp.observerlib.api.util.SingleBiomeManager;
-import hellfirepvp.observerlib.client.util.ClientTickHelper;
-import hellfirepvp.observerlib.common.util.RegistryUtil;
-import net.minecraft.core.*;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.world.flag.FeatureFlagSet;
-import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeManager;
-import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Stack;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 /**
  * This class supports to render a structure, centered around structure origin 0, 0, 0.
@@ -52,9 +13,9 @@ import java.util.stream.Stream;
  * Date: 30.04.2019 / 22:22
  */
 @OnlyIn(Dist.CLIENT)
-public class StructureRenderWorld implements LevelReader {
+public class StructureRenderWorld /*implements LevelReader*/ {
 
-    private static final int MAX_LIGHT = 15;
+    /*private static final int MAX_LIGHT = 15;
 
     private final Holder<Biome> globalBiome;
     private final SingleBiomeManager biomeManager;
@@ -68,9 +29,9 @@ public class StructureRenderWorld implements LevelReader {
         this.structure = structure;
         this.globalBiome = globalBiome;
         this.biomeManager = new SingleBiomeManager(this.globalBiome);
-        DimensionType dimType = RegistryUtil.client().getValue(Registries.DIMENSION_TYPE, BuiltinDimensionTypes.OVERWORLD);
+        DimensionType dimType = RegistryLookup.client().getValue(Registries.DIMENSION_TYPE, BuiltinDimensionTypes.OVERWORLD);
         if (dimType == null) {
-            dimType = Iterables.getFirst(RegistryUtil.client().getValues(Registries.DIMENSION_TYPE), null);
+            dimType = Iterables.getFirst(RegistryLookup.client().getValues(Registries.DIMENSION_TYPE), null);
         }
         this.thisDimType = dimType;
 
@@ -191,7 +152,7 @@ public class StructureRenderWorld implements LevelReader {
 
     @Override
     public RegistryAccess registryAccess() {
-        return RegistryUtil.client().getRegistryAccess();
+        return RegistryLookup.client().getRegistryAccess();
     }
 
     @Override
@@ -247,5 +208,5 @@ public class StructureRenderWorld implements LevelReader {
     @Override
     public DimensionType dimensionType() {
         return this.thisDimType;
-    }
+    }*/
 }
