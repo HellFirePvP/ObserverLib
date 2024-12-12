@@ -158,7 +158,7 @@ public class WorldCacheDomain {
             File saveFile = this.getSaveFile(saveDir);
             if (saveFile.exists()) {
                 try {
-                    Files.copy(saveFile, this.getSaveFile(backupDir));
+                    Files.copy(saveFile, fileResolver.apply(backupDir));
                 } catch (Exception exc) {
                     ObserverLib.log.info("Copying '{}' 's actual file to its backup file failed!", this.getIdentifier());
                     exc.printStackTrace();
