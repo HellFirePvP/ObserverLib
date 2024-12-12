@@ -111,13 +111,12 @@ public class WorldCacheDomain {
 
     public static class SaveKey<T extends IWorldRelatedData<T>> {
 
-        public static final Codec<SaveKey<?>> CODEC = Codec.pair(ResourceLocation.CODEC, Codec.STRING).flatXmap(pair -> {
-                WorldCacheDomain domain = WorldCacheManager.findDomain(pair.getFirst());
-                if (domain == null) return DataResult.error(() -> "Unknown domain: " + pair.getFirst());
-                SaveKey<?> key = domain.getKey(pair.getSecond());
-                if (key == null) return DataResult.error(() -> "Unknown saveKey: " + pair.getSecond());
-                return DataResult.success(key);
-            }, key -> DataResult.success(new Pair<>(key.getDomainName(), key.getIdentifier())));
+        public static final Codec<SaveKey<?>> CODEC = RecordCodecBuilder.create(inst -> inst.group(
+                ResourceLocation.CODEC.fieldOf("domain").forGetter(SaveKey::getDomainName),
+                Codec.STRING.fieldOf("identifier").forGetter(SaveKey::getIdentifier)
+        ).apply(inst, (domainKey, id) -> WorldCacheManager.findDomain(domainKey)
+                .map(domain -> domain.getKey(id))
+                .orElseThrow(() -> new IllegalArgumentException("Unknown domain key: " + domainKey + " / " + id))));
 
         private final ResourceLocation domainName;
         private final String identifier;

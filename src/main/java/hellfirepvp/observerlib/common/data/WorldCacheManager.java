@@ -1,5 +1,7 @@
 package hellfirepvp.observerlib.common.data;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
@@ -7,6 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -55,19 +58,17 @@ public class WorldCacheManager {
         return domain;
     }
 
-    @Nullable
-    public static WorldCacheDomain findDomain(String modid) {
+    public static Optional<WorldCacheDomain> findDomain(String modid) {
         return findDomain(ResourceLocation.fromNamespaceAndPath(modid, DEFAULT_DOMAIN_NAME));
     }
 
-    @Nullable
-    public static WorldCacheDomain findDomain(ResourceLocation domainKey) {
+    public static Optional<WorldCacheDomain> findDomain(ResourceLocation domainKey) {
         for (ResourceLocation key : domains.keySet()) {
             if (key.equals(domainKey)) {
-                return domains.get(key);
+                return Optional.of(domains.get(key));
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     public void doSave(Level world) {
