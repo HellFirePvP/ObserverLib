@@ -155,7 +155,7 @@ public class WorldCacheDomain {
         }
 
         public File createAndBackupSaveFile(File saveDir, File backupDir, Function<File, File> fileResolver) throws IOException {
-            File saveFile = this.getSaveFile(saveDir);
+            File saveFile = fileResolver.apply(saveDir);
             if (saveFile.exists()) {
                 try {
                     Files.copy(saveFile, fileResolver.apply(backupDir));
