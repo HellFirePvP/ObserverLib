@@ -105,6 +105,4 @@ public interface MatchableStructure extends Structure {
                     (tileEntity == null || (tileMatch == null || tileMatch.matches(reader, center.offset(centerOffset), tileEntity)));
         }
     }
-
-    public ResourceLocation getRegistryName();
 }

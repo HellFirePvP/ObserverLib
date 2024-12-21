@@ -42,4 +42,12 @@ public class CodecUtil {
     public static <T> T cast(Object obj) {
         return (T) obj;
     }
+
+    public static <T> T informedCast(Object obj, Class<T> target) {
+        try {
+            return (T) obj;
+        } catch (ClassCastException e) {
+            throw new RuntimeException("Failed to cast " + obj + " to " + target, e);
+        }
+    }
 }
