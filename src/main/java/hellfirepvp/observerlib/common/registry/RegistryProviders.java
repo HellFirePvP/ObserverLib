@@ -20,20 +20,20 @@ import javax.annotation.Nullable;
  */
 public class RegistryProviders {
 
-    public static final ResourceKey<Registry<ObserverProvider>> REGISTRY_KEY = ResourceKey.createRegistryKey(ObserverLib.key("observer_providers"));
-    private static final Registry<ObserverProvider> REGISTRY = new RegistryBuilder<>(REGISTRY_KEY).create();
+    public static final ResourceKey<Registry<ObserverProvider<?>>> REGISTRY_KEY = ResourceKey.createRegistryKey(ObserverLib.key("observer_providers"));
+    private static final Registry<ObserverProvider<?>> REGISTRY = new RegistryBuilder<>(REGISTRY_KEY).create();
 
     public static void initialize(NewRegistryEvent event) {
         event.register(REGISTRY);
     }
 
     @Nullable
-    public static ObserverProvider getProvider(ResourceLocation key) {
+    public static ObserverProvider<?> getProvider(ResourceLocation key) {
         return REGISTRY.get(key);
     }
 
     @Nonnull
-    public static Registry<ObserverProvider> getRegistry() {
+    public static Registry<ObserverProvider<?>> getRegistry() {
         return REGISTRY;
     }
 }
