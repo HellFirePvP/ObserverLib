@@ -38,7 +38,6 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
     private final int precision;
 
     private final AlternatingSet<SectionKey> dirtySections = new AlternatingSet<>();
-    private final Set<SectionKey> removedSections = new HashSet<>();
 
     protected SectionWorldData(WorldCacheDomain.SaveKey<T> key, Codec<S> sectionCodec, int sectionPrecision) {
         super(key);
@@ -108,12 +107,12 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
 
     public boolean removeSection(S section) {
         SectionKey key = SectionKey.from(section);
-        return this.sections.remove(key) == section && this.removedSections.add(key);
+        return this.sections.remove(key) != null;
     }
 
     public boolean removeSection(Vec3i absolute) {
         SectionKey key = SectionKey.resolve(absolute, this.precision);
-        return this.sections.remove(key) != null && this.removedSections.add(key);
+        return this.sections.remove(key) != null;
     }
 
     @Nonnull
