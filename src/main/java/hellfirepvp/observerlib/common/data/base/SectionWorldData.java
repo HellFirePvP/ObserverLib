@@ -125,20 +125,21 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
 
     @Nullable
     private S getSection(SectionKey key) {
-        return this.read(() -> {
-            S knownSection = this.sections.get(key);
-            if (knownSection == null && this.lazyLoadSections && this.sectionLoader != null && this.loadedSections.add(key)) {
-                S loadedSection = this.sectionLoader.loadData(dir -> this.getSectionSaveFile(dir, key.x, key.z), this.sectionCodec)
-                        .map(Tuple::getA)
-                        .orElse(null);
-                return this.write(() -> {
-                    this.loadedSections.add(key);
-                    this.sections.put(key, loadedSection);
-                    return loadedSection;
-                });
-            }
+        S knownSection = this.read(() -> this.sections.get(key));
+        if (knownSection != null) {
             return knownSection;
-        });
+        }
+
+        if (this.lazyLoadSections && this.sectionLoader != null && this.loadedSections.add(key)) {
+            return this.sectionLoader.loadData(dir -> this.getSectionSaveFile(dir, key.x, key.z), this.sectionCodec)
+                    .map(Tuple::getA)
+                    .map(section -> this.write(() -> {
+                        this.sections.put(key, section);
+                        return section;
+                    }))
+                    .orElse(null);
+        }
+        return null;
     }
 
     public boolean removeSection(S section) {
