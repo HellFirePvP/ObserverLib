@@ -1,7 +1,6 @@
 package hellfirepvp.observerlib.common.data;
 
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 import com.mojang.serialization.Codec;
 import hellfirepvp.observerlib.ObserverLib;
 import net.minecraft.nbt.CompoundTag;
@@ -12,12 +11,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.SharedConstants;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
+import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.BiFunction;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -171,13 +170,13 @@ public class WorldCacheIOThread extends TimerTask {
     }
 
     private static <F> IWorldRelatedData.FileLoader<F> createLoadingContext(DirectorySet dirSet, WorldCacheDomain.SaveKey<?> rootKey) {
-        String rootName = rootKey.saveFileResolver().resolveFile(new File("/")).getAbsolutePath();
+        String rootName = rootKey.saveFileResolver().resolveFile(new File("/")).getPath();
         return (fileResolver, codec) -> {
             if (!dirSet.getActualDirectory().exists() && !dirSet.getBackupDirectory().exists()) {
                 return Optional.empty();
             }
             // Resolve from root to get an idea of what's being loaded.
-            String attemptName = fileResolver.resolveFile(new File("/")).getAbsolutePath();
+            String attemptName = fileResolver.resolveFile(new File("/")).getPath();
             boolean isSaveRoot = attemptName.equals(rootName);
 
             F data = null;
@@ -211,23 +210,27 @@ public class WorldCacheIOThread extends TimerTask {
                             (isSaveRoot ? rootKey.getIdentifier() : rootKey.getIdentifier() + attemptName));
                 }
             }
+            // No existing data file found, nothing to load.
+            if (dataFile == null || !dataFile.exists()) {
+                return Optional.empty();
+            }
+
             // Copy files to error directory and give up.
             if (data == null) {
                 DirectorySet errorSet = dirSet.getErrorDirectories();
                 try {
                     if (dirSet.getActualDirectory().exists()) {
-                        Files.copy(dirSet.getActualDirectory(), errorSet.getActualDirectory());
+                        FileUtils.copyDirectory(dirSet.getActualDirectory(), errorSet.getActualDirectory());
                     }
                     if (dirSet.getBackupDirectory().exists()) {
-                        Files.copy(dirSet.getBackupDirectory(), errorSet.getBackupDirectory());
+                        FileUtils.copyDirectory(dirSet.getBackupDirectory(), errorSet.getBackupDirectory());
                     }
                 } catch (Exception e) {
                     ObserverLib.log.warn("Copying erroneous level data {} to the error directory failed.",
                             (isSaveRoot ? rootKey.getIdentifier() : rootKey.getIdentifier() + attemptName));
                     ObserverLib.log.error("Copying files failed.", e);
                 }
-            }
-            if (data == null) {
+
                 return Optional.empty();
             }
             return Optional.of(new Tuple<>(data, dataFile));
