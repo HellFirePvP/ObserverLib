@@ -165,6 +165,7 @@ public class WorldCacheIOThread extends TimerTask {
                     return dataTpl.getA();
                 })
                 .orElseGet(key::newInstance);
+        loaded.setLoader(loader);
         ObserverLib.log.info("Loading WorldData {}/{} for level {} finished", key.getDomainName().getNamespace(), key.getIdentifier(), dimTypeName);
         return loaded;
     }
