@@ -1,9 +1,7 @@
 package hellfirepvp.observerlib.common.data;
 
 import com.google.common.io.Files;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import hellfirepvp.observerlib.ObserverLib;
 import net.minecraft.server.MinecraftServer;
@@ -142,23 +140,23 @@ public class WorldCacheDomain {
             return instanceCodec;
         }
 
-        public T getNewInstance(SaveKey<T> key) {
-            return instanceProvider.apply(key);
+        public T newInstance() {
+            return instanceProvider.apply(this);
         }
 
-        public File getSaveFile(File directory) {
-            return directory.toPath().resolve(this.getIdentifier() + ".dat").toFile();
+        public IWorldRelatedData.FileResolver saveFileResolver() {
+            return directory -> directory.toPath().resolve(this.getIdentifier() + ".dat").toFile();
         }
 
         public File createAndBackupSaveFile(File saveDir, File backupDir) throws IOException {
-            return this.createAndBackupSaveFile(saveDir, backupDir, this::getSaveFile);
+            return this.createAndBackupSaveFile(saveDir, backupDir, this.saveFileResolver());
         }
 
-        public File createAndBackupSaveFile(File saveDir, File backupDir, Function<File, File> fileResolver) throws IOException {
-            File saveFile = fileResolver.apply(saveDir);
+        public File createAndBackupSaveFile(File saveDir, File backupDir, IWorldRelatedData.FileResolver fileResolver) throws IOException {
+            File saveFile = fileResolver.resolveFile(saveDir);
             if (saveFile.exists()) {
                 try {
-                    Files.copy(saveFile, fileResolver.apply(backupDir));
+                    Files.copy(saveFile, fileResolver.resolveFile(backupDir));
                 } catch (Exception exc) {
                     ObserverLib.log.info("Copying '{}' 's actual file to its backup file failed!", this.getIdentifier());
                     exc.printStackTrace();

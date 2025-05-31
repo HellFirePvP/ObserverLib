@@ -20,7 +20,6 @@ import java.util.function.Supplier;
 public abstract class CachedWorldData<T extends CachedWorldData<T>> implements IWorldRelatedData<T> {
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    protected final Random rand = new Random();
     private final WorldCacheDomain.SaveKey<T> key;
 
     protected CachedWorldData(WorldCacheDomain.SaveKey<T> key) {

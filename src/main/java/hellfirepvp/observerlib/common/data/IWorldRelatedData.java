@@ -1,9 +1,14 @@
 package hellfirepvp.observerlib.common.data;
 
+import com.mojang.serialization.Codec;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -14,14 +19,23 @@ import java.io.IOException;
  */
 public interface IWorldRelatedData<T extends IWorldRelatedData<T>> {
 
-    public WorldCacheDomain.SaveKey<T> getSaveKey();
+    WorldCacheDomain.SaveKey<T> getSaveKey();
 
-    public abstract void markSaved();
+    void markSaved();
 
-    default public void onLoad(Level world) {}
+    default void onLoad(Level world) {}
 
-    public void writeAdditionalData(File saveDir, File backupDir) throws IOException;
+    default void setLoader(FileLoader<?> loader) {}
 
-    public void readAdditionalData(File dir) throws IOException;
+    void writeAdditionalData(File saveDir, File backupDir) throws IOException;
 
+    void readAdditionalData(File directory, FileLoader<?> fileLoader);
+
+    interface FileResolver {
+        File resolveFile(File directory);
+    }
+
+    interface FileLoader<F> {
+        Optional<Tuple<F, File>> loadData(FileResolver resolver, Codec<F> codec);
+    }
 }

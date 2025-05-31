@@ -10,13 +10,14 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.SharedConstants;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
-import org.apache.commons.io.FileUtils;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -155,56 +156,81 @@ public class WorldCacheIOThread extends TimerTask {
     @Nonnull
     private static <T extends IWorldRelatedData<T>> T loadDataFromFile(WorldCacheDomain domain, ResourceLocation dimTypeName, WorldCacheDomain.SaveKey<T> key) {
         DirectorySet f = getDirectorySet(domain.getSaveDirectory(), dimTypeName, key);
-        if (!f.getActualDirectory().exists() && !f.getBackupDirectory().exists()) {
-            return key.getNewInstance(key);
-        }
-        ObserverLib.log.info("Load WorldRelatedData '" + key.getIdentifier() + "' for world " + dimTypeName);
-        boolean errored = false;
-        T data = null;
-        try {
-            if (f.getActualDirectory().exists()) {
-                data = attemptLoad(key, f.getActualDirectory());
-            }
-        } catch (Exception exc) {
-            ObserverLib.log.info("Loading worlddata '" + key.getIdentifier() + "' failed for its actual save. Attempting load from backup.");
-            errored = true;
-        }
-        if(data == null) {
-            try {
-                if (f.getBackupDirectory().exists()) {
-                    data = attemptLoad(key, f.getBackupDirectory());
-                }
-            } catch (Exception exc) {
-                ObserverLib.log.info("Loading worlddata '" + key.getIdentifier() + "' failed for its backup save. Creating empty one for current runtime and copying erroneous files to error directory.");
-                errored = true;
-            }
-        }
-        if(data == null && errored) {
-            DirectorySet errorSet = f.getErrorDirectories();
-            try {
-                if(f.getActualDirectory().exists()) {
-                    Files.copy(f.getActualDirectory(), errorSet.getActualDirectory());
-                    FileUtils.deleteDirectory(f.getActualDirectory());
-                }
-                if(f.getBackupDirectory().exists()) {
-                    Files.copy(f.getBackupDirectory(), errorSet.getBackupDirectory());
-                    FileUtils.deleteDirectory(f.getBackupDirectory());
-                }
-            } catch (Exception e) {
-                ObserverLib.log.info("Attempting to copy erroneous worlddata '" + key.getIdentifier() + "' to its error files directory failed.");
-                e.printStackTrace();
-            }
-        }
-        if (data == null) {
-            data = key.getNewInstance(key);
-        }
-        ObserverLib.log.info("Loading of '" + key.getIdentifier() + "' for world " + dimTypeName + " finished.");
-        return data;
+        IWorldRelatedData.FileLoader<T> loader = createLoadingContext(f, key);
+
+        ObserverLib.log.info("Loading WorldData {}/{} for level {}", key.getDomainName().getNamespace(), key.getIdentifier(), dimTypeName);
+        T loaded = loader.loadData(key.saveFileResolver(), key.getInstanceCodec())
+                .map(dataTpl -> {
+                    dataTpl.getA().readAdditionalData(dataTpl.getB().getParentFile(), loader);
+                    return dataTpl.getA();
+                })
+                .orElseGet(key::newInstance);
+        ObserverLib.log.info("Loading WorldData {}/{} for level {} finished", key.getDomainName().getNamespace(), key.getIdentifier(), dimTypeName);
+        return loaded;
     }
 
-    private static <T extends IWorldRelatedData<T>> T attemptLoad(WorldCacheDomain.SaveKey<T> key, File baseDirectory) throws IOException {
-        CompoundTag dataTag = NbtIo.read(key.getSaveFile(baseDirectory).toPath());
-        return key.getInstanceCodec().parse(NbtOps.INSTANCE, dataTag.get("data")).getOrThrow(IOException::new);
+    private static <F> IWorldRelatedData.FileLoader<F> createLoadingContext(DirectorySet dirSet, WorldCacheDomain.SaveKey<?> rootKey) {
+        String rootName = rootKey.saveFileResolver().resolveFile(new File("/")).getAbsolutePath();
+        return (fileResolver, codec) -> {
+            if (!dirSet.getActualDirectory().exists() && !dirSet.getBackupDirectory().exists()) {
+                return Optional.empty();
+            }
+            // Resolve from root to get an idea of what's being loaded.
+            String attemptName = fileResolver.resolveFile(new File("/")).getAbsolutePath();
+            boolean isSaveRoot = attemptName.equals(rootName);
+
+            F data = null;
+            File dataFile = null;
+
+            // Try load from actual fileset
+            try {
+                if (dirSet.getActualDirectory().exists()) {
+                    dataFile = fileResolver.resolveFile(dirSet.getActualDirectory());
+                    if (dataFile.exists()) {
+                        CompoundTag dataTag = NbtIo.read(dataFile.toPath());
+                        data = codec.parse(NbtOps.INSTANCE, dataTag.get("data")).getOrThrow(IOException::new);
+                    }
+                }
+            } catch (Exception exc) {
+                ObserverLib.log.warn("Loading level data {} failed for its actual save. Attempting load from backup.",
+                        (isSaveRoot ? rootKey.getIdentifier() : rootKey.getIdentifier() + attemptName));
+            }
+            // Try load from backup fileset
+            if (data == null) {
+                try {
+                    if (dirSet.getBackupDirectory().exists()) {
+                        dataFile = fileResolver.resolveFile(dirSet.getBackupDirectory());
+                        if (dataFile.exists()) {
+                            CompoundTag dataTag = NbtIo.read(dataFile.toPath());
+                            data = codec.parse(NbtOps.INSTANCE, dataTag.get("data")).getOrThrow(IOException::new);
+                        }
+                    }
+                } catch (Exception exc) {
+                    ObserverLib.log.warn("Loading level data {} failed for its backup save. Copying erroneous files to error directory.",
+                            (isSaveRoot ? rootKey.getIdentifier() : rootKey.getIdentifier() + attemptName));
+                }
+            }
+            // Copy files to error directory and give up.
+            if (data == null) {
+                DirectorySet errorSet = dirSet.getErrorDirectories();
+                try {
+                    if (dirSet.getActualDirectory().exists()) {
+                        Files.copy(dirSet.getActualDirectory(), errorSet.getActualDirectory());
+                    }
+                    if (dirSet.getBackupDirectory().exists()) {
+                        Files.copy(dirSet.getBackupDirectory(), errorSet.getBackupDirectory());
+                    }
+                } catch (Exception e) {
+                    ObserverLib.log.warn("Copying erroneous level data {} to the error directory failed.",
+                            (isSaveRoot ? rootKey.getIdentifier() : rootKey.getIdentifier() + attemptName));
+                    ObserverLib.log.error("Copying files failed.", e);
+                }
+            }
+            if (data == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new Tuple<>(data, dataFile));
+        };
     }
 
     private synchronized static DirectorySet getDirectorySet(File baseDirectory, ResourceLocation dimTypeName, WorldCacheDomain.SaveKey<?> key) {
@@ -215,15 +241,6 @@ public class WorldCacheIOThread extends TimerTask {
             ensureFolder(worldDir);
         }
         return new DirectorySet(new File(worldDir, key.getIdentifier()));
-    }
-
-    private static File getServerWorldDirectory(File baseDirectory) {
-        File pDir = new File(baseDirectory, "worlddata");
-        if (!pDir.exists()) {
-            pDir.mkdirs();
-        }
-        ensureFolder(pDir);
-        return pDir;
     }
 
     private static void ensureFolder(File f) {

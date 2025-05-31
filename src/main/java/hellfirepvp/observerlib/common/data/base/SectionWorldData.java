@@ -1,16 +1,15 @@
 package hellfirepvp.observerlib.common.data.base;
 
-import com.google.common.io.Files;
 import com.mojang.serialization.Codec;
-import hellfirepvp.observerlib.ObserverLib;
 import hellfirepvp.observerlib.common.data.CachedWorldData;
 import hellfirepvp.observerlib.common.data.WorldCacheDomain;
 import hellfirepvp.observerlib.common.util.AlternatingSet;
+import hellfirepvp.observerlib.common.util.CodecUtil;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
+import net.minecraft.util.Tuple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,6 +17,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -37,12 +38,21 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
     private final Codec<S> sectionCodec;
     private final int precision;
 
+    private FileLoader<S> sectionLoader = null;
+    private final Set<SectionKey> loadedSections = new HashSet<>();
+    private final boolean lazyLoadSections;
+
     private final AlternatingSet<SectionKey> dirtySections = new AlternatingSet<>();
 
     protected SectionWorldData(WorldCacheDomain.SaveKey<T> key, Codec<S> sectionCodec, int sectionPrecision) {
+        this(key, sectionCodec, sectionPrecision, false);
+    }
+
+    protected SectionWorldData(WorldCacheDomain.SaveKey<T> key, Codec<S> sectionCodec, int sectionPrecision, boolean lazyLoadSections) {
         super(key);
         this.sectionCodec = sectionCodec;
         this.precision = sectionPrecision;
+        this.lazyLoadSections = lazyLoadSections;
     }
 
     public void markDirty(Vec3i absolute) {
@@ -55,6 +65,11 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
 
     public void markDirty(S section) {
         this.write(() -> this.dirtySections.add(SectionKey.from(section)));
+    }
+
+    @Override
+    public void setLoader(FileLoader<?> fileLoader) {
+        this.sectionLoader = CodecUtil.cast(fileLoader);
     }
 
     protected abstract S createNewSection(int sectionX, int sectionZ);
@@ -92,7 +107,15 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
 
     @Nonnull
     private S getOrCreateSection(SectionKey key) {
-        return this.write(() -> this.sections.computeIfAbsent(key, sectionKey -> createNewSection(sectionKey.x, sectionKey.z)));
+        S section = this.getSection(key);
+        if (section != null) return section;
+
+        S newSection = this.createNewSection(key.x, key.z);
+        return this.write(() -> {
+            this.sections.put(key, newSection);
+            this.dirtySections.add(key);
+            return newSection;
+        });
     }
 
     @Nullable
@@ -102,7 +125,20 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
 
     @Nullable
     private S getSection(SectionKey key) {
-        return this.read(() -> this.sections.get(key));
+        return this.read(() -> {
+            S knownSection = this.sections.get(key);
+            if (knownSection == null && this.lazyLoadSections && this.sectionLoader != null && this.loadedSections.add(key)) {
+                S loadedSection = this.sectionLoader.loadData(dir -> this.getSectionSaveFile(dir, key.x, key.z), this.sectionCodec)
+                        .map(Tuple::getA)
+                        .orElse(null);
+                return this.write(() -> {
+                    this.loadedSections.add(key);
+                    this.sections.put(key, loadedSection);
+                    return loadedSection;
+                });
+            }
+            return knownSection;
+        });
     }
 
     public boolean removeSection(S section) {
@@ -131,10 +167,14 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
     }
 
     private File getSectionSaveFile(File directory, S section) {
+        return this.getSectionSaveFile(directory, section.getSectionX(), section.getSectionZ());
+    }
+
+    private File getSectionSaveFile(File directory, int sectionX, int sectionZ) {
         String name = String.format("%s_%s_%s.dat",
                 this.getSaveKey().getIdentifier(),
-                section.getSectionX(),
-                section.getSectionZ());
+                sectionX,
+                sectionZ);
         return directory.toPath().resolve(name).toFile();
     }
 
@@ -162,31 +202,31 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
     }
 
     @Override
-    public void readAdditionalData(File dir) throws IOException {
+    public void readAdditionalData(File directory, FileLoader<?> fileLoader) {
+        if (this.lazyLoadSections) {
+            return;
+        }
+
         String identifier = getSaveKey().getIdentifier();
-        for (File subFile : dir.listFiles()) {
+        FileLoader<S> sectionLoader = CodecUtil.cast(fileLoader);
+        Pattern filePattern = Pattern.compile("^%s_(-?\\d+)_(-?\\d+).dat$".formatted(identifier));
+        for (File subFile : directory.listFiles()) {
             String fileName = subFile.getName();
-            if (!fileName.endsWith(".dat")) {
+            Matcher match = filePattern.matcher(fileName);
+            if (!match.matches()) {
                 continue;
             }
-            fileName = fileName.substring(0, fileName.length() - 4);
-            String[] ptrn = fileName.split("_");
-            if (ptrn.length != 3 || !ptrn[0].equalsIgnoreCase(identifier)) {
-                continue;
-            }
+
             int sX, sZ;
             try {
-                sX = Integer.parseInt(ptrn[1]);
-                sZ = Integer.parseInt(ptrn[2]);
+                sX = Integer.parseInt(match.group(1));
+                sZ = Integer.parseInt(match.group(2));
             } catch (NumberFormatException exc) {
                 continue;
             }
 
-            this.readIO(() -> {
-                CompoundTag data = NbtIo.read(subFile.toPath());
-                this.sectionCodec.parse(NbtOps.INSTANCE, data.get("data")).ifSuccess(section -> {
-                    this.sections.put(new SectionKey(sX, sZ), section);
-                });
+            sectionLoader.loadData(dir -> subFile, this.sectionCodec).ifPresent(tpl -> {
+                this.sections.put(new SectionKey(sX, sZ), tpl.getA());
             });
         }
     }
@@ -199,6 +239,18 @@ public abstract class SectionWorldData<T extends SectionWorldData<T, S>, S exten
 
         private static SectionKey resolve(Vec3i absolute, int shift) {
             return new SectionKey(absolute.getX() >> shift, absolute.getZ() >> shift);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            SectionKey that = (SectionKey) o;
+            return x == that.x && z == that.z;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, z);
         }
     }
 }
