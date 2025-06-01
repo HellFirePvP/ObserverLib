@@ -19,10 +19,7 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class is part of the ObserverLib Mod
@@ -89,13 +86,18 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
     @Nullable
     public ChangeSubscriber<? extends ChangeObserver<?>> getSubscriber(BlockPos pos) {
-        return this.read(() -> getOrCreateSection(pos).getSubscriber(pos));
+        MatcherSectionData section = this.getSection(pos);
+        if (section == null) return null;
+        return this.read(() -> section.getSubscriber(pos));
     }
 
     @Nonnull
     public Collection<MatchChangeSubscriber<?>> getSubscribers(ChunkPos pos) {
-        MatcherSectionData data = getOrCreateSection(pos.getWorldPosition());
-        return this.read(() -> new ArrayList<>(data.requestSubscribers.values()));
+        MatcherSectionData section = this.getSection(pos.getWorldPosition());
+        if (section == null) return List.of();
+        return this.read(() -> {
+            return new ArrayList<>(section.requestSubscribers.values());
+        });
     }
 
     public static class MatcherSectionData extends WorldSection {
