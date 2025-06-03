@@ -11,6 +11,7 @@ import hellfirepvp.observerlib.common.change.MatchChangeSubscriber;
 import hellfirepvp.observerlib.common.data.base.SectionWorldData;
 import hellfirepvp.observerlib.common.data.base.WorldSection;
 import hellfirepvp.observerlib.common.util.CodecUtil;
+import hellfirepvp.observerlib.common.util.StringCodecs;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -105,7 +106,7 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         public static final Codec<MatcherSectionData> CODEC = RecordCodecBuilder.create(builder -> builder.group(
                 Codec.INT.fieldOf("sX").forGetter(WorldSection::getSectionX),
                 Codec.INT.fieldOf("sZ").forGetter(WorldSection::getSectionZ),
-                Codec.unboundedMap(BlockPos.CODEC, MatchChangeSubscriber.CODEC).fieldOf("subscribers")
+                Codec.unboundedMap(StringCodecs.blockPos(), MatchChangeSubscriber.CODEC).fieldOf("subscribers")
                         .forGetter(section -> section.requestSubscribers)
         ).apply(builder, MatcherSectionData::new));
 
