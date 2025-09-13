@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 public class RegistryProviders {
 
     public static final ResourceKey<Registry<ObserverProvider<?>>> REGISTRY_KEY = ResourceKey.createRegistryKey(ObserverLib.key("observer_providers"));
-    private static final Registry<ObserverProvider<?>> REGISTRY = new RegistryBuilder<>(REGISTRY_KEY).create();
+    private static final Registry<ObserverProvider<?>> REGISTRY = new RegistryBuilder<>(REGISTRY_KEY).sync(true).create();
 
     public static void initialize(NewRegistryEvent event) {
         event.register(REGISTRY);
