@@ -12,9 +12,7 @@ import hellfirepvp.observerlib.common.data.base.SectionWorldData;
 import hellfirepvp.observerlib.common.data.base.WorldSection;
 import hellfirepvp.observerlib.common.util.CodecUtil;
 import hellfirepvp.observerlib.common.util.StringCodecs;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
@@ -60,12 +58,9 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
         T observer = provider.newObserver();
         MatchChangeSubscriber<T> subscriber = new MatchChangeSubscriber<>(center, observer);
-
-        for (ChunkPos chPos : subscriber.getObservableChunks()) {
-            MatcherSectionData data = getOrCreateSection(chPos.getWorldPosition());
-            this.write(() -> data.addSubscriber(center, subscriber));
-            markDirty(data);
-        }
+        MatcherSectionData data = getOrCreateSection(center);
+        this.write(() -> data.addSubscriber(center, subscriber, true));
+        this.propagateSubscriber(subscriber);
         observer.initialize(world, center);
         return subscriber;
     }
@@ -73,20 +68,28 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
     public boolean removeSubscriber(BlockPos pos) {
         MatcherSectionData data = getOrCreateSection(pos);
 
-        ChangeSubscriber<? extends ChangeObserver<?>> removed = this.write(() -> data.removeSubscriber(pos));
+        ChangeSubscriber<? extends ChangeObserver<?>> removed = this.write(() -> data.removeOwnedSubscriber(pos));
         if (removed != null) {
             ObservableArea area = removed.getObserver().getObservableArea();
             for (ChunkPos chPos : area.getAffectedChunks(pos)) {
                 MatcherSectionData matchData = getOrCreateSection(chPos.getWorldPosition());
-                this.write(() -> matchData.removeSubscriber(pos));
+                this.write(() -> matchData.removeProxySubscriber(pos));
                 markDirty(matchData);
             }
         }
         return removed != null;
     }
 
+    private void propagateSubscriber(MatchChangeSubscriber<?> subscriber) {
+        for (ChunkPos chPos : subscriber.getObservableChunks()) {
+            MatcherSectionData data = getOrCreateSection(chPos.getWorldPosition());
+            this.write(() -> data.addSubscriber(subscriber.getCenter(), subscriber, false));
+            markDirty(data);
+        }
+    }
+
     @Nullable
-    public ChangeSubscriber<? extends ChangeObserver<?>> getSubscriber(BlockPos pos) {
+    public MatchChangeSubscriber<? extends ChangeObserver<?>> getSubscriber(BlockPos pos) {
         MatcherSectionData section = this.getSection(pos);
         if (section == null) return null;
         return this.read(() -> section.getSubscriber(pos));
@@ -97,8 +100,14 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
         MatcherSectionData section = this.getSection(pos.getWorldPosition());
         if (section == null) return List.of();
         return this.read(() -> {
-            return new ArrayList<>(section.requestSubscribers.values());
+            return new ArrayList<>(section.proxySubscribers.values());
         });
+    }
+
+    @Override
+    public void onLoad(Level world) {
+        super.onLoad(world);
+        this.getSections().forEach(section -> section.ownedSubscribers.values().forEach(this::propagateSubscriber));
     }
 
     public static class MatcherSectionData extends WorldSection {
@@ -107,10 +116,11 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
                 Codec.INT.fieldOf("sX").forGetter(WorldSection::getSectionX),
                 Codec.INT.fieldOf("sZ").forGetter(WorldSection::getSectionZ),
                 Codec.unboundedMap(StringCodecs.blockPos(), MatchChangeSubscriber.CODEC).fieldOf("subscribers")
-                        .forGetter(section -> section.requestSubscribers)
+                        .forGetter(section -> section.ownedSubscribers)
         ).apply(builder, MatcherSectionData::new));
 
-        private final Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver<?>>> requestSubscribers = new HashMap<>();
+        private final Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver<?>>> proxySubscribers = new HashMap<>();
+        private final Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver<?>>> ownedSubscribers = new HashMap<>();
 
         private MatcherSectionData(int sX, int sZ) {
             super(sX, sZ);
@@ -118,22 +128,28 @@ public class StructureMatchingBuffer extends SectionWorldData<StructureMatchingB
 
         private MatcherSectionData(int sX, int sZ, Map<BlockPos, MatchChangeSubscriber<? extends ChangeObserver<?>>> subscribers) {
             super(sX, sZ);
-            this.requestSubscribers.putAll(subscribers);
+            this.ownedSubscribers.putAll(subscribers);
         }
 
         @Nullable
         private MatchChangeSubscriber<? extends ChangeObserver<?>> getSubscriber(BlockPos pos) {
-            return this.requestSubscribers.get(pos);
+            return this.proxySubscribers.get(pos);
         }
 
         @Nullable
-        private ChangeSubscriber<? extends ChangeObserver<?>> removeSubscriber(BlockPos pos) {
-            return this.requestSubscribers.remove(pos);
+        private ChangeSubscriber<? extends ChangeObserver<?>> removeOwnedSubscriber(BlockPos pos) {
+            return this.ownedSubscribers.remove(pos);
         }
 
-        @Nullable
-        private ChangeSubscriber<? extends ChangeObserver<?>> addSubscriber(BlockPos pos, MatchChangeSubscriber<? extends ChangeObserver<?>> subscriber) {
-            return this.requestSubscribers.put(pos, subscriber);
+        private void removeProxySubscriber(BlockPos pos) {
+            this.proxySubscribers.remove(pos);
+        }
+
+        private void addSubscriber(BlockPos pos, MatchChangeSubscriber<? extends ChangeObserver<?>> subscriber, boolean owned) {
+            if (owned) {
+                this.ownedSubscribers.put(pos, subscriber);
+            }
+            this.proxySubscribers.put(pos, subscriber);
         }
     }
 
