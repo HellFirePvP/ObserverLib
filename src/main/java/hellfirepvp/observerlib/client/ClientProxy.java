@@ -1,6 +1,5 @@
 package hellfirepvp.observerlib.client;
 
-import hellfirepvp.observerlib.client.preview.StructurePreviewHandler;
 import hellfirepvp.observerlib.client.util.ClientTickHelper;
 import hellfirepvp.observerlib.common.CommonProxy;
 import net.neoforged.bus.api.IEventBus;
@@ -19,6 +18,5 @@ public class ClientProxy extends CommonProxy {
         super.attachEventHandlers(eventBus);
 
         ClientTickHelper.INSTANCE.attachEventListener(eventBus);
-        StructurePreviewHandler.getInstance().attachEventListeners(eventBus);
     }
 }
