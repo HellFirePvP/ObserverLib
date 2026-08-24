@@ -1,7 +1,6 @@
 package hellfirepvp.observerlib.api.block;
 
 import hellfirepvp.observerlib.api.ObserverHelper;
-import hellfirepvp.observerlib.api.client.StructureRenderer;
 import hellfirepvp.observerlib.common.block.BlockAirRequirement;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
@@ -41,7 +40,7 @@ public interface MatchableState {
     /**
      * A default matcher allowing for the display of a blockstate that has to be air.
      *
-     * Works in conjunction with {@link StructureRenderer} in case it displays required air blocks.
+     * {@link BlockAirRequirement#displayRequiredAir} should be set to true to display this more visibly.
      */
     public static final MatchableState REQUIRES_AIR = new MatchableState() {
         @Nonnull
